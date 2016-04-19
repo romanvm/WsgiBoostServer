@@ -389,13 +389,13 @@ namespace WsgiBoost {
                 Response response(*socket, yield);
 
                 try {
-					if (request->content_dir != "")
+					if (request->content_dir == "")
 					{
-						handle_static_request(response, request);
+						handle_wsgi_request(response, request);
 					}
 					else
 					{
-						handle_wsgi_request(response, request);
+						handle_static_request(response, request);
 					}
                 }
                 catch(const std::exception& e) {
