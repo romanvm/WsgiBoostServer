@@ -30,7 +30,15 @@ namespace WsgiBoost
 			_response << "Server: " << _server_name << "\r\n";
 			_response << "Date: " << get_current_gmt_time() << "\r\n";
 			_response << "Content-Length: " << message.length() << "\r\n";
-			_response << "Content-Type: text/plain\r\nConnection: close\r\n\r\n" << message;
+			_response << "Connection: close\r\n";
+			if (message != "")
+			{
+				_response << "Content-Type: text/plain\r\n\r\n" << message;
+			}
+			else
+			{
+				_response << "\r\n";
+			}
 		}
 	};
 }
