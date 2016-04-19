@@ -8,6 +8,7 @@ License: MIT, see License.txt
 #include "server_http.h"
 
 using namespace boost::python;
+using namespace WsgiBoost;
 
 
 BOOST_PYTHON_MODULE(wsgi_boost)
