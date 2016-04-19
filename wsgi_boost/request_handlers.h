@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include "utils.h"
+
 #include <iostream>
 
 
@@ -20,6 +21,7 @@ public:
 	{
 		_response << "HTTP/" << _http_version << " " << code << "\r\n";
 		_response << "Server: " << _server_name << "\r\n";
+		_response << "Date: " << get_current_gmt_time() << "\r\n";
 		_response << "Content-Length: " << message.length() << "\r\n";
 		_response << "Content-Type: text/plain\r\nConnection: close\r\n\r\n" << message;
 	}
