@@ -161,6 +161,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="request_handlers.h" />
+    <ClInclude Include="server_http.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
