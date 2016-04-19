@@ -7,7 +7,7 @@
 
 class BaseRequestHandler
 {
-private:
+protected:
 	std::ostream& _response;
 	const std::string& _server_name;
 	const std::string& _http_version;
