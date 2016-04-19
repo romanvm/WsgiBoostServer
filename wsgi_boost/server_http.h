@@ -27,6 +27,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#define WSGI_BOOST_VERSION "0.0.1"
+
 #include "request_handlers.h"
 
 #include <boost/asio.hpp>
@@ -150,14 +152,12 @@ namespace WsgiBoost {
         };
         ///Set before calling start().
         Config config;
-
-        typedef std::function<void(typename ServerBase<socket_type>::Response&, std::shared_ptr<typename ServerBase<socket_type>::Request>)> Resource;
         
-		Resource static_handler;
-		Resource wsgi_handler;
 		std::vector<std::pair<boost::regex, std::string>> static_routes;
         
     public:
+		std::string server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
+
         void start() {
 			GilRelease release_gil;
 
@@ -203,7 +203,14 @@ namespace WsgiBoost {
 			static_routes.emplace_back(boost::regex(path, boost::regex::icase), content_dir);
 		}
 
+		void set_app(boost::python::object app_)
+		{
+			app = app_;
+		}
+
     protected:
+		boost::python::object app;
+
         boost::asio::io_service io_service;
         boost::asio::ip::tcp::acceptor acceptor;
         std::vector<std::thread> threads;
@@ -213,17 +220,20 @@ namespace WsgiBoost {
         
         ServerBase(unsigned short port, size_t num_threads, size_t timeout_request, size_t timeout_send_or_receive) : 
                 config(port, num_threads), acceptor(io_service),
-                timeout_request(timeout_request), timeout_content(timeout_send_or_receive)
-		{
-			static_handler = wsgi_handler = [](ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
-			{
-				std::string message = "501 Not Implemented";
-				response << "HTTP/1.1 " << message << "\r\nContent-Type: text/plain\r\nContent-Length: " << message.length() << "\r\n\r\n" << message;
-			};
-		}
+                timeout_request(timeout_request), timeout_content(timeout_send_or_receive) {}
         
         virtual void accept()=0;
+
+		void handle_wsgi_request(ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
+		{
+
+		}
         
+		void handle_static_request(ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
+		{
+
+		}
+
         std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {
             std::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(io_service));
             timer->expires_from_now(boost::posix_time::seconds(seconds));
@@ -362,25 +372,31 @@ namespace WsgiBoost {
 				{
 					request->path_regex = route.first;
 					request->content_dir = route.second;
-                    write_response(socket, request, static_handler);
+                    write_response(socket, request);
                     return;
                 }                 
             }
-            write_response(socket, request, wsgi_handler);
+            write_response(socket, request);
         }
         
-        void write_response(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request, 
-                std::function<void(typename ServerBase<socket_type>::Response&, std::shared_ptr<typename ServerBase<socket_type>::Request>)>& resource_function) {
+        void write_response(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request) {
             //Set timeout on the following boost::asio::async-read or write function
             std::shared_ptr<boost::asio::deadline_timer> timer;
             if(timeout_content>0)
                 timer=set_timeout_on_socket(socket, request, timeout_content);
 
-            boost::asio::spawn(request->strand, [this, &resource_function, socket, request, timer](boost::asio::yield_context yield) {
+            boost::asio::spawn(request->strand, [this, socket, request, timer](boost::asio::yield_context yield) {
                 Response response(*socket, yield);
 
                 try {
-                    resource_function(response, request);
+					if (request->content_dir != "")
+					{
+						handle_static_request(response, request);
+					}
+					else
+					{
+						handle_wsgi_request(response, request);
+					}
                 }
                 catch(const std::exception& e) {
 					std::cerr << e.what() << std::endl;
