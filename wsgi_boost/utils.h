@@ -29,3 +29,12 @@ std::string get_current_gmt_time()
 {
 	return time_to_header(std::time(nullptr));
 }
+
+
+struct SafeCharBuffer
+{
+	char* data;
+
+	explicit SafeCharBuffer(size_t size) : data{ new char[size] } {}
+	~SafeCharBuffer() { delete[] data; }
+};
