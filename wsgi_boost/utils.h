@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/algorithm/string.hpp>
+#include <Python.h>
 
 #include <string>
 #include <sstream>
@@ -29,7 +30,7 @@ std::time_t header_to_time(const std::string& time_string)
 }
 
 
-std::string get_current_gmt_time()
+inline std::string get_current_gmt_time()
 {
 	return time_to_header(std::time(nullptr));
 }
@@ -39,9 +40,32 @@ struct SafeCharBuffer
 {
 	char* data;
 
-	explicit SafeCharBuffer(size_t size) : data{ new char[size] } {}
-	~SafeCharBuffer() { delete[] data; }
+	inline explicit SafeCharBuffer(size_t size) : data{ new char[size] } {}
+	inline ~SafeCharBuffer() { delete[] data; }
 };
+
+
+class GilRelease
+{
+public:
+	inline GilRelease() { _state = PyEval_SaveThread(); }
+	inline ~GilRelease() { PyEval_RestoreThread(_state); }
+
+private:
+	PyThreadState* _state;
+};
+
+
+class GilAcquire
+{
+public:
+	inline GilAcquire() { _gstate = PyGILState_Ensure(); };
+	inline ~GilAcquire() { PyGILState_Release(_gstate); };
+
+private:
+	PyGILState_STATE _gstate;
+};
+
 
 
 class MimeTypes
