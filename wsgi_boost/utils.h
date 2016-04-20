@@ -7,6 +7,7 @@ License: MIT, see License.txt
 */
 
 #include <boost/algorithm/string.hpp>
+#include <boost/functional/hash.hpp>
 #include <Python.h>
 
 #include <string>
@@ -15,10 +16,34 @@ License: MIT, see License.txt
 #include <iomanip>
 #include <unordered_map>
 #include <array>
+#include <cctype>
 
 
 namespace WsgiBoost
 {
+	//Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
+	class iequal_to
+	{
+	public:
+		bool operator()(const std::string &key1, const std::string &key2) const
+		{
+			return boost::algorithm::iequals(key1, key2);
+		}
+	};
+
+
+	class ihash
+	{
+	public:
+		size_t operator()(const std::string &key) const
+		{
+			std::size_t seed = 0;
+			for (auto &c : key)
+				boost::hash_combine(seed, std::tolower(c));
+			return seed;
+		}
+	};
+
 	std::string time_to_header(std::time_t posix_time)
 	{
 		std::stringstream ss;

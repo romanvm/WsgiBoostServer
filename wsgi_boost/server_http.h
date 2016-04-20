@@ -92,23 +92,6 @@ namespace WsgiBoost {
         
         class Request {
             friend class ServerBase<socket_type>;
-            
-            //Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
-            class iequal_to {
-            public:
-              bool operator()(const std::string &key1, const std::string &key2) const {
-                return boost::algorithm::iequals(key1, key2);
-              }
-            };
-            class ihash {
-            public:
-              size_t operator()(const std::string &key) const {
-                std::size_t seed=0;
-                for(auto &c: key)
-                  boost::hash_combine(seed, std::tolower(c));
-                return seed;
-              }
-            };
         public:
             std::string method, path, http_version, content_dir;
 
@@ -224,18 +207,33 @@ namespace WsgiBoost {
         
         virtual void accept()=0;
 
-		void handle_wsgi_request(ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
+		void handle_wsgi_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
 		{
-			WsgiRequestHandler request_handler{ response, server_name, request->http_version, request->method, request->path,
-												request->remote_endpoint_address, request->remote_endpoint_port,
-												request->header, request->content, app};
+			WsgiRequestHandler request_handler{
+				response,
+				server_name,
+				request->http_version,
+				request->method,
+				request->path,
+				request->remote_endpoint_address,
+				request->remote_endpoint_port,
+				request->header,
+				request->content, app};
 			request_handler.handle_request();
 		}
         
-		void handle_static_request(ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
+		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
 		{
-			StaticRequestHandler request_handler{ response, server_name, request->http_version, request->method, request->path,
-													request->content_dir, request->header, request->path_regex };
+			StaticRequestHandler request_handler{
+				response,
+				server_name,
+				request->http_version,
+				request->method,
+				request->path,
+				request->content_dir,
+				request->header,
+				request->path_regex
+				};
 			request_handler.handle_request();
 		}
 
