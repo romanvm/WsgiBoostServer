@@ -10,6 +10,7 @@ License: MIT, see License.txt
 
 #include <boost/regex.hpp>
 #include <boost/python.hpp>
+#include <boost/filesystem.hpp>
 
 #include <iostream>
 #include <unordered_map>
@@ -23,12 +24,16 @@ namespace WsgiBoost
 		std::ostream& _response;
 		const std::string& _server_name;
 		const std::string& _http_version;
+		std::vector<std::pair<std::string, std::string>> _out_headers;
 
 	public:
 		BaseRequestHandler(std::ostream& response, const std::string& server_name, const std::string& http_version) :
 			_response{ response },
 			_server_name{ server_name },
-			_http_version{ http_version } {}
+			_http_version{ http_version }
+		{
+			_initialize_headers();
+		}
 
 		virtual ~BaseRequestHandler(){}
 
@@ -39,19 +44,37 @@ namespace WsgiBoost
 
 		void send_code(const std::string& code, const std::string message = "")
 		{
+			_out_headers.emplace_back("Connection", "close");
+			_send_string(code, message);
+		}
+
+	protected:
+		void _initialize_headers()
+		{
+			_out_headers.emplace_back("Server", _server_name);
+			_out_headers.emplace_back("Date", get_current_gmt_time());
+		}
+
+		void _send_http_header(const std::string& code)
+		{
 			_response << "HTTP/" << _http_version << " " << code << "\r\n";
-			_response << "Server: " << _server_name << "\r\n";
-			_response << "Date: " << get_current_gmt_time() << "\r\n";
-			_response << "Content-Length: " << message.length() << "\r\n";
-			_response << "Connection: close\r\n";
-			if (message != "")
+			for (const auto& header : _out_headers)
 			{
-				_response << "Content-Type: text/plain\r\n\r\n" << message;
+				_response << header.first << ": " << header.second << "\r\n";
 			}
-			else
+			_response << "\r\n";
+		}
+
+		void _send_string(const std::string& code, const std::string& content_string = "")
+		{
+			_out_headers.emplace_back("Connection", "close");
+			_out_headers.emplace_back("Content-Length", std::to_string(content_string.length()));
+			if (content_string != "")
 			{
-				_response << "\r\n";
+				_out_headers.emplace_back("Content-Type", "text/plain");
 			}
+			_send_http_header(code);
+			_response << content_string;
 		}
 	};
 
@@ -85,8 +108,12 @@ namespace WsgiBoost
 
 		void handle_request()
 		{
-			std::string code = "501 Not Implemented";
-			send_code(code, code);
+			if (_method != "GET" && _method != "HEAD")
+			{
+				std::string code = "405 Method Not Allowed";
+				_send_string(code, code);
+				return;
+			}
 		}
 	};
 
