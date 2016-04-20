@@ -334,3 +334,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# --- Custom ignores ---#
+*.exe
