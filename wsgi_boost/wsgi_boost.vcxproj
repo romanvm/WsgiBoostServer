@@ -106,6 +106,12 @@
     <CustomBuildStep>
       <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>copy module to the project dir</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -141,6 +147,12 @@
     <CustomBuildStep>
       <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>copy module to the project dir</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
