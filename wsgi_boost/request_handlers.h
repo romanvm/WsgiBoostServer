@@ -22,7 +22,11 @@ namespace WsgiBoost
 
 	public:
 		BaseRequestHandler(std::ostream& response, const std::string& server_name, const std::string& http_version) :
-			_response{ response }, _server_name{ server_name }, _http_version{ http_version } {}
+			_response{ response }, _server_name{ server_name }, _http_version{ http_version }
+		{}
+		virtual ~BaseRequestHandler(){}
+
+		virtual void handle_request() = 0;
 
 		void send_code(const std::string& code, const std::string message = "")
 		{
