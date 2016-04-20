@@ -226,12 +226,17 @@ namespace WsgiBoost {
 
 		void handle_wsgi_request(ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
 		{
-
+			WsgiRequestHandler request_handler{ response, server_name, request->http_version, request->method, request->path,
+												request->remote_endpoint_address, request->remote_endpoint_port,
+												request->header, request->content, app};
+			request_handler.handle_request();
 		}
         
 		void handle_static_request(ServerBase<socket_type>::Response& response, std::shared_ptr<ServerBase<socket_type>::Request> request)
 		{
-
+			StaticRequestHandler request_handler{ response, server_name, request->http_version, request->method, request->path,
+													request->content_dir, request->header, request->path_regex };
+			request_handler.handle_request();
 		}
 
         std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {
