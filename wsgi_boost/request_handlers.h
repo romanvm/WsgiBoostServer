@@ -56,7 +56,7 @@ namespace WsgiBoost
 	};
 
 
-	class StaticRequestHandler : public WsgiBoost::BaseRequestHandler
+	class StaticRequestHandler : public BaseRequestHandler
 	{
 	private:
 		const std::string& _method;
@@ -75,8 +75,7 @@ namespace WsgiBoost
 				const std::string& content_dir,
 				const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& in_headers,
 				const boost::regex& path_regex
-			) :
-			WsgiBoost::BaseRequestHandler(response, server_name, http_version),
+			) : BaseRequestHandler(response, server_name, http_version),
 			_method{ method },
 			_path{ path },
 			_content_dir{ content_dir },
@@ -92,7 +91,7 @@ namespace WsgiBoost
 	};
 
 	
-	class WsgiRequestHandler : public WsgiBoost::BaseRequestHandler
+	class WsgiRequestHandler : public BaseRequestHandler
 	{
 	private:
 		const std::string& _method;
@@ -105,18 +104,17 @@ namespace WsgiBoost
 
 	public:
 		WsgiRequestHandler(
-			std::ostream& response,
-			const std::string& server_name,
-			const std::string& http_version,
-			const std::string& method,
-			const std::string& path,
-			const std::string& remote_endpoint_address,
-			const unsigned short& remote_endpoint_port,
-			const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& in_headers,
-			std::istream& in_content,
-			boost::python::object& app
-			) :
-			WsgiBoost::BaseRequestHandler(response, server_name, http_version),
+				std::ostream& response,
+				const std::string& server_name,
+				const std::string& http_version,
+				const std::string& method,
+				const std::string& path,
+				const std::string& remote_endpoint_address,
+				const unsigned short& remote_endpoint_port,
+				const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& in_headers,
+				std::istream& in_content,
+				boost::python::object& app
+			) : BaseRequestHandler(response, server_name, http_version),
 			_method{ method },
 			_path{ path },
 			_remote_endpoint_address{ remote_endpoint_address },
