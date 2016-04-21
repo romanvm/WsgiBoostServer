@@ -219,7 +219,16 @@ namespace WsgiBoost {
 				request->remote_endpoint_port,
 				request->header,
 				request->content, app};
-			request_handler.handle_request();
+			try
+			{
+				request_handler.handle_request();
+			}
+			catch (const std::exception& ex)
+			{
+				std::cerr << "Error: " << ex.what() << std::endl;
+				request_handler.send_code("500 Internal Server Error", "Error 500: Internal server error while handling WSGI request!");
+			}
+			
 		}
         
 		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
@@ -234,7 +243,15 @@ namespace WsgiBoost {
 				request->header,
 				request->path_regex
 				};
-			request_handler.handle_request();
+			try
+			{
+				request_handler.handle_request();
+			}
+			catch (const std::exception& ex)
+			{
+				std::cerr << "Error: " << ex.what() << std::endl;
+				request_handler.send_code("500 Internal Server Error", "Error 500: Internal server error while handling static request!");
+			}
 		}
 
         std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {
@@ -391,20 +408,16 @@ namespace WsgiBoost {
             boost::asio::spawn(request->strand, [this, socket, request, timer](boost::asio::yield_context yield) {
                 Response response(*socket, yield);
 
-                try {
-					if (request->content_dir == "")
-					{
-						handle_wsgi_request(response, request);
-					}
-					else
-					{
-						handle_static_request(response, request);
-					}
-                }
-                catch(const std::exception& e) {
-					std::cerr << e.what() << std::endl;
-                    return;
-                }
+				std::cout << request->remote_endpoint_address << ": " << request->method << " " << request->path << std::endl;
+                
+				if (request->content_dir == "")
+				{
+					handle_wsgi_request(response, request);
+				}
+				else
+				{
+					handle_static_request(response, request);
+				}                
                 
                 if(response.size()>0) {
                     try {
