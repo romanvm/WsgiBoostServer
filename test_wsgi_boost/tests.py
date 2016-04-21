@@ -60,5 +60,6 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png')
         self.assertEqual(png_size, int(resp.headers['Content-Length']))
 
+
 if __name__ == '__main__':
     unittest.main()
