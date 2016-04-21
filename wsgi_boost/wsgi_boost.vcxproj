@@ -148,10 +148,10 @@
       <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
+      <Command>"$(SolutionDir)test_wsgi_boost\vs_run_tests.bat"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>copy module to the project dir</Message>
+      <Message>copy module to the project dir and run tests</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
