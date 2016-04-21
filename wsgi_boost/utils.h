@@ -81,15 +81,6 @@ namespace WsgiBoost
 	}
 
 
-	std::pair<std::string, std::string> get_host_and_port(const std::string& host_string)
-	{
-		boost::regex regex{ "^(.+?):?(\d{0,5})$", boost::regex::icase };
-		boost::smatch match;
-		boost::regex_search(host_string, match, regex);
-		return std::pair<std::string, std::string>(std::string(match[1].first, match[1].second), std::string(match[2].first, match[2].second));
-	}
-
-
 	struct SafeCharBuffer
 	{
 		char* data;

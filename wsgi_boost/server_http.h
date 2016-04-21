@@ -151,13 +151,17 @@ namespace WsgiBoost {
             if(config.address.size()>0)
                 endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(config.address), config.port);
             else
-                endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config.port);
+                endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config.port);			
             acceptor.open(endpoint.protocol());
             acceptor.set_option(boost::asio::socket_base::reuse_address(config.reuse_address));
             acceptor.bind(endpoint);
             acceptor.listen();
-     
-            accept(); 
+
+            accept();
+
+			ip_address = endpoint.address().to_string();
+			host_name = boost::asio::ip::host_name();
+			std::cout << "IP: " << ip_address << " Host name: " << host_name << std::endl;
             
             //If num_threads>1, start m_io_service.run() in (num_threads-1) threads for thread-pooling
             threads.clear();
@@ -200,9 +204,13 @@ namespace WsgiBoost {
         
         size_t timeout_request;
         size_t timeout_content;
+
+		std::string host_name;
+		std::string ip_address;
+		unsigned short port;
         
         ServerBase(unsigned short port, size_t num_threads, size_t timeout_request, size_t timeout_send_or_receive) : 
-                config(port, num_threads), acceptor(io_service),
+                config(port, num_threads), acceptor(io_service), port(port),
                 timeout_request(timeout_request), timeout_content(timeout_send_or_receive) {}
         
         virtual void accept()=0;
