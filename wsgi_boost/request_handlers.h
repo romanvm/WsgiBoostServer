@@ -232,6 +232,8 @@ namespace WsgiBoost
 		std::istream& _in_content;
 		boost::python::object& _app;	
 
+		boost::python::dict environ_;
+
 	public:
 		WsgiRequestHandler(
 				std::ostream& response,
@@ -254,8 +256,31 @@ namespace WsgiBoost
 
 		void handle_request()
 		{
-			std::string code = "501 Not Implemented";
-			send_code(code, code);
+			if (_app.is_none())
+			{
+				send_code("500 Internal Server Error", "500: Internal server error! Application is not configured.");
+				return;
+			}
+			_prepare_environ();
+		}
+
+	private:
+		void _prepare_environ()
+		{
+			environ_["REQUEST_METHOD"] = _method;
+			environ_["SCRIPT_NAME"] = "";
+			environ_["PATH_INFO"] = _path;
+			environ_["QUERY_STRING"] = get_query_string(_path);
+			auto ct_iter = _in_headers.find("Content-Type");
+			if (ct_iter != _in_headers.end())
+			{
+				environ_["CONTENT_TYPE"] = ct_iter->second;
+			}
+			auto cl_iter = _in_headers.find("Content-Length");
+			if (cl_iter != _in_headers.end())
+			{
+				environ_["CONTENT_LENGTH"] = cl_iter->second;
+			}
 		}
 	};
 }

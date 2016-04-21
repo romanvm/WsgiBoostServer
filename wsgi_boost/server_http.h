@@ -209,6 +209,7 @@ namespace WsgiBoost {
 
 		void handle_wsgi_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
 		{
+			GilAcquire acquire_gil;
 			WsgiRequestHandler request_handler{
 				response,
 				server_name,
@@ -218,7 +219,8 @@ namespace WsgiBoost {
 				request->remote_endpoint_address,
 				request->remote_endpoint_port,
 				request->header,
-				request->content, app};
+				request->content,
+				app};
 			try
 			{
 				request_handler.handle_request();

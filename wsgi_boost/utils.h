@@ -44,6 +44,7 @@ namespace WsgiBoost
 		}
 	};
 
+
 	std::string time_to_header(std::time_t posix_time)
 	{
 		std::stringstream ss;
@@ -66,6 +67,26 @@ namespace WsgiBoost
 	inline std::string get_current_gmt_time()
 	{
 		return time_to_header(std::time(nullptr));
+	}
+
+
+	std::string get_query_string(const std::string& path)
+	{
+		size_t pos = path.find("?");
+		if (pos != std::string::npos && pos + 1 < path.length())
+		{
+			return path.substr(pos + 1);
+		}
+		return "";
+	}
+
+
+	std::pair<std::string, std::string> get_host_and_port(const std::string& host_string)
+	{
+		boost::regex regex{ "^(.+?):?(\d{0,5})$", boost::regex::icase };
+		boost::smatch match;
+		boost::regex_search(host_string, match, regex);
+		return std::pair<std::string, std::string>(std::string(match[1].first, match[1].second), std::string(match[2].first, match[2].second));
 	}
 
 
@@ -98,7 +119,6 @@ namespace WsgiBoost
 	private:
 		PyGILState_STATE _gstate;
 	};
-
 
 
 	class MimeTypes
