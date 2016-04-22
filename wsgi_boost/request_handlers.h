@@ -235,6 +235,7 @@ namespace WsgiBoost
 		boost::python::object& _app;	
 
 		boost::python::dict environ_;
+		boost::python::object start_response;
 
 	public:
 		WsgiRequestHandler(
@@ -258,16 +259,25 @@ namespace WsgiBoost
 			_in_headers{ in_headers },
 			_in_content{ in_content },
 			_app{ app }
-			{}
+			{
+				start_response = boost::python::make_function(&WsgiRequestHandler::_start_response);
+			}
 
 		void handle_request()
 		{
 			if (_app.is_none())
 			{
-				send_code("500 Internal Server Error", "500: Internal server error! Application is not configured.");
+				send_code("500 Internal Server Error", "500: Internal server error! WSGI application is not configured.");
 				return;
 			}
+			std::cout << "Preparing environ..." << std::endl;
 			_prepare_environ();
+			std::cout << "Getting iterable..." << std::endl;
+			PyObject* args = Py_BuildValue("(O,O)", environ_.ptr(), start_response.ptr());
+			PyObject* result = PyEval_CallObject(_app.ptr(), args);
+			boost::python::object iterable{ boost::python::handle<>(borrowed(result)) };
+			std::cout << "Sending iterable..." << std::endl;
+			_send_iterable(iterable);
 		}
 
 	private:
@@ -294,7 +304,7 @@ namespace WsgiBoost
 			for (auto& header : _in_headers)
 			{
 				std::string env_header = transform_header(header.first);
-				if (boost::python::extract<bool>(environ_.attr("__contains__")(env_header)))
+				if (!boost::python::extract<bool>(environ_.attr("__contains__")(env_header)))
 				{
 					environ_[env_header] =  header.second;
 				}
@@ -315,6 +325,55 @@ namespace WsgiBoost
 			environ_["wsgi.multithread"] = true;
 			environ_["wsgi.multiprocess"] = false;
 			environ_["wsgi.run_once"] = false;
+		}
+
+		void _start_response(PyObject stat, PyObject resp_hdrs)
+		{
+			std::string status = boost::python::extract<char*>(stat);
+			std::vector<std::pair<std::string, std::string>> response_headers;
+			for (int i = 0; i < boost::python::len(resp_hdrs); ++i)
+			{
+				response_headers[i].first = boost::python::extract<char*>(resp_hdrs[i][0]);
+				response_headers[i].second = boost::python::extract<char*>(resp_hdrs[i][1]);
+			}
+			for (const auto& item : response_headers)
+			{
+				_out_headers.emplace_back(item);
+			}
+			_send_http_header(status);
+		}
+
+		void _send_iterable(boost::python::object iterable)
+		{
+			while (true)
+			{
+				try
+				{
+					if (PY_MAJOR_VERSION > 2)
+					{
+						_response << boost::python::extract<char*>(_app.attr("__next__")());
+					}
+					else
+					{
+						_response << boost::python::extract<char*>(_app.attr("next")());
+					}
+				}
+				catch (const boost::python::error_already_set& ex)
+				{
+					PyObject *e, *v, *t;
+					PyErr_Fetch(&e, &v, &t);
+					PyErr_NormalizeException(&e, &v, &t);
+					if (PyErr_GivenExceptionMatches(PyExc_StopIteration, e))
+					{
+						break;
+					}
+					else
+					{
+						PyErr_Restore(e, v, t);
+						throw;
+					}
+				}
+			}
 		}
 	};
 }

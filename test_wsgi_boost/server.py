@@ -13,8 +13,19 @@ sys.path.insert(0, wsgi_boost_dir)
 
 import wsgi_boost
 
+
+def simple_app(environ, start_response):
+    """Simplest possible application object"""
+    status = '200 OK'
+    content = 'Hello world!'
+    response_headers = [('Content-type', 'text/plain'), ('Content-Length', len(content))]
+    start_response(status, response_headers)
+    return [conetent]
+
+
 print('Startig WsgiBoost server...')
 httpd =  wsgi_boost.WsgiBoostHttp(8000, 8)
+httpd.set_app(simple_app)
 httpd.add_static_route('^/static', cwd)
 server_thread = threading.Thread(target=httpd.start)
 server_thread.daemon = True
