@@ -81,6 +81,19 @@ namespace WsgiBoost
 	}
 
 
+	std::string transform_header(std::string header)
+	{
+		for (auto& ch : header)
+		{
+			if (ch == '-')
+				ch = '_';
+		}
+		boost::to_upper(header);
+		header = "HTTP_" + header;
+		return header;
+	}
+
+
 	struct SafeCharBuffer
 	{
 		char* data;

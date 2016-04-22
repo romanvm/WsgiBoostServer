@@ -139,7 +139,7 @@ namespace WsgiBoost {
 		std::vector<std::pair<boost::regex, std::string>> static_routes;
         
     public:
-		std::string server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
+		std::string server_name = "http WsgiBoost Server v." WSGI_BOOST_VERSION;
 
         void start() {
 			GilRelease release_gil;
@@ -159,9 +159,7 @@ namespace WsgiBoost {
 
             accept();
 
-			ip_address = endpoint.address().to_string();
 			host_name = boost::asio::ip::host_name();
-			std::cout << "IP: " << ip_address << " Host name: " << host_name << std::endl;
             
             //If num_threads>1, start m_io_service.run() in (num_threads-1) threads for thread-pooling
             threads.clear();
@@ -206,7 +204,6 @@ namespace WsgiBoost {
         size_t timeout_content;
 
 		std::string host_name;
-		std::string ip_address;
 		unsigned short port;
         
         ServerBase(unsigned short port, size_t num_threads, size_t timeout_request, size_t timeout_send_or_receive) : 
@@ -221,6 +218,8 @@ namespace WsgiBoost {
 			WsgiRequestHandler request_handler{
 				response,
 				server_name,
+				host_name,
+				port,
 				request->http_version,
 				request->method,
 				request->path,

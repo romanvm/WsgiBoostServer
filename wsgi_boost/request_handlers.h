@@ -226,6 +226,8 @@ namespace WsgiBoost
 	class WsgiRequestHandler : public BaseRequestHandler
 	{
 	private:
+		const std::string& _host_name;
+		unsigned short _port;
 		const std::string& _remote_endpoint_address;
 		const unsigned short& _remote_endpoint_port;
 		const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& _in_headers;
@@ -238,6 +240,8 @@ namespace WsgiBoost
 		WsgiRequestHandler(
 				std::ostream& response,
 				const std::string& server_name,
+				const std::string& host_name,
+				unsigned short port,
 				const std::string& http_version,
 				const std::string& method,
 				const std::string& path,
@@ -247,6 +251,8 @@ namespace WsgiBoost
 				std::istream& in_content,
 				boost::python::object& app
 			) : BaseRequestHandler(response, server_name, http_version, method, path, in_headers),
+			_host_name{ host_name },
+			_port{ port },
 			_remote_endpoint_address{ remote_endpoint_address },
 			_remote_endpoint_port{ remote_endpoint_port },
 			_in_headers{ in_headers },
@@ -267,6 +273,7 @@ namespace WsgiBoost
 	private:
 		void _prepare_environ()
 		{
+			environ_["SERVER_SOFTWARE"] = _server_name;
 			environ_["REQUEST_METHOD"] = _method;
 			environ_["SCRIPT_NAME"] = "";
 			environ_["PATH_INFO"] = _path;
@@ -281,6 +288,33 @@ namespace WsgiBoost
 			{
 				environ_["CONTENT_LENGTH"] = cl_iter->second;
 			}
+			environ_["SERVER_NAME"] = _host_name;
+			environ_["SERVER_PORT"] = std::to_string(_port);
+			environ_["SERVER_PROTOCOL"] = "HTTP/" + _http_version;
+			for (auto& header : _in_headers)
+			{
+				std::string env_header = transform_header(header.first);
+				if (environ_.attr("__contains__")(env_header) == Py_False)
+				{
+					environ_[env_header] =  header.second;
+				}
+				else
+				{
+					environ_[env_header] = environ_[env_header] + "," + header.second;
+				}
+			}
+			environ_["wsgi.version"] = boost::python::make_tuple<int, int>(1, 0);
+			environ_["wsgi.url_scheme"] = _server_name.substr(0, 4);
+			std::string in_content;
+			_in_content >> in_content;
+			boost::python::object input = boost::python::import("cStringIO").attr("StringIO")();
+			input.attr("write")(in_content);
+			environ_["wsgi.input"] = input;
+			boost::python::object errors = boost::python::import("sys").attr("stderr");
+			environ_["wsgi.errors"] = errors;
+			environ_["wsgi.multithread"] = Py_True;
+			environ_["wsgi.multiprocess"] = Py_False;
+			environ_["wsgi.run_once"] = Py_False;
 		}
 	};
 }
