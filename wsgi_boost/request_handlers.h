@@ -294,7 +294,7 @@ namespace WsgiBoost
 			for (auto& header : _in_headers)
 			{
 				std::string env_header = transform_header(header.first);
-				if (environ_.attr("__contains__")(env_header) == Py_False)
+				if (boost::python::extract<bool>(environ_.attr("__contains__")(env_header)))
 				{
 					environ_[env_header] =  header.second;
 				}
@@ -312,9 +312,9 @@ namespace WsgiBoost
 			environ_["wsgi.input"] = input;
 			boost::python::object errors = boost::python::import("sys").attr("stderr");
 			environ_["wsgi.errors"] = errors;
-			environ_["wsgi.multithread"] = Py_True;
-			environ_["wsgi.multiprocess"] = Py_False;
-			environ_["wsgi.run_once"] = Py_False;
+			environ_["wsgi.multithread"] = true;
+			environ_["wsgi.multiprocess"] = false;
+			environ_["wsgi.run_once"] = false;
 		}
 	};
 }
