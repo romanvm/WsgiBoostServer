@@ -31,9 +31,10 @@ namespace WsgiBoost
 		const std::string& _method;
 		const std::string& _path;
 		const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& _in_headers;
-		std::vector<std::pair<std::string, std::string>> _out_headers;
 
 	public:
+		std::vector<std::pair<std::string, std::string>> _out_headers;
+
 		BaseRequestHandler(
 			std::ostream& response,
 			const std::string& server_name,
@@ -66,8 +67,18 @@ namespace WsgiBoost
 			{
 				_out_headers.emplace_back("Content-Type", "text/plain");
 			}
-			_send_http_header(code);
+			send_http_header(code);
 			_response << message;
+		}
+
+		void send_http_header(const std::string& code)
+		{
+			_response << "HTTP/" << _http_version << " " << code << "\r\n";
+			for (const auto& header : _out_headers)
+			{
+				_response << header.first << ": " << header.second << "\r\n";
+			}
+			_response << "\r\n";
 		}
 
 	protected:
@@ -80,16 +91,6 @@ namespace WsgiBoost
 			{
 				_out_headers.emplace_back("Connection", conn_iter->second);
 			}
-		}
-
-		void _send_http_header(const std::string& code)
-		{
-			_response << "HTTP/" << _http_version << " " << code << "\r\n";
-			for (const auto& header : _out_headers)
-			{
-				_response << header.first << ": " << header.second << "\r\n";
-			}
-			_response << "\r\n";
 		}
 	};
 
@@ -209,7 +210,7 @@ namespace WsgiBoost
 			size_t length = content_stream.tellg();
 			content_stream.seekg(0, std::ios::beg);
 			_out_headers.emplace_back("Content-Length", std::to_string(length));
-			_send_http_header("200 OK");
+			send_http_header("200 OK");
 			//read and send 128 KB at a time
 			const size_t buffer_size = 131072;
 			SafeCharBuffer buffer{ buffer_size };
@@ -222,7 +223,7 @@ namespace WsgiBoost
 		}
 	};
 
-	
+
 	class WsgiRequestHandler : public BaseRequestHandler
 	{
 	private:
@@ -260,7 +261,18 @@ namespace WsgiBoost
 			_in_content{ in_content },
 			_app{ app }
 			{
-				start_response = boost::python::make_function(&WsgiRequestHandler::_start_response);
+				std::function<void(boost::python::str, boost::python::list)> sr{ [this](boost::python::str stat, boost::python::list hdrs)
+					{
+						std::string status = boost::python::extract<char*>(stat);
+						for (size_t i = 0; i < boost::python::len(hdrs); ++i)
+						{
+							boost::python::object header = hdrs[i];
+							this->_out_headers.emplace_back(boost::python::extract<char*>(header[0]), boost::python::extract<char*>(header[1]));
+						}
+						this->send_http_header(status);
+					} };
+				start_response = boost::python::make_function(sr, boost::python::default_call_policies(),
+					boost::python::args("status", "headers"), boost::mpl::vector<void, boost::python::str, boost::python::list>());
 			}
 
 		void handle_request()
@@ -270,14 +282,14 @@ namespace WsgiBoost
 				send_code("500 Internal Server Error", "500: Internal server error! WSGI application is not configured.");
 				return;
 			}
-			std::cout << "Preparing environ..." << std::endl;
 			_prepare_environ();
-			std::cout << "Getting iterable..." << std::endl;
-			PyObject* args = Py_BuildValue("(O,O)", environ_.ptr(), start_response.ptr());
-			PyObject* result = PyEval_CallObject(_app.ptr(), args);
-			boost::python::object iterable{ boost::python::handle<>(borrowed(result)) };
-			std::cout << "Sending iterable..." << std::endl;
+			auto args = get_python_object(Py_BuildValue("(O,O)", environ_.ptr(), start_response.ptr()));
+			auto iterable = get_python_object(PyEval_CallObject(_app.ptr(), args.ptr()));
 			_send_iterable(iterable);
+			if (PyObject_HasAttrString(iterable.ptr(), "close"))
+			{
+				iterable.attr("close")();
+			}
 		}
 
 	private:
@@ -304,6 +316,10 @@ namespace WsgiBoost
 			for (auto& header : _in_headers)
 			{
 				std::string env_header = transform_header(header.first);
+				if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
+				{
+					continue;
+				}
 				if (!boost::python::extract<bool>(environ_.attr("__contains__")(env_header)))
 				{
 					environ_[env_header] =  header.second;
@@ -327,36 +343,19 @@ namespace WsgiBoost
 			environ_["wsgi.run_once"] = false;
 		}
 
-		void _start_response(PyObject stat, PyObject resp_hdrs)
+		void _send_iterable(boost::python::object& iterable)
 		{
-			std::string status = boost::python::extract<char*>(stat);
-			std::vector<std::pair<std::string, std::string>> response_headers;
-			for (int i = 0; i < boost::python::len(resp_hdrs); ++i)
-			{
-				response_headers[i].first = boost::python::extract<char*>(resp_hdrs[i][0]);
-				response_headers[i].second = boost::python::extract<char*>(resp_hdrs[i][1]);
-			}
-			for (const auto& item : response_headers)
-			{
-				_out_headers.emplace_back(item);
-			}
-			_send_http_header(status);
-		}
-
-		void _send_iterable(boost::python::object iterable)
-		{
+			boost::python::object iterator = iterable.attr("__iter__")();
 			while (true)
 			{
 				try
 				{
-					if (PY_MAJOR_VERSION > 2)
-					{
-						_response << boost::python::extract<char*>(_app.attr("__next__")());
-					}
-					else
-					{
-						_response << boost::python::extract<char*>(_app.attr("next")());
-					}
+#if PY_MAJOR_VERSION < 3
+					boost::python::object chunk = iterator.attr("next")();
+#else
+					boost::python::object chunk = iterator.attr("__next__")();
+#endif
+					_response << boost::python::extract<char*>(chunk);
 				}
 				catch (const boost::python::error_already_set& ex)
 				{
@@ -365,14 +364,18 @@ namespace WsgiBoost
 					PyErr_NormalizeException(&e, &v, &t);
 					if (PyErr_GivenExceptionMatches(PyExc_StopIteration, e))
 					{
+						PyErr_Clear();
 						break;
 					}
-					else
 					{
 						PyErr_Restore(e, v, t);
 						throw;
 					}
 				}
+			}			
+			if (PyObject_HasAttrString(iterator.ptr(), "close"))
+			{
+				iterator.attr("close")();
 			}
 		}
 	};

@@ -8,7 +8,7 @@ License: MIT, see License.txt
 
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
-#include <Python.h>
+#include <boost/python.hpp>
 
 #include <string>
 #include <sstream>
@@ -21,6 +21,12 @@ License: MIT, see License.txt
 
 namespace WsgiBoost
 {
+	inline boost::python::object get_python_object(PyObject* pyobj)
+	{
+		return boost::python::object(boost::python::handle<>(pyobj));
+	};
+
+
 	//Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
 	class iequal_to
 	{
