@@ -27,6 +27,29 @@ namespace WsgiBoost
 	};
 
 
+	class Iterator
+	{
+	private:
+		boost::python::object _iterator;
+
+	public:
+		explicit Iterator(boost::python::object it) : _iterator{ it } {}
+
+		~Iterator()
+		{
+			if (PyObject_HasAttrString(_iterator.ptr(), "close"))
+			{
+				_iterator.attr("close")();
+			}
+		}
+
+		boost::python::object attr(const std::string& at) const
+		{
+			return _iterator.attr(at.c_str());
+		}
+	};
+
+
 	//Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
 	class iequal_to
 	{

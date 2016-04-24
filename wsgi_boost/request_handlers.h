@@ -237,6 +237,7 @@ namespace WsgiBoost
 
 		boost::python::dict environ_;
 		boost::python::object start_response;
+		std::string status;
 
 	public:
 		WsgiRequestHandler(
@@ -261,19 +262,29 @@ namespace WsgiBoost
 			_in_content{ in_content },
 			_app{ app }
 			{
-				std::function<void(boost::python::str, boost::python::list)> sr{ [this](boost::python::str stat, boost::python::list hdrs)
+				std::function<void(boost::python::str, boost::python::list, boost::python::object)> sr{
+					[this](boost::python::str stat, boost::python::list hdrs, boost::python::object exc_info = boost::python::object())
 					{
+						if (!exc_info.is_none())
+						{
+							PyErr_Print();
+							exc_info = boost::python::object();
+						}
 						std::string status = boost::python::extract<char*>(stat);
 						for (size_t i = 0; i < boost::python::len(hdrs); ++i)
 						{
 							boost::python::object header = hdrs[i];
 							this->_out_headers.emplace_back(boost::python::extract<char*>(header[0]), boost::python::extract<char*>(header[1]));
 						}
-						this->send_http_header(status);
+						this->status = status;
+						return boost::python::object();
 					} };
-				start_response = boost::python::make_function(sr, boost::python::default_call_policies(),
-					boost::python::args("status", "headers"), boost::mpl::vector<void, boost::python::str, boost::python::list>());
+				start_response = boost::python::make_function(sr,
+					boost::python::default_call_policies(),
+					(boost::python::arg("status"), "headers", boost::python::arg("exc_info") = boost::python::object()),
+					boost::mpl::vector<void, boost::python::str, boost::python::list, boost::python::object>());
 			}
+		
 
 		void handle_request()
 		{
@@ -284,17 +295,13 @@ namespace WsgiBoost
 			}
 			_prepare_environ();
 			auto args = get_python_object(Py_BuildValue("(O,O)", environ_.ptr(), start_response.ptr()));
-			auto iterable = get_python_object(PyEval_CallObject(_app.ptr(), args.ptr()));
-			_send_iterable(iterable);
-			if (PyObject_HasAttrString(iterable.ptr(), "close"))
-			{
-				iterable.attr("close")();
-			}
+			Iterator iterable{ get_python_object(PyEval_CallObject(_app.ptr(), args.ptr())) };
+			_send_iterable(iterable);			
 		}
 
 	private:
 		void _prepare_environ()
-		{
+		{			
 			environ_["SERVER_SOFTWARE"] = _server_name;
 			environ_["REQUEST_METHOD"] = _method;
 			environ_["SCRIPT_NAME"] = "";
@@ -343,9 +350,10 @@ namespace WsgiBoost
 			environ_["wsgi.run_once"] = false;
 		}
 
-		void _send_iterable(boost::python::object& iterable)
+		void _send_iterable(Iterator& iterable)
 		{
 			boost::python::object iterator = iterable.attr("__iter__")();
+			bool headers_sent = false;
 			while (true)
 			{
 				try
@@ -355,6 +363,11 @@ namespace WsgiBoost
 #else
 					boost::python::object chunk = iterator.attr("__next__")();
 #endif
+					if (!headers_sent)
+					{
+						send_http_header(status);
+						headers_sent = true;
+					}
 					_response << boost::python::extract<char*>(chunk);
 				}
 				catch (const boost::python::error_already_set& ex)
@@ -373,10 +386,6 @@ namespace WsgiBoost
 					}
 				}
 			}			
-			if (PyObject_HasAttrString(iterator.ptr(), "close"))
-			{
-				iterator.attr("close")();
-			}
 		}
 	};
 }
