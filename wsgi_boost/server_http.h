@@ -45,7 +45,7 @@ SOFTWARE.
 #include <sstream>
 
 
-namespace WsgiBoost {
+namespace wsgi_boost {
     template <class socket_type>
     class ServerBase {
     public:
@@ -492,5 +492,5 @@ namespace WsgiBoost {
         }
     };
 
-	typedef WsgiBoost::Server<WsgiBoost::HTTP> HttpServer;
+	typedef wsgi_boost::Server<wsgi_boost::HTTP> HttpServer;
 }

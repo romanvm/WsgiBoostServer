@@ -19,38 +19,40 @@ License: MIT, see License.txt
 #include <cctype>
 
 
-namespace WsgiBoost
+namespace wsgi_boost
 {
+	// Wraps a raw PyObject* into a boost::python::object
 	inline boost::python::object get_python_object(PyObject* pyobj)
 	{
 		return boost::python::object(boost::python::handle<>(pyobj));
 	};
 
 
+	// RAII implementation for auto-closing an iterator object passed from a WSGI application
 	class Iterator
 	{
 	private:
-		boost::python::object _iterator;
+		boost::python::object m_iterator;
 
 	public:
-		explicit Iterator(boost::python::object it) : _iterator{ it } {}
+		explicit Iterator(boost::python::object it) : m_iterator{ it } {}
 
 		~Iterator()
 		{
-			if (PyObject_HasAttrString(_iterator.ptr(), "close"))
+			if (PyObject_HasAttrString(m_iterator.ptr(), "close"))
 			{
-				_iterator.attr("close")();
+				m_iterator.attr("close")();
 			}
 		}
 
 		boost::python::object attr(const std::string& at) const
 		{
-			return _iterator.attr(at.c_str());
+			return m_iterator.attr(at.c_str());
 		}
 	};
 
-
-	//Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
+	// Moved from server_http.h
+	// Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
 	class iequal_to
 	{
 	public:
@@ -74,6 +76,7 @@ namespace WsgiBoost
 	};
 
 
+	// Converts POSIX time to HTTP header format
 	std::string time_to_header(std::time_t posix_time)
 	{
 		std::stringstream ss;
@@ -83,6 +86,7 @@ namespace WsgiBoost
 	}
 
 
+	// Parses HTTP "time" headers to POSIX time
 	std::time_t header_to_time(const std::string& time_string)
 	{
 		std::tm t;
@@ -98,7 +102,7 @@ namespace WsgiBoost
 		return time_to_header(std::time(nullptr));
 	}
 
-
+	// Get a query string from a URL path
 	std::string get_query_string(const std::string& path)
 	{
 		size_t pos = path.find("?");
@@ -109,7 +113,7 @@ namespace WsgiBoost
 		return "";
 	}
 
-
+	// Transform a HTTP header to WSGI environ format HTTP_
 	std::string transform_header(std::string header)
 	{
 		for (auto& ch : header)
@@ -122,7 +126,7 @@ namespace WsgiBoost
 		return header;
 	}
 
-
+	// Allocate and automacially deallocate a buffer of char
 	struct SafeCharBuffer
 	{
 		char* data;
@@ -132,28 +136,31 @@ namespace WsgiBoost
 	};
 
 
+	// Scoped GIL release
 	class GilRelease
 	{
 	public:
-		inline GilRelease() { _state = PyEval_SaveThread(); }
-		inline ~GilRelease() { PyEval_RestoreThread(_state); }
+		inline GilRelease() { m_state = PyEval_SaveThread(); }
+		inline ~GilRelease() { PyEval_RestoreThread(m_state); }
 
 	private:
-		PyThreadState* _state;
+		PyThreadState* m_state;
 	};
 
 
+	// Scoped GIL acquire
 	class GilAcquire
 	{
 	public:
-		inline GilAcquire() { _gstate = PyGILState_Ensure(); };
-		inline ~GilAcquire() { PyGILState_Release(_gstate); };
+		inline GilAcquire() { m_gstate = PyGILState_Ensure(); };
+		inline ~GilAcquire() { PyGILState_Release(m_gstate); };
 
 	private:
-		PyGILState_STATE _gstate;
+		PyGILState_STATE m_gstate;
 	};
 
 
+	// Deduce MIME types from file extensions
 	class MimeTypes
 	{
 	public:
@@ -162,21 +169,22 @@ namespace WsgiBoost
 			boost::to_lower(ext);
 			try
 			{
-				return _mime_types.at(ext);
+				return m_mime_types.at(ext);
 			}
 			catch (const std::out_of_range& ex)
 			{
-				return _default_mime;
+				return m_default_mime;
 			}
 		}
 
 		bool is_compressable(const std::string& mime) const
 		{
-			return std::find(_compressables.begin(), _compressables.end(), mime) != _compressables.end();
+			return std::find(m_compressables.begin(), m_compressables.end(), mime) != m_compressables.end();
 		}
 
 	private:
-		std::array<std::string, 8> _compressables{
+		// Common textual formats that can be gzip-ed
+		std::array<std::string, 8> m_compressables{
 			"text/plain",
 			"text/html",
 			"text/css",
@@ -187,9 +195,10 @@ namespace WsgiBoost
 			"application/javascript"
 		};
 
-		std::string _default_mime = "application/octet-stream";
+		std::string m_default_mime = "application/octet-stream";
 
-		std::unordered_map<std::string, std::string> _mime_types{
+		// The items were taken from Apache mime.types
+		std::unordered_map<std::string, std::string> m_mime_types{
 			{ ".123", "application/vnd.lotus-1-2-3" },
 			{ ".3dml", "text/vnd.in3d.3dml" },
 			{ ".3ds", "image/x-3ds" },

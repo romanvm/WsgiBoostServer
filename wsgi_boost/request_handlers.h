@@ -20,7 +20,7 @@ License: MIT, see License.txt
 #include <sstream>
 
 
-namespace WsgiBoost
+namespace wsgi_boost
 {
 	class BaseRequestHandler
 	{
