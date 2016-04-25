@@ -91,17 +91,16 @@ namespace wsgi_boost
 	class WsgiRequestHandler : public BaseRequestHandler
 	{
 	private:
-		const std::string& _host_name;
-		unsigned short _port;
-		const std::string& _remote_endpoint_address;
-		const unsigned short& _remote_endpoint_port;
-		const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& _in_headers;
-		std::istream& _in_content;
-		boost::python::object& _app;	
+		const std::string& m_host_name;
+		unsigned short m_port;
+		const std::string& m_remote_endpoint_address;
+		const unsigned short& m_remote_endpoint_port;
+		const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& m_in_headers;
+		std::istream& m_in_content;
+		boost::python::object& m_app;	
 
-		boost::python::dict environ_;
-		boost::python::object start_response;
-		std::string status;
+		boost::python::dict m_environ;
+		boost::python::object m_start_response;
 
 	public:
 		WsgiRequestHandler(
@@ -118,99 +117,97 @@ namespace wsgi_boost
 				std::istream& in_content,
 				boost::python::object& app
 			) : BaseRequestHandler(response, server_name, http_version, method, path, in_headers),
-			_host_name{ host_name },
-			_port{ port },
-			_remote_endpoint_address{ remote_endpoint_address },
-			_remote_endpoint_port{ remote_endpoint_port },
-			_in_headers{ in_headers },
-			_in_content{ in_content },
-			_app{ app }
+			m_host_name{ host_name },
+			m_port{ port },
+			m_remote_endpoint_address{ remote_endpoint_address },
+			m_remote_endpoint_port{ remote_endpoint_port },
+			m_in_headers{ in_headers },
+			m_in_content{ in_content },
+			m_app{ app }
 			{
 				std::function<void(boost::python::str, boost::python::list, boost::python::object)> sr{
-					[this](boost::python::str stat, boost::python::list hdrs, boost::python::object exc_info = boost::python::object())
+					[this](boost::python::str status, boost::python::list headers, boost::python::object exc_info = boost::python::object())
 					{
 						if (!exc_info.is_none())
 						{
 							PyErr_Print();
 							exc_info = boost::python::object();
 						}
-						std::string status = boost::python::extract<char*>(stat);
-						for (size_t i = 0; i < boost::python::len(hdrs); ++i)
+						this->status = boost::python::extract<char*>(status);
+						for (size_t i = 0; i < boost::python::len(headers); ++i)
 						{
-							boost::python::object header = hdrs[i];
+							boost::python::object header = headers[i];
 							this->out_headers.emplace_back(boost::python::extract<char*>(header[0]), boost::python::extract<char*>(header[1]));
 						}
-						this->status = status;
 					} };
-				start_response = boost::python::make_function(sr,
-					boost::python::default_call_policies(),
+				m_start_response = boost::python::make_function(sr, boost::python::default_call_policies(),
 					(boost::python::arg("status"), "headers", boost::python::arg("exc_info") = boost::python::object()),
 					boost::mpl::vector<void, boost::python::str, boost::python::list, boost::python::object>());
-			}
-		
+			}		
 
 		void handle_request()
 		{
-			if (_app.is_none())
+			if (m_app.is_none())
 			{
-				send_status("500 Internal Server Error", "500: Internal server error! WSGI application is not configured.");
+				status = "500 Internal Server Error";
+				send_status("500: Internal server error! WSGI application is not configured.");
 				return;
 			}
 			_prepare_environ();
-			auto args = get_python_object(Py_BuildValue("(O,O)", environ_.ptr(), start_response.ptr()));
-			Iterator iterable{ get_python_object(PyEval_CallObject(_app.ptr(), args.ptr())) };
+			auto args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
+			Iterator iterable{ get_python_object(PyEval_CallObject(m_app.ptr(), args.ptr())) };
 			_send_iterable(iterable);			
 		}
 
 	private:
 		void _prepare_environ()
 		{			
-			environ_["SERVER_SOFTWARE"] = m_server_name;
-			environ_["REQUEST_METHOD"] = m_method;
-			environ_["SCRIPT_NAME"] = "";
-			environ_["PATH_INFO"] = m_path;
-			environ_["QUERY_STRING"] = get_query_string(m_path);
-			auto ct_iter = _in_headers.find("Content-Type");
-			if (ct_iter != _in_headers.end())
+			m_environ["SERVER_SOFTWARE"] = m_server_name;
+			m_environ["REQUEST_METHOD"] = m_method;
+			m_environ["SCRIPT_NAME"] = "";
+			m_environ["PATH_INFO"] = m_path;
+			m_environ["QUERY_STRING"] = get_query_string(m_path);
+			auto ct_iter = m_in_headers.find("Content-Type");
+			if (ct_iter != m_in_headers.end())
 			{
-				environ_["CONTENT_TYPE"] = ct_iter->second;
+				m_environ["CONTENT_TYPE"] = ct_iter->second;
 			}
-			auto cl_iter = _in_headers.find("Content-Length");
-			if (cl_iter != _in_headers.end())
+			auto cl_iter = m_in_headers.find("Content-Length");
+			if (cl_iter != m_in_headers.end())
 			{
-				environ_["CONTENT_LENGTH"] = cl_iter->second;
+				m_environ["CONTENT_LENGTH"] = cl_iter->second;
 			}
-			environ_["SERVER_NAME"] = _host_name;
-			environ_["SERVER_PORT"] = std::to_string(_port);
-			environ_["SERVER_PROTOCOL"] = "HTTP/" + m_http_version;
-			for (auto& header : _in_headers)
+			m_environ["SERVER_NAME"] = m_host_name;
+			m_environ["SERVER_PORT"] = std::to_string(m_port);
+			m_environ["SERVER_PROTOCOL"] = "HTTP/" + m_http_version;
+			for (auto& header : m_in_headers)
 			{
 				std::string env_header = transform_header(header.first);
 				if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
 				{
 					continue;
 				}
-				if (!boost::python::extract<bool>(environ_.attr("__contains__")(env_header)))
+				if (!boost::python::extract<bool>(m_environ.attr("__contains__")(env_header)))
 				{
-					environ_[env_header] =  header.second;
+					m_environ[env_header] =  header.second;
 				}
 				else
 				{
-					environ_[env_header] = environ_[env_header] + "," + header.second;
+					m_environ[env_header] = m_environ[env_header] + "," + header.second;
 				}
 			}
-			environ_["wsgi.version"] = boost::python::make_tuple<int, int>(1, 0);
-			environ_["wsgi.url_scheme"] = m_server_name.substr(0, 4);
+			m_environ["wsgi.version"] = boost::python::make_tuple<int, int>(1, 0);
+			m_environ["wsgi.url_scheme"] = m_server_name.substr(0, 4);
 			std::string in_content;
-			_in_content >> in_content;
+			m_in_content >> in_content;
 			boost::python::object input = boost::python::import("cStringIO").attr("StringIO")();
 			input.attr("write")(in_content);
-			environ_["wsgi.input"] = input;
+			m_environ["wsgi.input"] = input;
 			boost::python::object errors = boost::python::import("sys").attr("stderr");
-			environ_["wsgi.errors"] = errors;
-			environ_["wsgi.multithread"] = true;
-			environ_["wsgi.multiprocess"] = false;
-			environ_["wsgi.run_once"] = false;
+			m_environ["wsgi.errors"] = errors;
+			m_environ["wsgi.multithread"] = true;
+			m_environ["wsgi.multiprocess"] = false;
+			m_environ["wsgi.run_once"] = false;
 		}
 
 		void _send_iterable(Iterator& iterable)
@@ -228,7 +225,7 @@ namespace wsgi_boost
 #endif
 					if (!headers_sent)
 					{
-						send_http_header(status);
+						send_http_header();
 						headers_sent = true;
 					}
 					m_response << boost::python::extract<char*>(chunk);

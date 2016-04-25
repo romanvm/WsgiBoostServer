@@ -233,9 +233,7 @@ namespace wsgi_boost {
 			}
 			catch (const boost::python::error_already_set& ex)
 			{
-				boost::python::object exc_traceback = boost::python::import("traceback").attr("format_exc")();
-				BOOST_LOG_TRIVIAL(error) = boost::python::extract<char*>(exc_traceback);
-				PyErr_Clear();
+				PyErr_Print();
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: WSGI application error!");
 			}
@@ -247,11 +245,11 @@ namespace wsgi_boost {
 			}
 			if (request_handler.status[0] != '5')
 			{
-				BOOST_LOG_TRIVIAL(info) << request->method << " " request->path << ": " << request_handler.status;
+				BOOST_LOG_TRIVIAL(info) << request->method << " " << request->path << ": " << request_handler.status;
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(error) << request->method << " " request->path << ": " << request_handler.status;
+				BOOST_LOG_TRIVIAL(error) << request->method << " " << request->path << ": " << request_handler.status;
 			}			
 		}
         
@@ -279,11 +277,11 @@ namespace wsgi_boost {
 			}
 			if (request_handler.status[0] != '5')
 			{
-				BOOST_LOG_TRIVIAL(info) << request->method << " " request->path << ": " << request_handler.status;
+				BOOST_LOG_TRIVIAL(info) << request->method << " " << request->path << ": " << request_handler.status;
 			}
 			else
 			{
-				BOOST_LOG_TRIVIAL(error) << request->method << " " request->path << ": " << request_handler.status;
+				BOOST_LOG_TRIVIAL(error) << request->method << " " << request->path << ": " << request_handler.status;
 			}
 		}
 
