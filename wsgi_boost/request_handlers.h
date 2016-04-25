@@ -24,16 +24,6 @@ namespace wsgi_boost
 {
 	class BaseRequestHandler
 	{
-	protected:
-		std::ostream& m_response;
-		const std::string& m_server_name;
-		const std::string& m_http_version;
-		const std::string& m_method;
-		const std::string& m_path;
-		const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& m_in_headers;
-
-		void initialize_headers();
-
 	public:
 		std::vector<std::pair<std::string, std::string>> out_headers;
 		std::string status;
@@ -55,16 +45,23 @@ namespace wsgi_boost
 
 		void send_status(const std::string message = "");
 
-		void send_http_header();		
+		void send_http_header();	
+
+	protected:
+		std::ostream& m_response;
+		const std::string& m_server_name;
+		const std::string& m_http_version;
+		const std::string& m_method;
+		const std::string& m_path;
+		const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& m_in_headers;
+
+		void initialize_headers();
+
 	};
 
 
 	class StaticRequestHandler : public BaseRequestHandler
 	{
-	private:
-		const std::string& _content_dir;
-		const boost::regex& _path_regex;
-
 	public:
 		StaticRequestHandler(
 				std::ostream& response,
@@ -76,115 +73,18 @@ namespace wsgi_boost
 				const std::unordered_multimap<std::string, std::string, ihash, iequal_to>& in_headers,
 				const boost::regex& path_regex
 			) : BaseRequestHandler(response, server_name, http_version, method, path, in_headers),
-			_content_dir{ content_dir },
-			_path_regex{ path_regex }
+			m_content_dir{ content_dir },
+			m_path_regex{ path_regex }
 			{}
 
-		void handle_request()
-		{
-			const auto content_dir_path = boost::filesystem::path{ _content_dir };
-			if (!boost::filesystem::exists(content_dir_path))
-			{
-				send_status("500 Internal Server Error", "500: Internal server error! Invalid content directory.");
-				return;
-			}
-			if (m_method != "GET" && m_method != "HEAD")
-			{
-				std::string code = "405 Method Not Allowed";
-				send_status(code, code);
-				return;
-			}
-			_serve_file(content_dir_path);
-		}
+		void handle_request();
 
 	private:
-		void _serve_file(const boost::filesystem::path& content_dir_path)
-		{
-			boost::filesystem::path path = content_dir_path;
-			path /= boost::regex_replace(m_path, _path_regex, "");
-			if (boost::filesystem::exists(path))
-			{
-				path = boost::filesystem::canonical(path);
-				// Checking if path is inside content_dir
-				if (std::distance(content_dir_path.begin(), content_dir_path.end()) <= std::distance(path.begin(), path.end()) &&
-					std::equal(content_dir_path.begin(), content_dir_path.end(), path.begin()))
-				{
-					if (boost::filesystem::is_directory(path))
-					{
-						path /= "index.html";
-					}
-					if (boost::filesystem::exists(path) && boost::filesystem::is_regular_file(path))
-					{
-						std::ifstream ifs;
-						ifs.open(path.string(), std::ifstream::in | std::ios::binary);
-						if (ifs)
-						{
-							time_t last_modified = boost::filesystem::last_write_time(path);
-							auto ims_iter = m_in_headers.find("If-Modified-Since");
-							if (ims_iter != m_in_headers.end() && last_modified > header_to_time(ims_iter->second))
-							{
-								send_status("304 Not Modified");
-								return;
-							}
-							MimeTypes mime_types;
-							std::string mime = mime_types[path.extension().string()];			
-							out_headers.emplace_back("Content-Type", mime);
-							out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
-							auto ae_iter = m_in_headers.find("Accept-Encoding");
-							if (mime_types.is_compressable(mime) && ae_iter != m_in_headers.end() && ae_iter->second.find("gzip") != std::string::npos)
-							{
-								boost::iostreams::filtering_istream gzstream;
-								gzstream.push(boost::iostreams::gzip_compressor());
-								gzstream.push(ifs);
-								std::stringstream compressed;
-								boost::iostreams::copy(gzstream, compressed);
-								out_headers.emplace_back("Content-Encoding", "gzip");
-								if (m_method == "HEAD")
-								{
-									compressed.str("");
-								}
-								_send_file(compressed);
-							}
-							else
-							{
-								if (m_method == "GET")
-								{
-									_send_file(ifs);
-								}
-								else
-								{
-									std::stringstream ss;
-									ss.str("");
-									_send_file(ss);
-								}
-							}
-							ifs.close();
-							return;
-						}
-					}
-				}
-			}
-			std::cerr << "Invalid path: " << path.string() << std::endl;
-			send_status("404 Not Found", "Error 404: Requested content not found!");
-		}
+		const std::string& m_content_dir;
+		const boost::regex& m_path_regex;
 
-		void _send_file(std::istream& content_stream)
-		{
-			content_stream.seekg(0, std::ios::end);
-			size_t length = content_stream.tellg();
-			content_stream.seekg(0, std::ios::beg);
-			out_headers.emplace_back("Content-Length", std::to_string(length));
-			send_http_header("200 OK");
-			//read and send 128 KB at a time
-			const size_t buffer_size = 131072;
-			SafeCharBuffer buffer{ buffer_size };
-			size_t read_length;
-			while ((read_length = content_stream.read(buffer.data, buffer_size).gcount()) > 0)
-			{
-				m_response.write(buffer.data, read_length);
-				m_response.flush();
-			}
-		}
+		void serve_file(const boost::filesystem::path& content_dir_path);
+		void send_file(std::istream& content_stream);
 	};
 
 

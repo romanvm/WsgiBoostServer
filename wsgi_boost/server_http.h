@@ -33,10 +33,9 @@ SOFTWARE.
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
-#include <boost/regex.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/python.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <unordered_map>
 #include <thread>
@@ -234,13 +233,25 @@ namespace wsgi_boost {
 			}
 			catch (const boost::python::error_already_set& ex)
 			{
-				PyErr_Print();
-				request_handler.send_status("500 Internal Server Error", "Error 500: WSGI application error!");
+				boost::python::object exc_traceback = boost::python::import("traceback").attr("format_exc")();
+				BOOST_LOG_TRIVIAL(error) = boost::python::extract<char*>(exc_traceback);
+				PyErr_Clear();
+				request_handler.status = "500 Internal Server Error";
+				request_handler.send_status("Error 500: WSGI application error!");
 			}
 			catch (const std::exception& ex)
 			{
-				std::cerr << "Error: " << ex.what() << std::endl;
-				request_handler.send_status("500 Internal Server Error", "Error 500: Internal server error!");
+				BOOST_LOG_TRIVIAL(error) << ex.what();
+				request_handler.status = "500 Internal Server Error";
+				request_handler.send_status("Error 500: Internal server error!");
+			}
+			if (request_handler.status[0] != '5')
+			{
+				BOOST_LOG_TRIVIAL(info) << request->method << " " request->path << ": " << request_handler.status;
+			}
+			else
+			{
+				BOOST_LOG_TRIVIAL(error) << request->method << " " request->path << ": " << request_handler.status;
 			}			
 		}
         
@@ -262,8 +273,17 @@ namespace wsgi_boost {
 			}
 			catch (const std::exception& ex)
 			{
-				std::cerr << "Error: " << ex.what() << std::endl;
-				request_handler.send_status("500 Internal Server Error", "Error 500: Internal server error while handling static request!");
+				BOOST_LOG_TRIVIAL(error) << ex.what();
+				request_handler.status = "500 Internal Server Error";
+				request_handler.send_status("Error 500: Internal server error while handling static request!");
+			}
+			if (request_handler.status[0] != '5')
+			{
+				BOOST_LOG_TRIVIAL(info) << request->method << " " request->path << ": " << request_handler.status;
+			}
+			else
+			{
+				BOOST_LOG_TRIVIAL(error) << request->method << " " request->path << ": " << request_handler.status;
 			}
 		}
 
@@ -420,8 +440,6 @@ namespace wsgi_boost {
 
             boost::asio::spawn(request->strand, [this, socket, request, timer](boost::asio::yield_context yield) {
                 Response response(*socket, yield);
-
-				std::cout << request->remote_endpoint_address << ": " << request->method << " " << request->path << std::endl;
                 
 				if (request->content_dir == "")
 				{

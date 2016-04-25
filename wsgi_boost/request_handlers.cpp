@@ -63,7 +63,114 @@ namespace wsgi_boost
 #pragma endregion
 #pragma region StaticRequestHandler
 
+	void StaticRequestHandler::handle_request()
+	{
+		const auto content_dir_path = boost::filesystem::path{ m_content_dir };
+		if (!boost::filesystem::exists(content_dir_path))
+		{
+			status = "500 Internal Server Error";
+			send_status("500: Internal server error! Invalid content directory.");
+			return;
+		}
+		if (m_method != "GET" && m_method != "HEAD")
+		{
+			status = "405 Method Not Allowed";
+			send_status();
+			return;
+		}
+		serve_file(content_dir_path);
+	}
 
+
+	void StaticRequestHandler::serve_file(const fs::path& content_dir_path)
+	{
+		fs::path path = content_dir_path;
+		path /= boost::regex_replace(m_path, m_path_regex, "");
+		if (fs::exists(path))
+		{
+			path = fs::canonical(path);
+			// Checking if path is inside content_dir
+			if (distance(content_dir_path.begin(), content_dir_path.end()) <= distance(path.begin(), path.end()) &&
+				equal(content_dir_path.begin(), content_dir_path.end(), path.begin()))
+			{
+				if (fs::is_directory(path))
+				{
+					path /= "index.html";
+				}
+				if (fs::exists(path) && fs::is_regular_file(path))
+				{
+					ifstream ifs;
+					ifs.open(path.string(), ifstream::in | ios::binary);
+					if (ifs)
+					{
+						time_t last_modified = fs::last_write_time(path);
+						auto ims_iter = m_in_headers.find("If-Modified-Since");
+						if (ims_iter != m_in_headers.end() && last_modified > header_to_time(ims_iter->second))
+						{
+							status = "304 Not Modified";
+							send_status();
+							return;
+						}
+						MimeTypes mime_types;
+						string mime = mime_types[path.extension().string()];
+						out_headers.emplace_back("Content-Type", mime);
+						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
+						auto ae_iter = m_in_headers.find("Accept-Encoding");
+						if (mime_types.is_compressable(mime) && ae_iter != m_in_headers.end() && ae_iter->second.find("gzip") != std::string::npos)
+						{
+							boost::iostreams::filtering_istream gzstream;
+							gzstream.push(boost::iostreams::gzip_compressor());
+							gzstream.push(ifs);
+							stringstream compressed;
+							boost::iostreams::copy(gzstream, compressed);
+							out_headers.emplace_back("Content-Encoding", "gzip");
+							if (m_method == "HEAD")
+							{
+								compressed.str("");
+							}
+							send_file(compressed);
+						}
+						else
+						{
+							if (m_method == "GET")
+							{
+								send_file(ifs);
+							}
+							else
+							{
+								stringstream ss;
+								ss.str("");
+								send_file(ss);
+							}
+						}
+						ifs.close();
+						return;
+					}
+				}
+			}
+		}
+		status = "404 Not Found";
+		send_status("Error 404: Requested content not found!");
+	}
+
+	void StaticRequestHandler::send_file(istream& content_stream)
+	{
+		content_stream.seekg(0, ios::end);
+		size_t length = content_stream.tellg();
+		content_stream.seekg(0, ios::beg);
+		out_headers.emplace_back("Content-Length", to_string(length));
+		status = "200 OK";
+		send_http_header();
+		//read and send 128 KB at a time
+		const size_t buffer_size = 131072;
+		SafeCharBuffer buffer{ buffer_size };
+		size_t read_length;
+		while ((read_length = content_stream.read(buffer.data, buffer_size).gcount()) > 0)
+		{
+			m_response.write(buffer.data, read_length);
+			m_response.flush();
+		}
+	}
 
 #pragma endregion
 
