@@ -235,12 +235,12 @@ namespace wsgi_boost {
 			catch (const boost::python::error_already_set& ex)
 			{
 				PyErr_Print();
-				request_handler.send_code("500 Internal Server Error", "Error 500: WSGI application error!");
+				request_handler.send_status("500 Internal Server Error", "Error 500: WSGI application error!");
 			}
 			catch (const std::exception& ex)
 			{
 				std::cerr << "Error: " << ex.what() << std::endl;
-				request_handler.send_code("500 Internal Server Error", "Error 500: Internal server error!");
+				request_handler.send_status("500 Internal Server Error", "Error 500: Internal server error!");
 			}			
 		}
         
@@ -263,7 +263,7 @@ namespace wsgi_boost {
 			catch (const std::exception& ex)
 			{
 				std::cerr << "Error: " << ex.what() << std::endl;
-				request_handler.send_code("500 Internal Server Error", "Error 500: Internal server error while handling static request!");
+				request_handler.send_status("500 Internal Server Error", "Error 500: Internal server error while handling static request!");
 			}
 		}
 

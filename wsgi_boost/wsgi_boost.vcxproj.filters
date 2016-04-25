@@ -29,5 +29,8 @@
     <ClCompile Include="wsgi_boost.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="request_handlers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
