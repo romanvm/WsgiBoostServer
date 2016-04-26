@@ -24,6 +24,9 @@
     <ClInclude Include="server_http.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="wsgi_boost.cpp">

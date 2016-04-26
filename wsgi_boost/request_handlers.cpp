@@ -15,15 +15,7 @@ namespace wsgi_boost
 {
 #pragma region BaseRequestHandler
 
-	BaseRequestHandler::BaseRequestHandler(
-			ostream& response,
-			const string& server_name,
-			const string& http_version,
-			const string& method,
-			const string& path,
-			const unordered_multimap<string, string, ihash, iequal_to>& in_headers) :
-		m_response{ response }, m_server_name{ server_name }, m_http_version{ http_version },
-		m_in_headers{ in_headers }, m_method{ method }, m_path{ path }
+	BaseRequestHandler::BaseRequestHandler(ostream& response, std::shared_ptr<Request> request) : m_response{ response }, m_request{ request }
 	{
 		initialize_headers();
 	}
@@ -41,7 +33,7 @@ namespace wsgi_boost
 
 	void BaseRequestHandler::send_http_header()
 	{
-		m_response << "HTTP/" << m_http_version << " " << status << "\r\n";
+		m_response << "HTTP/" << m_request->http_version << " " << status << "\r\n";
 		for (const auto& header : out_headers)
 		{
 			m_response << header.first << ": " << header.second << "\r\n";
@@ -51,10 +43,10 @@ namespace wsgi_boost
 
 	void BaseRequestHandler::initialize_headers()
 	{
-		out_headers.emplace_back("Server", m_server_name);
+		out_headers.emplace_back("Server", m_request->server_name);
 		out_headers.emplace_back("Date", get_current_gmt_time());
-		const auto conn_iter = m_in_headers.find("Connection");
-		if (conn_iter != m_in_headers.end())
+		const auto conn_iter = m_request->header.find("Connection");
+		if (conn_iter != m_request->header.end())
 		{
 			out_headers.emplace_back("Connection", conn_iter->second);
 		}
@@ -66,14 +58,14 @@ namespace wsgi_boost
 
 	void StaticRequestHandler::handle_request()
 	{
-		const auto content_dir_path = boost::filesystem::path{ m_content_dir };
+		const auto content_dir_path = boost::filesystem::path{ m_request->content_dir };
 		if (!boost::filesystem::exists(content_dir_path))
 		{
 			status = "500 Internal Server Error";
 			send_status("500: Internal server error! Invalid content directory.");
 			return;
 		}
-		if (m_method != "GET" && m_method != "HEAD")
+		if (m_request->method != "GET" && m_request->method != "HEAD")
 		{
 			status = "405 Method Not Allowed";
 			send_status();
@@ -86,7 +78,7 @@ namespace wsgi_boost
 	void StaticRequestHandler::serve_file(const fs::path& content_dir_path)
 	{
 		fs::path path = content_dir_path;
-		path /= boost::regex_replace(m_path, m_path_regex, "");
+		path /= boost::regex_replace(m_request->path, m_request->path_regex, "");
 		if (fs::exists(path))
 		{
 			path = fs::canonical(path);
@@ -105,8 +97,8 @@ namespace wsgi_boost
 					if (ifs)
 					{
 						time_t last_modified = fs::last_write_time(path);
-						auto ims_iter = m_in_headers.find("If-Modified-Since");
-						if (ims_iter != m_in_headers.end() && last_modified > header_to_time(ims_iter->second))
+						auto ims_iter = m_request->header.find("If-Modified-Since");
+						if (ims_iter != m_request->header.end() && last_modified > header_to_time(ims_iter->second))
 						{
 							status = "304 Not Modified";
 							send_status();
@@ -116,8 +108,8 @@ namespace wsgi_boost
 						string mime = mime_types[path.extension().string()];
 						out_headers.emplace_back("Content-Type", mime);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
-						auto ae_iter = m_in_headers.find("Accept-Encoding");
-						if (mime_types.is_compressable(mime) && ae_iter != m_in_headers.end() && ae_iter->second.find("gzip") != std::string::npos)
+						auto ae_iter = m_request->header.find("Accept-Encoding");
+						if (mime_types.is_compressable(mime) && ae_iter != m_request->header.end() && ae_iter->second.find("gzip") != std::string::npos)
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
@@ -125,7 +117,7 @@ namespace wsgi_boost
 							stringstream compressed;
 							boost::iostreams::copy(gzstream, compressed);
 							out_headers.emplace_back("Content-Encoding", "gzip");
-							if (m_method == "HEAD")
+							if (m_request->method == "HEAD")
 							{
 								compressed.str("");
 							}
@@ -133,7 +125,7 @@ namespace wsgi_boost
 						}
 						else
 						{
-							if (m_method == "GET")
+							if (m_request->method == "GET")
 							{
 								send_file(ifs);
 							}
@@ -177,27 +169,8 @@ namespace wsgi_boost
 
 #pragma region WsgiRequestHandler
 
-	WsgiRequestHandler::WsgiRequestHandler(
-		ostream& response,
-		const string& server_name,
-		const string& host_name,
-		unsigned short port,
-		const string& http_version,
-		const string& method,
-		const string& path,
-		const string& remote_endpoint_address,
-		const unsigned short& remote_endpoint_port,
-		const unordered_multimap<std::string, std::string, ihash, iequal_to>& in_headers,
-		istream& in_content,
-		py::object& app
-	) : BaseRequestHandler(response, server_name, http_version, method, path, in_headers),
-		m_host_name{ host_name },
-		m_port{ port },
-		m_remote_endpoint_address{ remote_endpoint_address },
-		m_remote_endpoint_port{ remote_endpoint_port },
-		m_in_headers{ in_headers },
-		m_in_content{ in_content },
-		m_app{ app }
+	WsgiRequestHandler::WsgiRequestHandler(ostream& response, std::shared_ptr<Request> request, py::object& app) :
+		BaseRequestHandler(response, request), m_app{ app }
 	{
 		std::function<void(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
@@ -225,11 +198,11 @@ namespace wsgi_boost
 		if (m_app.is_none())
 		{
 			status = "500 Internal Server Error";
-			send_status("500: Internal server error! WSGI application is not configured.");
+			send_status("500: Internal server error! WSGI application is not set.");
 			return;
 		}
 		prepare_environ();
-		auto args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
+		py::object args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
 		Iterator iterable{ get_python_object(PyEval_CallObject(m_app.ptr(), args.ptr())) };
 		send_iterable(iterable);
 	}
@@ -237,32 +210,32 @@ namespace wsgi_boost
 
 	void WsgiRequestHandler::prepare_environ()
 	{
-		m_environ["SERVER_SOFTWARE"] = m_server_name;
-		m_environ["REQUEST_METHOD"] = m_method;
+		m_environ["SERVER_SOFTWARE"] = m_request->server_name;
+		m_environ["REQUEST_METHOD"] = m_request->method;
 		m_environ["SCRIPT_NAME"] = "";
-		m_environ["PATH_INFO"] = m_path;
-		m_environ["QUERY_STRING"] = get_query_string(m_path);
-		auto ct_iter = m_in_headers.find("Content-Type");
-		if (ct_iter != m_in_headers.end())
+		m_environ["PATH_INFO"] = m_request->path;
+		m_environ["QUERY_STRING"] = get_query_string(m_request->path);
+		auto ct_iter = m_request->header.find("Content-Type");
+		if (ct_iter != m_request->header.end())
 		{
 			m_environ["CONTENT_TYPE"] = ct_iter->second;
 		}
-		auto cl_iter = m_in_headers.find("Content-Length");
-		if (cl_iter != m_in_headers.end())
+		auto cl_iter = m_request->header.find("Content-Length");
+		if (cl_iter != m_request->header.end())
 		{
 			m_environ["CONTENT_LENGTH"] = cl_iter->second;
 		}
-		m_environ["SERVER_NAME"] = m_host_name;
-		m_environ["SERVER_PORT"] = std::to_string(m_port);
-		m_environ["SERVER_PROTOCOL"] = "HTTP/" + m_http_version;
-		for (auto& header : m_in_headers)
+		m_environ["SERVER_NAME"] = m_request->host_name;
+		m_environ["SERVER_PORT"] = to_string(m_request->local_endpoint_port);
+		m_environ["SERVER_PROTOCOL"] = "HTTP/" + m_request->http_version;
+		for (auto& header : m_request->header)
 		{
 			std::string env_header = transform_header(header.first);
 			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
 			{
 				continue;
 			}
-			if (!boost::python::extract<bool>(m_environ.attr("__contains__")(env_header)))
+			if (!py::extract<bool>(m_environ.attr("__contains__")(env_header)))
 			{
 				m_environ[env_header] = header.second;
 			}
@@ -271,14 +244,11 @@ namespace wsgi_boost
 				m_environ[env_header] = m_environ[env_header] + "," + header.second;
 			}
 		}
-		m_environ["wsgi.version"] = boost::python::make_tuple<int, int>(1, 0);
-		m_environ["wsgi.url_scheme"] = m_server_name.substr(0, 4);
-		string in_content;
-		m_in_content >> in_content;
-		cout << "POST data: " << in_content << endl;
-		boost::python::object input = boost::python::import("io").attr("BytesIO")(in_content);
+		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
+		m_environ["wsgi.url_scheme"] = m_request->server_name.substr(0, 4);
+		py::object input = py::import("io").attr("BytesIO")(m_request->content.string());
 		m_environ["wsgi.input"] = input;
-		boost::python::object errors = boost::python::import("sys").attr("stderr");
+		py::object errors = py::import("sys").attr("stderr");
 		m_environ["wsgi.errors"] = errors;
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
@@ -287,25 +257,26 @@ namespace wsgi_boost
 
 	void WsgiRequestHandler::send_iterable(Iterator& iterable)
 	{
-		boost::python::object iterator = iterable.attr("__iter__")();
+		py::object iterator = iterable.attr("__iter__")();
 		bool headers_sent = false;
 		while (true)
 		{
 			try
 			{
 #if PY_MAJOR_VERSION < 3
-				boost::python::object chunk = iterator.attr("next")();
+				std::string chunk = py::extract<char*>(iterator.attr("next")());
 #else
-				boost::python::object chunk = iterator.attr("__next__")();
+				std::string chunk = py::extract<char*>(iterator.attr("__next__")());
 #endif
 				if (!headers_sent)
 				{
 					send_http_header();
 					headers_sent = true;
 				}
-				m_response << boost::python::extract<char*>(chunk);
+				GilRelease release_gil;
+				m_response << chunk;
 			}
-			catch (const boost::python::error_already_set& ex)
+			catch (const py::error_already_set& ex)
 			{
 				PyObject *e, *v, *t;
 				PyErr_Fetch(&e, &v, &t);
@@ -322,6 +293,5 @@ namespace wsgi_boost
 			}
 		}
 	}
-
 #pragma endregion
 }

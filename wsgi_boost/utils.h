@@ -7,9 +7,7 @@ License: MIT, see License.txt
 */
 
 #include <boost/algorithm/string.hpp>
-#include <boost/functional/hash.hpp>
 #include <boost/python.hpp>
-#include <boost/asio.hpp>
 
 #include <string>
 #include <sstream>
@@ -22,23 +20,6 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
-	class Content : public std::istream {
-	public:
-		Content(boost::asio::streambuf &streambuf) : std::istream(&streambuf), streambuf(streambuf) {}
-
-		size_t size() {
-			return streambuf.size();
-		}
-		std::string string() {
-			std::stringstream ss;
-			ss << rdbuf();
-			return ss.str();
-		}
-	private:
-		boost::asio::streambuf &streambuf;
-	};
-
-
 	// Wraps a raw PyObject* into a boost::python::object
 	inline boost::python::object get_python_object(PyObject* pyobj)
 	{
@@ -69,30 +50,6 @@ namespace wsgi_boost
 		}
 	};
 
-
-	// Moved from server_http.h
-	// Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
-	class iequal_to
-	{
-	public:
-		bool operator()(const std::string &key1, const std::string &key2) const
-		{
-			return boost::algorithm::iequals(key1, key2);
-		}
-	};
-
-
-	class ihash
-	{
-	public:
-		size_t operator()(const std::string &key) const
-		{
-			std::size_t seed = 0;
-			for (auto &c : key)
-				boost::hash_combine(seed, std::tolower(c));
-			return seed;
-		}
-	};
 
 	// Converts POSIX time to HTTP header format
 	std::string time_to_header(std::time_t posix_time);

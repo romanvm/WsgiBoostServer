@@ -46,61 +46,31 @@ namespace wsgi_boost {
     template <class socket_type>
     class ServerBase {
     public:
-        class Response : public std::ostream {
-            friend class ServerBase<socket_type>;
-        private:
-            boost::asio::yield_context& yield;
-            
-            boost::asio::streambuf streambuf;
+		class Response : public std::ostream {
+			friend class ServerBase<socket_type>;
+		private:
+			boost::asio::yield_context& yield;
 
-            socket_type &socket;
-            
-            Response(socket_type &socket, boost::asio::yield_context& yield):
-                    std::ostream(&streambuf), yield(yield), socket(socket) {}
-                        
-        public:
-            size_t size() {
-                return streambuf.size();
-            }
-            void flush() {
-                boost::system::error_code ec;
-                boost::asio::async_write(socket, streambuf, yield[ec]);
-                
-                if(ec)
-                    throw std::runtime_error(ec.message());
-            }
-        };
-                
-        class Request {
-            friend class ServerBase<socket_type>;
-        public:
-            std::string method, path, http_version, content_dir;
+			boost::asio::streambuf streambuf;
 
-            Content content;
+			socket_type &socket;
 
-            std::unordered_multimap<std::string, std::string, ihash, iequal_to> header;
+			Response(socket_type &socket, boost::asio::yield_context& yield) :
+				std::ostream(&streambuf), yield(yield), socket(socket) {}
 
-			boost::regex path_regex;
-            
-            std::string remote_endpoint_address;
-            unsigned short remote_endpoint_port;
-            
-        private:
-            Request(boost::asio::io_service &io_service): content(streambuf), strand(io_service) {}
-            
-            boost::asio::streambuf streambuf;
-            
-            boost::asio::strand strand;
-            
-            void read_remote_endpoint_data(socket_type& socket) {
-                try {
-                    remote_endpoint_address=socket.lowest_layer().remote_endpoint().address().to_string();
-                    remote_endpoint_port=socket.lowest_layer().remote_endpoint().port();
-                }
-                catch(const std::exception& e) {}
-            }
-        };
-        
+		public:
+			size_t size() {
+				return streambuf.size();
+			}
+			void flush() {
+				boost::system::error_code ec;
+				boost::asio::async_write(socket, streambuf, yield[ec]);
+
+				if (ec)
+					throw std::runtime_error(ec.message());
+			}
+		};
+
         class Config {
             friend class ServerBase<socket_type>;
         private:
@@ -192,22 +162,13 @@ namespace wsgi_boost {
         
         virtual void accept()=0;
 
-		void handle_wsgi_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
+		void handle_wsgi_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<Request> request)
 		{
+			request->server_name = server_name;
+			request->host_name = host_name;
+			request->local_endpoint_port = config.port;
 			GilAcquire acquire_gil;
-			WsgiRequestHandler request_handler{
-				response,
-				server_name,
-				host_name,
-				config.port,
-				request->http_version,
-				request->method,
-				request->path,
-				request->remote_endpoint_address,
-				request->remote_endpoint_port,
-				request->header,
-				request->content,
-				app};
+			WsgiRequestHandler request_handler{ response, request, app };
 			try
 			{
 				request_handler.handle_request();
@@ -226,18 +187,10 @@ namespace wsgi_boost {
 			std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
 		}
         
-		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
+		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<Request> request)
 		{
-			StaticRequestHandler request_handler{
-				response,
-				server_name,
-				request->http_version,
-				request->method,
-				request->path,
-				request->content_dir,
-				request->header,
-				request->path_regex
-				};
+			request->server_name = server_name;
+			StaticRequestHandler request_handler{ response, request };
 			try
 			{
 				request_handler.handle_request();
