@@ -273,10 +273,10 @@ namespace wsgi_boost
 		}
 		m_environ["wsgi.version"] = boost::python::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_server_name.substr(0, 4);
-		std::string in_content;
+		string in_content;
 		m_in_content >> in_content;
-		boost::python::object input = boost::python::import("cStringIO").attr("StringIO")();
-		input.attr("write")(in_content);
+		cout << "POST data: " << in_content << endl;
+		boost::python::object input = boost::python::import("io").attr("BytesIO")(in_content);
 		m_environ["wsgi.input"] = input;
 		boost::python::object errors = boost::python::import("sys").attr("stderr");
 		m_environ["wsgi.errors"] = errors;

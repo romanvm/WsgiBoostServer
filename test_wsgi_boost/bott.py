@@ -43,32 +43,34 @@ def index():
 
 app = default_app()
 
-# serve(app, host='0.0.0.0', port=8000)
+serve(app, host='0.0.0.0', port=8000)
+
+
 # httpd = create_server(app, port=8000)
 # httpd.serve_forever()
 
-cwd = os.path.dirname(os.path.abspath(__file__))
-wsgi_boost_dir = os.path.join(os.path.dirname(cwd), 'wsgi_boost')
-sys.path.insert(0, wsgi_boost_dir)
+# cwd = os.path.dirname(os.path.abspath(__file__))
+# wsgi_boost_dir = os.path.join(os.path.dirname(cwd), 'wsgi_boost')
+# sys.path.insert(0, wsgi_boost_dir)
 
-import wsgi_boost
+# import wsgi_boost
 
-print('Startig WsgiBoost server...')
-httpd =  wsgi_boost.WsgiBoostHttp(8000, 8)
-httpd.set_app(app)
+# print('Startig WsgiBoost server...')
+# httpd =  wsgi_boost.WsgiBoostHttp(8000, 8)
+# httpd.set_app(app)
 
-server_thread = threading.Thread(target=httpd.start)
-server_thread.daemon = True
-server_thread.start()
-time.sleep(0.5)
+# server_thread = threading.Thread(target=httpd.start)
+# server_thread.daemon = True
+# server_thread.start()
+# time.sleep(0.5)
 
-print('WsgiBoost server started. To stop it press Ctrl+C.')
-try:
-    while True:
-        time.sleep(0.1)
-except KeyboardInterrupt:
-    pass
-finally:
-    httpd.stop()
-    server_thread.join()
-print('WsgiBoost server stopped.')
+# print('WsgiBoost server started. To stop it press Ctrl+C.')
+# try:
+#     while True:
+#         time.sleep(0.1)
+# except KeyboardInterrupt:
+#     pass
+# finally:
+#     httpd.stop()
+#     server_thread.join()
+# print('WsgiBoost server stopped.')

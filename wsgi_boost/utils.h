@@ -9,6 +9,7 @@ License: MIT, see License.txt
 #include <boost/algorithm/string.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/python.hpp>
+#include <boost/asio.hpp>
 
 #include <string>
 #include <sstream>
@@ -21,6 +22,23 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
+	class Content : public std::istream {
+	public:
+		Content(boost::asio::streambuf &streambuf) : std::istream(&streambuf), streambuf(streambuf) {}
+
+		size_t size() {
+			return streambuf.size();
+		}
+		std::string string() {
+			std::stringstream ss;
+			ss << rdbuf();
+			return ss.str();
+		}
+	private:
+		boost::asio::streambuf &streambuf;
+	};
+
+
 	// Wraps a raw PyObject* into a boost::python::object
 	inline boost::python::object get_python_object(PyObject* pyobj)
 	{

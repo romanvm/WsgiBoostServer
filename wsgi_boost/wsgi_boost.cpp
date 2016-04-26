@@ -15,12 +15,14 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 {
 	PyEval_InitThreads(); // Initialize GIL
 
+	
 	scope current;
 	current.attr("__doc__") = "This module provides WSGI/HTTP server class";
 	current.attr("__version__") = WSGI_BOOST_VERSION;
 	current.attr("__author__") = "Roman Miroshnychenko";
 	current.attr("__email__") = "romanvm@yandex.ua";
 	current.attr("__license__") = "MIT";
+	
 
 
 	class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
