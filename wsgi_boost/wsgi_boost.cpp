@@ -27,7 +27,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		"class docstring",
 
-		init<unsigned short, size_t, optional<size_t, size_t>>(args("port", "num_threads", "timeout_request", "timeout_content")))
+		init<unsigned short, optional<size_t, size_t, size_t>>(args("port", "num_threads", "timeout_request", "timeout_content")))
 
 		.def_readonly("name", &HttpServer::server_name, "Server name")
 

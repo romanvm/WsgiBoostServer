@@ -51,6 +51,7 @@ namespace wsgi_boost
 		}
 	};
 
+
 	// Moved from server_http.h
 	// Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
 	class iequal_to
@@ -75,56 +76,30 @@ namespace wsgi_boost
 		}
 	};
 
-
 	// Converts POSIX time to HTTP header format
-	std::string time_to_header(std::time_t posix_time)
-	{
-		std::stringstream ss;
-		ss.imbue(std::locale("C"));
-		ss << std::put_time(std::gmtime(&posix_time), "%a, %d %b %Y %H:%M:%S GMT");
-		return ss.str();
-	}
+	std::string time_to_header(std::time_t posix_time);
 
 
 	// Parses HTTP "time" headers to POSIX time
-	std::time_t header_to_time(const std::string& time_string)
-	{
-		std::tm t;
-		std::stringstream ss{ time_string };
-		ss.imbue(std::locale("C"));
-		ss >> std::get_time(&t, "%a, %d %b %Y %H:%M:%S GMT");
-		return std::mktime(&t);
-	}
+	std::time_t header_to_time(const std::string& time_string);
+
+
+	// Get a query string from a URL path
+	std::string get_query_string(const std::string& path);
+
+
+	// Transform a HTTP header to WSGI environ format HTTP_
+	std::string transform_header(std::string header);
+
+	// Get current timezone time as string
+	std::string get_current_local_time();
 
 
 	inline std::string get_current_gmt_time()
 	{
 		return time_to_header(std::time(nullptr));
-	}
+	};
 
-	// Get a query string from a URL path
-	std::string get_query_string(const std::string& path)
-	{
-		size_t pos = path.find("?");
-		if (pos != std::string::npos && pos + 1 < path.length())
-		{
-			return path.substr(pos + 1);
-		}
-		return "";
-	}
-
-	// Transform a HTTP header to WSGI environ format HTTP_
-	std::string transform_header(std::string header)
-	{
-		for (auto& ch : header)
-		{
-			if (ch == '-')
-				ch = '_';
-		}
-		boost::to_upper(header);
-		header = "HTTP_" + header;
-		return header;
-	}
 
 	// Allocate and automacially deallocate a buffer of char
 	struct SafeCharBuffer
@@ -197,7 +172,7 @@ namespace wsgi_boost
 
 		std::string m_default_mime = "application/octet-stream";
 
-		// The items were taken from Apache mime.types
+		// The items were taken from Apache's mime.types
 		std::unordered_map<std::string, std::string> m_mime_types{
 			{ ".123", "application/vnd.lotus-1-2-3" },
 			{ ".3dml", "text/vnd.in3d.3dml" },

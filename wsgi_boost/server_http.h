@@ -35,7 +35,6 @@ SOFTWARE.
 #include <boost/asio/spawn.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <unordered_map>
 #include <thread>
@@ -123,9 +122,9 @@ namespace wsgi_boost {
             friend class ServerBase<socket_type>;
         private:
             Config(unsigned short port, size_t num_threads): port(port), num_threads(num_threads), reuse_address(true) {}
-            unsigned short port;
             size_t num_threads;
         public:
+			unsigned short port;
             ///IPv4 address in dotted decimal form or IPv6 address in hexadecimal notation.
             ///If empty, the address will be any address.
             std::string address;
@@ -143,38 +142,39 @@ namespace wsgi_boost {
         void start() {
 			GilRelease release_gil;
 
-            if(io_service.stopped())
-                io_service.reset();
-
-            boost::asio::ip::tcp::endpoint endpoint;
-            if(config.address.size()>0)
-                endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(config.address), config.port);
-            else
-                endpoint=boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config.port);			
-            acceptor.open(endpoint.protocol());
-            acceptor.set_option(boost::asio::socket_base::reuse_address(config.reuse_address));
-            acceptor.bind(endpoint);
-            acceptor.listen();
-
-            accept();
-
 			host_name = boost::asio::ip::host_name();
-            
-            //If num_threads>1, start m_io_service.run() in (num_threads-1) threads for thread-pooling
-            threads.clear();
-            for(size_t c = 1; c < config.num_threads; ++c){
-                threads.emplace_back([this](){
-                    io_service.run();
-                });
-            }
 
-            //Main thread
-            io_service.run();
+			if (io_service.stopped())
+				io_service.reset();
 
-            //Wait for the rest of the threads, if any, to finish as well
-            for(auto& t: threads) {
-                t.join();
-            }
+			boost::asio::ip::tcp::endpoint endpoint;
+			if (config.address.size()>0)
+				endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(config.address), config.port);
+			else
+				endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config.port);
+			acceptor.open(endpoint.protocol());
+			acceptor.set_option(boost::asio::socket_base::reuse_address(config.reuse_address));
+			acceptor.bind(endpoint);
+			acceptor.listen();
+
+			accept();
+
+			//If num_threads>1, start m_io_service.run() in (num_threads-1) threads for thread-pooling
+			threads.clear();
+			for (size_t c = 1; c<config.num_threads; ++c) {
+				threads.emplace_back([this]() {
+					std::cout << "Starting thread #" << std::this_thread::get_id << std::endl
+					io_service.run();
+				});
+			}
+
+			//Main thread
+			io_service.run();
+
+			//Wait for the rest of the threads, if any, to finish as well
+			for (auto& t : threads) {
+				t.join();
+			}
         }
         
         void stop() {
@@ -203,10 +203,9 @@ namespace wsgi_boost {
         size_t timeout_content;
 
 		std::string host_name;
-		unsigned short port;
         
         ServerBase(unsigned short port, size_t num_threads, size_t timeout_request, size_t timeout_send_or_receive) : 
-                config(port, num_threads), acceptor(io_service), port(port),
+                config(port, num_threads), acceptor(io_service),
                 timeout_request(timeout_request), timeout_content(timeout_send_or_receive) {}
         
         virtual void accept()=0;
@@ -218,7 +217,7 @@ namespace wsgi_boost {
 				response,
 				server_name,
 				host_name,
-				port,
+				config.port,
 				request->http_version,
 				request->method,
 				request->path,
@@ -239,18 +238,10 @@ namespace wsgi_boost {
 			}
 			catch (const std::exception& ex)
 			{
-				BOOST_LOG_TRIVIAL(error) << ex.what();
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error!");
 			}
-			if (request_handler.status[0] != '5')
-			{
-				BOOST_LOG_TRIVIAL(info) << request->method << " " << request->path << ": " << request_handler.status;
-			}
-			else
-			{
-				BOOST_LOG_TRIVIAL(error) << request->method << " " << request->path << ": " << request_handler.status;
-			}			
+			std::cout << std::this_thread::get_id << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
 		}
         
 		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<typename ServerBase<socket_type>::Request> request)
@@ -271,18 +262,10 @@ namespace wsgi_boost {
 			}
 			catch (const std::exception& ex)
 			{
-				BOOST_LOG_TRIVIAL(error) << ex.what();
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error while handling static request!");
 			}
-			if (request_handler.status[0] != '5')
-			{
-				BOOST_LOG_TRIVIAL(info) << request->method << " " << request->path << ": " << request_handler.status;
-			}
-			else
-			{
-				BOOST_LOG_TRIVIAL(error) << request->method << " " << request->path << ": " << request_handler.status;
-			}
+			std::cout << std::this_thread::get_id << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
 		}
 
         std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {
