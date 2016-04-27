@@ -22,6 +22,44 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
+#pragma region functions
+
+	// Wraps a raw PyObject* into a boost::python::object
+	inline boost::python::object get_python_object(PyObject* pyobj)
+	{
+		return boost::python::object(boost::python::handle<>(pyobj));
+	};
+
+
+	// Converts POSIX time to HTTP header format
+	std::string time_to_header(std::time_t posix_time);
+
+
+	// Parses HTTP "time" headers to POSIX time
+	std::time_t header_to_time(const std::string& time_string);
+
+
+	// Splits a full path into a path proper and a query string
+	std::pair<std::string, std::string> split_path(const std::string& path);
+
+
+	// Transform a HTTP header to WSGI environ format HTTP_
+	std::string transform_header(std::string header);
+
+
+	// Get current timezone time as string
+	std::string get_current_local_time();
+
+
+	inline std::string get_current_gmt_time()
+	{
+		return time_to_header(std::time(nullptr));
+	};
+
+#pragma endregion
+
+#pragma region classes
+
 	class StringQueue
 	{
 	private:
@@ -29,37 +67,11 @@ namespace wsgi_boost
 		std::queue<std::string> m_queue;
 
 	public:
-		void push(std::string item)
-		{
-			m_mutex.lock();
-			m_queue.push(item);
-			m_mutex.unlock();
-		}
+		void push(std::string item);
 
-		std::string pop()
-		{
-			std::string tmp;
-			m_mutex.lock();
-			tmp = m_queue.front();
-			m_queue.pop();
-			m_mutex.unlock();
-			return tmp;
-		}
+		std::string pop();
 
-		bool is_empty()
-		{
-			bool tmp;
-			m_mutex.lock();
-			tmp = m_queue.empty();
-			m_mutex.unlock();
-			return tmp;
-		}
-	};
-
-	// Wraps a raw PyObject* into a boost::python::object
-	inline boost::python::object get_python_object(PyObject* pyobj)
-	{
-		return boost::python::object(boost::python::handle<>(pyobj));
+		bool is_empty();
 	};
 
 
@@ -87,29 +99,6 @@ namespace wsgi_boost
 	};
 
 
-	// Converts POSIX time to HTTP header format
-	std::string time_to_header(std::time_t posix_time);
-
-
-	// Parses HTTP "time" headers to POSIX time
-	std::time_t header_to_time(const std::string& time_string);
-
-	// Splits a full path into a path proper and a query string
-	std::pair<std::string, std::string> split_path(const std::string& path);	
-
-	// Transform a HTTP header to WSGI environ format HTTP_
-	std::string transform_header(std::string header);
-
-	// Get current timezone time as string
-	std::string get_current_local_time();
-
-
-	inline std::string get_current_gmt_time()
-	{
-		return time_to_header(std::time(nullptr));
-	};
-
-
 	// Allocate and automacially deallocate a buffer of char
 	struct SafeCharBuffer
 	{
@@ -130,7 +119,6 @@ namespace wsgi_boost
 	private:
 		PyThreadState* m_state;
 	};
-
 
 	// Scoped GIL acquire
 	class GilAcquire
@@ -1167,3 +1155,4 @@ namespace wsgi_boost
 		};
 	};
 }
+#pragma endregion

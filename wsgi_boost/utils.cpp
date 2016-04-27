@@ -4,6 +4,36 @@ using namespace std;
 
 namespace wsgi_boost
 {
+#pragma region StringQueue
+
+	void StringQueue::push(string item)
+	{
+		m_mutex.lock();
+		m_queue.push(item);
+		m_mutex.unlock();
+	}
+
+	string StringQueue::pop()
+	{
+		std::string tmp;
+		m_mutex.lock();
+		tmp = m_queue.front();
+		m_queue.pop();
+		m_mutex.unlock();
+		return tmp;
+	}
+
+	bool String::Queue::is_empty()
+	{
+		bool tmp;
+		m_mutex.lock();
+		tmp = m_queue.empty();
+		m_mutex.unlock();
+		return tmp;
+	}
+
+#pragma endregion
+
 	string time_to_header(time_t posix_time)
 	{
 		stringstream ss;

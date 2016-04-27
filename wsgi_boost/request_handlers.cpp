@@ -97,8 +97,8 @@ namespace wsgi_boost
 					if (ifs)
 					{
 						time_t last_modified = fs::last_write_time(path);
-						auto ims_iter = m_request->header.find("If-Modified-Since");
-						if (ims_iter != m_request->header.end() && last_modified > header_to_time(ims_iter->second))
+						string ims = m_request->get_header("If-Modified-Since");
+						if (ims != "" && last_modified > header_to_time(ims))
 						{
 							status = "304 Not Modified";
 							send_status();
@@ -108,8 +108,7 @@ namespace wsgi_boost
 						string mime = mime_types[path.extension().string()];
 						out_headers.emplace_back("Content-Type", mime);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
-						auto ae_iter = m_request->header.find("Accept-Encoding");
-						if (mime_types.is_compressable(mime) && ae_iter != m_request->header.end() && ae_iter->second.find("gzip") != std::string::npos)
+						if (mime_types.is_compressable(mime) && m_request->check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
@@ -217,15 +216,15 @@ namespace wsgi_boost
 		pair<string, string> path_and_query = split_path(m_request->path);
 		m_environ["PATH_INFO"] = path_and_query.first;
 		m_environ["QUERY_STRING"] = path_and_query.second;
-		auto ct_iter = m_request->header.find("Content-Type");
-		if (ct_iter != m_request->header.end())
+		string ct = m_request->get_header("Content-Type");
+		if (ct != "")
 		{
-			m_environ["CONTENT_TYPE"] = ct_iter->second;
+			m_environ["CONTENT_TYPE"] = ct;
 		}
-		auto cl_iter = m_request->header.find("Content-Length");
-		if (cl_iter != m_request->header.end())
+		string cl = m_request->get_header("Content-Length");
+		if (cl != "")
 		{
-			m_environ["CONTENT_LENGTH"] = cl_iter->second;
+			m_environ["CONTENT_LENGTH"] = cl;
 		}
 		m_environ["SERVER_NAME"] = m_request->host_name;
 		m_environ["SERVER_PORT"] = to_string(m_request->local_endpoint_port);
