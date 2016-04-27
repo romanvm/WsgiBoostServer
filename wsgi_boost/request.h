@@ -89,13 +89,6 @@ namespace wsgi_boost
 			catch (const std::exception& e) {}
 		}
 
-		// Check if certain header is present
-		bool check_header(const std::string& hdr)
-		{
-			auto iter = header.find(hdr);
-			return iter != header.end();
-		}
-
 		// Check if a certain header is present and includes a requested string
 		bool check_header(const std::string& hdr, const std::string& val)
 		{

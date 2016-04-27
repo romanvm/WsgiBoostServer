@@ -201,6 +201,10 @@ namespace wsgi_boost
 			send_status("500: Internal server error! WSGI application is not set.");
 			return;
 		}
+		if (m_request->check_header("Expect", "100-continue"))
+		{
+			m_response << "HTTP/" << m_request->http_version << " 100 Continue\r\n\r\n";
+		}
 		prepare_environ();
 		py::object args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
 		Iterator iterable{ get_python_object(PyEval_CallObject(m_app.ptr(), args.ptr())) };
