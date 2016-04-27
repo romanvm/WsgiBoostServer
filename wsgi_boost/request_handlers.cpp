@@ -177,7 +177,8 @@ namespace wsgi_boost
 		{
 			if (!exc_info.is_none())
 			{
-				PyErr_Print();
+				py::object format_exc = py::import("traceback").attr("format_exc")();
+				cerr << py::extract<char*>(format_exc) << endl;
 				exc_info = py::object();
 			}
 			this->status = py::extract<char*>(status);
