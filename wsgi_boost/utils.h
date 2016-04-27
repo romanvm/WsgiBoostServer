@@ -58,10 +58,8 @@ namespace wsgi_boost
 	// Parses HTTP "time" headers to POSIX time
 	std::time_t header_to_time(const std::string& time_string);
 
-
-	// Get a query string from a URL path
-	std::string get_query_string(const std::string& path);
-
+	// Splits a full path into a path proper and a query string
+	std::pair<std::string, std::string> split_path(const std::string& path);	
 
 	// Transform a HTTP header to WSGI environ format HTTP_
 	std::string transform_header(std::string header);

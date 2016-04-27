@@ -184,7 +184,7 @@ namespace wsgi_boost {
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error!");
 			}
-			std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
+			//std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
 		}
         
 		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<Request> request)
@@ -200,7 +200,7 @@ namespace wsgi_boost {
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error while handling static request!");
 			}
-			std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
+			//std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
 		}
 
         std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {

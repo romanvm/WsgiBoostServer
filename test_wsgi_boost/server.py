@@ -19,16 +19,15 @@ import wsgi_boost
 
 def simple_app(environ, start_response):
     """Simplest possible application object"""
-    text = 'Hello World!\nI love you!\n\n'
-    text += 'POST data: {0}\n\n'.format(environ['wsgi.input'].read())
-    text += 'environ variables:\n'
+    content = 'Hello World!\n\n'
+    content += 'POST data: {0}\n\n'.format(environ['wsgi.input'].read())
+    content += 'environ variables:\n'
     for key, value in environ.iteritems():
-        text += '{0}: {1}\n'.format(key, value)
+        content += '{0}: {1}\n'.format(key, value)
     status = '200 OK'
-    content = StringIO(text)
-    response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(text)))]
+    response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))]
     start_response(status, response_headers)
-    return content
+    return [content]
 
 
 print('Startig WsgiBoost server...')

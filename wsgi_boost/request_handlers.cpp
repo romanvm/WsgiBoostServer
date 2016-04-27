@@ -213,8 +213,9 @@ namespace wsgi_boost
 		m_environ["SERVER_SOFTWARE"] = m_request->server_name;
 		m_environ["REQUEST_METHOD"] = m_request->method;
 		m_environ["SCRIPT_NAME"] = "";
-		m_environ["PATH_INFO"] = m_request->path;
-		m_environ["QUERY_STRING"] = get_query_string(m_request->path);
+		pair<string, string> path_and_query = split_path(m_request->path);
+		m_environ["PATH_INFO"] = path_and_query.first;
+		m_environ["QUERY_STRING"] = path_and_query.second;
 		auto ct_iter = m_request->header.find("Content-Type");
 		if (ct_iter != m_request->header.end())
 		{

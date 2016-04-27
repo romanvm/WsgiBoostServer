@@ -23,15 +23,16 @@ namespace wsgi_boost
 	}
 
 
-	string get_query_string(const string& path)
+	pair<string, string> split_path(const string& path)
 	{
 		size_t pos = path.find("?");
-		if (pos != string::npos && pos + 1 < path.length())
+		if (pos != string::npos)
 		{
-			return path.substr(pos + 1);
+			return pair<string, string>{path.substr(0, pos), path.substr(pos + 1)};
 		}
-		return "";
+		return pair<string, string>(path, "");
 	}
+
 
 	string transform_header(string header)
 	{
