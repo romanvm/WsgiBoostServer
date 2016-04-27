@@ -40,6 +40,7 @@ SOFTWARE.
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <atomic>
 
 
 namespace wsgi_boost {
@@ -120,6 +121,8 @@ namespace wsgi_boost {
 				});
 			}
 
+			is_running = true;
+
 			//Main thread
 			io_service.run();
 
@@ -132,6 +135,7 @@ namespace wsgi_boost {
         void stop() {
             acceptor.close();
             io_service.stop();
+			is_running = false;
         }
 
 		void add_static_route(std::string path, std::string content_dir)
@@ -145,6 +149,8 @@ namespace wsgi_boost {
 		}
 
     protected:
+		std::atomic_bool is_running = false;
+
 		boost::python::object app;
 
         boost::asio::io_service io_service;
@@ -159,6 +165,12 @@ namespace wsgi_boost {
         ServerBase(unsigned short port, size_t num_threads, size_t timeout_request, size_t timeout_send_or_receive) : 
                 config(port, num_threads), acceptor(io_service),
                 timeout_request(timeout_request), timeout_content(timeout_send_or_receive) {}
+
+		virtual ~ServerBase()
+		{
+			if (is_running)
+				stop();
+		}
         
         virtual void accept()=0;
 
