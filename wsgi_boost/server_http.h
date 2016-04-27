@@ -41,6 +41,7 @@ SOFTWARE.
 #include <iostream>
 #include <sstream>
 #include <atomic>
+#include <cstdio>
 
 
 namespace wsgi_boost {
@@ -135,7 +136,7 @@ namespace wsgi_boost {
 					{
 						if (!this->msg_queue.is_empty())
 						{
-							std::cout << msg_queue.pop();
+							puts(msg_queue.pop().c_str());
 						}
 					}
 				}
@@ -216,8 +217,9 @@ namespace wsgi_boost {
 			}
 			if (logging)
 			{
+				GilRelease release_gil;
 				std::ostringstream ss;
-				ss << "[" << get_current_local_time() << "] " << request->method << " " << request->path << " : " << request_handler.status << std::endl;
+				ss << "[" << get_current_local_time() << "] " << request->method << " " << request->path << " : " << request_handler.status;
 				msg_queue.push(ss.str());
 			}
 		}
@@ -238,7 +240,7 @@ namespace wsgi_boost {
 			if (logging)
 			{
 				std::ostringstream ss;
-				ss << "[" << get_current_local_time() << "] " << request->method << " " << request->path << " : " << request_handler.status << std::endl;
+				ss << "[" << get_current_local_time() << "] " << request->method << " " << request->path << " : " << request_handler.status;
 				msg_queue.push(ss.str());
 			}
 		}

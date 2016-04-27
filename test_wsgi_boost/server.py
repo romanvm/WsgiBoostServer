@@ -31,7 +31,7 @@ def simple_app(environ, start_response):
 
 print('Startig WsgiBoost server...')
 httpd =  wsgi_boost.WsgiBoostHttp(8000, 4)
-#httpd.logging = True
+httpd.logging = True
 httpd.add_static_route('^/static', cwd)
 httpd.set_app(simple_app)
 server_thread = threading.Thread(target=httpd.start)

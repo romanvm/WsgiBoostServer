@@ -29,7 +29,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		"WsgiBoostHttp(port, num_threads=1, timeout_request=5, timeout_content=300)\n\n"
 
-		"A PEP333-compliant WSGI server\n\n"
+		"PEP333-compliant multi-threaded WSGI server\n\n"
 
 		"The server is able to serve both Python WSGI applications and static files.\n"
 		"For static files gzip compression and 'If-Modified-Since' headers are supported.\n\n"
@@ -72,12 +72,14 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		init<unsigned short, optional<size_t, size_t, size_t>>(args("port", "num_threads", "timeout_request", "timeout_content")))
 
-		.def_readonly("name", &HttpServer::server_name, "Server name")
+		.def_readonly("name", &HttpServer::server_name, "Get server name")
 
 		.def_readwrite("logging", &HttpServer::logging,
-			"Enable logging into console (default: ``False``)\n\n"
+			"Get or set logging state (default: ``False``)\n\n"
 
-			".. warning:: Enabling logging may have significant performance impact."
+			"When set to ``True`` server logs to the console basic request data.\n\n"
+
+			".. warning:: Enabling logging may have impact on server performance."
 		)
 
 		.def("start", &HttpServer::start, "Start processing HTTP requests")
