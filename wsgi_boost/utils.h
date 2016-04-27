@@ -60,6 +60,25 @@ namespace wsgi_boost
 
 #pragma region classes
 
+	class InputWrapper
+	{
+	private:
+		std::istream& m_is;
+
+	public:
+		InputWrapper(std::istream& is) : m_is{ is } {}
+
+		std::string read(size_t size = 0);
+
+		std::string readline();
+
+		boost::python::list readlines(size_t hint = 0);
+
+		InputWrapper iter();
+
+		std::string next();
+	};
+
 	class StringQueue
 	{
 	private:
