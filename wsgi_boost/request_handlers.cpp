@@ -171,25 +171,27 @@ namespace wsgi_boost
 	WsgiRequestHandler::WsgiRequestHandler(ostream& response, std::shared_ptr<Request> request, py::object& app) :
 		BaseRequestHandler(response, request), m_app{ app }
 	{
-		std::function<void(py::str, py::list, py::object)> sr{
+		std::function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
-		{
-			if (!exc_info.is_none())
 			{
-				py::object format_exc = py::import("traceback").attr("format_exc")();
-				cerr << py::extract<char*>(format_exc) << endl;
-				exc_info = py::object();
+				if (!exc_info.is_none())
+				{
+					py::object format_exc = py::import("traceback").attr("format_exc")();
+					cerr << py::extract<char*>(format_exc) << endl;
+					exc_info = py::object();
+				}
+				this->status = py::extract<char*>(status);
+				for (size_t i = 0; i < py::len(headers); ++i)
+				{
+					py::object header = headers[i];
+					this->out_headers.emplace_back(py::extract<char*>(header[0]), py::extract<char*>(header[1]));
+				}
+				return py::import("io").attr("BytesIO");
 			}
-			this->status = py::extract<char*>(status);
-			for (size_t i = 0; i < py::len(headers); ++i)
-			{
-				py::object header = headers[i];
-				this->out_headers.emplace_back(py::extract<char*>(header[0]), py::extract<char*>(header[1]));
-			}
-		} };
+		};
 		m_start_response = py::make_function(sr, py::default_call_policies(),
 			(py::arg("status"), "headers", py::arg("exc_info") = py::object()),
-			boost::mpl::vector<void, py::str, py::list, py::object>());
+			boost::mpl::vector<py::object, py::str, py::list, py::object>());
 	}
 
 
