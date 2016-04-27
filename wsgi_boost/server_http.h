@@ -93,6 +93,12 @@ namespace wsgi_boost {
     public:
 		std::string server_name = "http WsgiBoost Server v." WSGI_BOOST_VERSION;
 
+		std::atomic_bool is_running = false;
+
+		StringQueue msg_queue;
+
+		bool logging = false;
+
         void start() {
 			GilRelease release_gil;
 
@@ -123,6 +129,18 @@ namespace wsgi_boost {
 
 			is_running = true;
 
+			std::thread log_thread{ [this]()
+				{
+					while (this->is_running)
+					{
+						if (!this->msg_queue.is_empty())
+						{
+							std::cout << msg_queue.pop();
+						}
+					}
+				}
+			};
+
 			//Main thread
 			io_service.run();
 
@@ -130,6 +148,8 @@ namespace wsgi_boost {
 			for (auto& t : threads) {
 				t.join();
 			}
+
+			log_thread.join();
         }
         
         void stop() {
@@ -149,8 +169,6 @@ namespace wsgi_boost {
 		}
 
     protected:
-		std::atomic_bool is_running = false;
-
 		boost::python::object app;
 
         boost::asio::io_service io_service;
@@ -196,7 +214,12 @@ namespace wsgi_boost {
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error!");
 			}
-			//std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
+			if (logging)
+			{
+				std::ostringstream ss;
+				ss << "[" << get_current_local_time() << "] " << request->method << " " << request->path << " : " << request_handler.status << std::endl;
+				msg_queue.push(ss.str());
+			}
 		}
         
 		void handle_static_request(typename ServerBase<socket_type>::Response& response, std::shared_ptr<Request> request)
@@ -212,8 +235,14 @@ namespace wsgi_boost {
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error while handling static request!");
 			}
-			//std::cout << std::this_thread::get_id() << ": [" << get_current_local_time() << "] " << request->method << " " << request->path << ": " << request_handler.status << std::endl;
+			if (logging)
+			{
+				std::ostringstream ss;
+				ss << "[" << get_current_local_time() << "] " << request->method << " " << request->path << " : " << request_handler.status << std::endl;
+				msg_queue.push(ss.str());
+			}
 		}
+		
 
         std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {
             std::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(io_service));

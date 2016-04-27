@@ -18,7 +18,6 @@ import wsgi_boost
 
 
 def simple_app(environ, start_response):
-    """Simplest possible application object"""
     content = 'Hello World!\n\n'
     content += 'POST data: {0}\n\n'.format(environ['wsgi.input'].read())
     content += 'environ variables:\n'
@@ -32,6 +31,7 @@ def simple_app(environ, start_response):
 
 print('Startig WsgiBoost server...')
 httpd =  wsgi_boost.WsgiBoostHttp(8000, 4)
+#httpd.logging = True
 httpd.add_static_route('^/static', cwd)
 httpd.set_app(simple_app)
 server_thread = threading.Thread(target=httpd.start)

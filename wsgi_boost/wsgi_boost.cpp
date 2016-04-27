@@ -32,7 +32,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"A PEP333-compliant WSGI server\n\n"
 
 		"The server is able to serve both Python WSGI applications and static files.\n"
-		"For static files gzip compression and 'If-Modified-Since headers are supported.\n\n"
+		"For static files gzip compression and 'If-Modified-Since' headers are supported.\n\n"
 
 		"Usage::\n\n"
 
@@ -73,6 +73,12 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		init<unsigned short, optional<size_t, size_t, size_t>>(args("port", "num_threads", "timeout_request", "timeout_content")))
 
 		.def_readonly("name", &HttpServer::server_name, "Server name")
+
+		.def_readwrite("logging", &HttpServer::logging,
+			"Enable logging into console (default: ``False``)\n\n"
+
+			".. warning:: Enabling logging may have significant performance impact."
+		)
 
 		.def("start", &HttpServer::start, "Start processing HTTP requests")
 

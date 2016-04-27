@@ -16,10 +16,46 @@ License: MIT, see License.txt
 #include <unordered_map>
 #include <array>
 #include <cctype>
+#include <mutex>
+#include <queue>
 
 
 namespace wsgi_boost
 {
+	class StringQueue
+	{
+	private:
+		std::mutex m_mutex;
+		std::queue<std::string> m_queue;
+
+	public:
+		void push(std::string item)
+		{
+			m_mutex.lock();
+			m_queue.push(item);
+			m_mutex.unlock();
+		}
+
+		std::string pop()
+		{
+			std::string tmp;
+			m_mutex.lock();
+			tmp = m_queue.front();
+			m_queue.pop();
+			m_mutex.unlock();
+			return tmp;
+		}
+
+		bool is_empty()
+		{
+			bool tmp;
+			m_mutex.lock();
+			tmp = m_queue.empty();
+			m_mutex.unlock();
+			return tmp;
+		}
+	};
+
 	// Wraps a raw PyObject* into a boost::python::object
 	inline boost::python::object get_python_object(PyObject* pyobj)
 	{
