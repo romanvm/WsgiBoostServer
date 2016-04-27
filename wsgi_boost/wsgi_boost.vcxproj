@@ -172,6 +172,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="exceptions.h" />
     <ClInclude Include="request_handlers.h" />
     <ClInclude Include="request.h" />
     <ClInclude Include="server_http.h" />

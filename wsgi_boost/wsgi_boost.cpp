@@ -15,6 +15,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 {
 	PyEval_InitThreads(); // Initialize GIL
 
+	register_exception_translator<StopIteration>(&stop_iteration_translator);
 	
 	scope current;
 	current.attr("__doc__") = "This module provides WSGI/HTTP server class";
@@ -23,7 +24,6 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	current.attr("__email__") = "romanvm@yandex.ua";
 	current.attr("__license__") = "MIT";
 	
-
 
 	class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
 
