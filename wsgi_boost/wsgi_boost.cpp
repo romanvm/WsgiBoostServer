@@ -82,6 +82,12 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			".. warning:: Enabling logging may have impact on server performance."
 		)
 
+		.def_readwrite("url_scheme", &HttpServer::url_scheme,
+			"Get os set url scheme -- http or https.\n\n"
+
+			"Default: ``'http'``"
+			)
+
 		.def("start", &HttpServer::start, "Start processing HTTP requests")
 
 		.def("stop", &HttpServer::stop, "Stop processing HTTP requests")

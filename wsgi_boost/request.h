@@ -66,6 +66,7 @@ namespace wsgi_boost
 		std::string remote_endpoint_address;
 		std::string server_name;
 		std::string host_name;
+		std::string url_scheme;
 
 		Content content;
 

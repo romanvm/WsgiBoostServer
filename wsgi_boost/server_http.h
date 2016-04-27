@@ -92,7 +92,9 @@ namespace wsgi_boost {
 		std::vector<std::pair<boost::regex, std::string>> static_routes;
         
     public:
-		std::string server_name = "http WsgiBoost Server v." WSGI_BOOST_VERSION;
+		std::string server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
+
+		std::string url_scheme = "http";
 
 		std::atomic_bool is_running = false;
 
@@ -198,6 +200,7 @@ namespace wsgi_boost {
 			request->server_name = server_name;
 			request->host_name = host_name;
 			request->local_endpoint_port = config.port;
+			request->url_scheme = url_scheme;
 			GilAcquire acquire_gil;
 			WsgiRequestHandler request_handler{ response, request, app };
 			try

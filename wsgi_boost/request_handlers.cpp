@@ -247,7 +247,7 @@ namespace wsgi_boost
 			}
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
-		m_environ["wsgi.url_scheme"] = m_request->server_name.substr(0, 4);
+		m_environ["wsgi.url_scheme"] = m_request->url_scheme;
 		py::object input = py::import("io").attr("BytesIO")(m_request->content.string());
 		m_environ["wsgi.input"] = input;
 		py::object errors = py::import("sys").attr("stderr");
@@ -255,6 +255,7 @@ namespace wsgi_boost
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
+		m_environ["wsgi.file_wrapper"] = py::import("wsgiref.util").attr("FileWrapper");
 	}
 
 	void WsgiRequestHandler::send_iterable(Iterator& iterable)
