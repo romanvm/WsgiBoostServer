@@ -7,7 +7,6 @@ License: MIT, see License.txt
 */
 
 #include "utils.h"
-#include "request.h"
 
 #include <boost/regex.hpp>
 #include <boost/python.hpp>

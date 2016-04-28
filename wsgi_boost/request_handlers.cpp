@@ -252,7 +252,7 @@ namespace wsgi_boost
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request->url_scheme;
-		py::object input = py::import("io").attr("BytesIO")(m_request->content.string());
+		InputWrapper input{ m_request->content };
 		m_environ["wsgi.input"] = input;
 		py::object errors = py::import("sys").attr("stderr");
 		m_environ["wsgi.errors"] = errors;

@@ -5,6 +5,7 @@ Various utility functions
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
+#include "request.h"
 #include "exceptions.h"
 
 #include <boost/algorithm/string.hpp>
@@ -64,20 +65,22 @@ namespace wsgi_boost
 	class InputWrapper
 	{
 	private:
-		std::istream& m_is;
+		Content& m_is;
 
 	public:
-		InputWrapper(std::istream& is) : m_is{ is } {}
+		explicit InputWrapper(Content& is) : m_is{ is } {}
 
 		std::string read(size_t size = 0);
 
-		std::string readline();
+		std::string readline(size_t size = 0);
 
 		boost::python::list readlines(size_t hint = 0);
 
-		InputWrapper iter();
+		InputWrapper* iter();
 
 		std::string next();
+
+		size_t len();
 	};
 
 	class StringQueue

@@ -23,6 +23,9 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	current.attr("__author__") = "Roman Miroshnychenko";
 	current.attr("__email__") = "romanvm@yandex.ua";
 	current.attr("__license__") = "MIT";
+	list all;
+	all.append("WsgiBoostHttp");
+	current.attr("__all__") = all;
 	
 
 	class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
@@ -115,5 +118,18 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 			":param app: an application to be served as an executable object"
 		)
+		;
+
+	class_<InputWrapper>("InputWrapper", no_init)
+		.def("read", &InputWrapper::read, (arg("size")=0))
+		.def("readline", &InputWrapper::readline, (arg("size") = 0))
+		.def("readlines", &InputWrapper::readlines, (arg("size") = 0))
+		.def("__iter__", &InputWrapper::iter, return_value_policy<manage_new_object>())
+#if PY_MAJOR_VERSION < 3
+		.def("next", &InputWrapper::next)
+#else
+		.def("__next__", &InputWrapper::next)
+#endif
+		.def("__len__", &InputWrapper::len)
 		;
 }
