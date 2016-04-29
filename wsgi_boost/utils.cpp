@@ -20,9 +20,8 @@ namespace wsgi_boost
 
 	string InputWrapper::readline(size_t size)
 	{
-		SafeCharBuffer buffer{ m_is.size() };
-		m_is.getline(buffer.data, m_is.size());
-		string ret{ buffer.data };
+		string ret;
+		getline(m_is, ret);
 		if (m_is.good())
 			ret += "\n";
 		if (size > 0 && ret.length() > size)
