@@ -39,7 +39,7 @@ namespace wsgi_boost
 
 	class Content : public std::istream {
 	public:
-		Content(boost::asio::streambuf &streambuf) : std::istream(&streambuf), streambuf(streambuf) {}
+		explicit Content(boost::asio::streambuf &streambuf) : std::istream(&streambuf), streambuf(streambuf) {}
 
 		size_t size() {
 			return streambuf.size();
@@ -57,7 +57,7 @@ namespace wsgi_boost
 
 
 	struct Request {
-		Request(boost::asio::io_service &io_service) : content(streambuf), strand(io_service) {}
+		explicit Request(boost::asio::io_service &io_service) : content(streambuf), strand(io_service) {}
 
 		std::string method;
 		std::string path;

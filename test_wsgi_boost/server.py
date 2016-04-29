@@ -6,9 +6,7 @@ import os
 import sys
 import threading
 import time
-from wsgiref.validate import validator
-from cStringIO import StringIO
-from waitress import serve
+import atexit
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 wsgi_boost_dir = os.path.join(os.path.dirname(cwd), 'wsgi_boost')
@@ -32,6 +30,7 @@ def simple_app(environ, start_response):
 print('Startig WsgiBoost server...')
 httpd =  wsgi_boost.WsgiBoostHttp(8000, 4)
 httpd.logging = True
+httpd.abort_on_errors = True
 httpd.add_static_route('^/static', cwd)
 httpd.set_app(simple_app)
 server_thread = threading.Thread(target=httpd.start)
@@ -48,5 +47,3 @@ finally:
     httpd.stop()
     server_thread.join()
 print('WsgiBoost server stopped.')
-
-# serve(simple_app, host='0.0.0.0', port=8000)

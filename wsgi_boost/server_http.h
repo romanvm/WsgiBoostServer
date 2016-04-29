@@ -2,6 +2,8 @@
 /*
 Core HTTP server engine
 
+Based on: https://github.com/eidheim/Simple-Web-Server
+
 =====================
 The MIT License (MIT)
 
@@ -102,6 +104,8 @@ namespace wsgi_boost {
 
 		bool logging = false;
 
+		bool abort_on_errors = false;
+
         void start() {
 			GilRelease release_gil;
 
@@ -171,6 +175,7 @@ namespace wsgi_boost {
 			app = app_;
 		}
 
+
     protected:
 		boost::python::object app;
 
@@ -212,11 +217,22 @@ namespace wsgi_boost {
 				PyErr_Print();
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: WSGI application error!");
+				if (abort_on_errors)
+				{
+					std::cerr << "Stopping server because of a Python error..." << std::endl;
+					stop();
+				}				
 			}
 			catch (const std::exception& ex)
 			{
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error!");
+				if (abort_on_errors)
+				{
+					std::cerr << "Stopping server because of a program error..." << std::endl;
+					std::cerr << ex.what() << std::endl;
+					stop();
+				}
 			}
 			if (logging)
 			{
@@ -239,6 +255,12 @@ namespace wsgi_boost {
 			{
 				request_handler.status = "500 Internal Server Error";
 				request_handler.send_status("Error 500: Internal server error while handling static request!");
+				if (abort_on_errors)
+				{
+					std::cerr << "Stopping server because of a program error..." << std::endl;
+					std::cerr << ex.what() << std::endl;
+					stop();
+				}
 			}
 			if (logging)
 			{

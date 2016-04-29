@@ -77,6 +77,8 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		.def_readonly("name", &HttpServer::server_name, "Get server name")
 
+		.def_readonly("is_running", &HttpServer::is_running, "Get running status")
+
 		.def_readwrite("logging", &HttpServer::logging,
 			"Get or set logging state (default: ``False``)\n\n"
 
@@ -89,6 +91,12 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			"Get os set url scheme -- http or https.\n\n"
 
 			"Default: ``'http'``"
+			)
+
+		.def_readwrite("abort_on_errors", &HttpServer::abort_on_errors,
+			"Get or set ``abort_on_errors`` flag\n\n"
+
+			"If ``True`` the server stops in case of any errors. Default: ``False``."
 			)
 
 		.def("start", &HttpServer::start, "Start processing HTTP requests")
