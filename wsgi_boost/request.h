@@ -1,3 +1,13 @@
+/*
+Request and related classes
+
+Based on: https://github.com/eidheim/Simple-Web-Server
+
+Copyright (c) 2014 Ole Christian Eidheim
+Copyright (c) 2016 Roman Miroshnychenko (modified version)
+
+License: MIT, see License.txt
+*/
 #pragma once
 
 #include <boost/algorithm/string.hpp>
@@ -37,15 +47,18 @@ namespace wsgi_boost
 	};
 
 
-	class Content : public std::istream {
+	class Content : public std::istream
+	{
 	public:
 		explicit Content(boost::asio::streambuf &streambuf) : std::istream(&streambuf), streambuf(streambuf) {}
 
-		size_t size() {
+		size_t size()
+		{
 			return streambuf.size();
 		}
 
-		std::string string() {
+		std::string string()
+		{
 			std::stringstream ss;
 			ss << rdbuf();
 			return ss.str();
@@ -56,7 +69,8 @@ namespace wsgi_boost
 	};
 
 
-	struct Request {
+	struct Request
+	{
 		explicit Request(boost::asio::io_service &io_service) : content(streambuf), strand(io_service) {}
 
 		std::string method;
@@ -81,8 +95,10 @@ namespace wsgi_boost
 
 		boost::asio::strand strand;
 
-		void read_remote_endpoint_data(boost::asio::ip::tcp::socket& socket) {
-			try {
+		void read_remote_endpoint_data(boost::asio::ip::tcp::socket& socket)
+		{
+			try
+			{
 				remote_endpoint_address = socket.lowest_layer().remote_endpoint().address().to_string();
 				remote_endpoint_port = socket.lowest_layer().remote_endpoint().port();
 			}

@@ -50,8 +50,10 @@ namespace wsgi_boost {
     template <class socket_type>
     class ServerBase {
     public:
-		class Response : public std::ostream {
+		class Response : public std::ostream
+		{
 			friend class ServerBase<socket_type>;
+
 		private:
 			boost::asio::yield_context& yield;
 
@@ -63,10 +65,12 @@ namespace wsgi_boost {
 				std::ostream(&streambuf), yield(yield), socket(socket) {}
 
 		public:
-			size_t size() {
+			size_t size()
+			{
 				return streambuf.size();
 			}
-			void flush() {
+			void flush()
+			{
 				boost::system::error_code ec;
 				boost::asio::async_write(socket, streambuf, yield[ec]);
 
@@ -75,11 +79,14 @@ namespace wsgi_boost {
 			}
 		};
 
-        class Config {
+        class Config
+		{
             friend class ServerBase<socket_type>;
+
         private:
             Config(unsigned short port, size_t num_threads): port(port), num_threads(num_threads), reuse_address(true) {}
             size_t num_threads;
+
         public:
 			unsigned short port;
             ///IPv4 address in dotted decimal form or IPv6 address in hexadecimal notation.
@@ -106,7 +113,8 @@ namespace wsgi_boost {
 
 		bool abort_on_errors = false;
 
-        void start() {
+        void start()
+		{
 			GilRelease release_gil;
 
 			host_name = boost::asio::ip::host_name();
@@ -115,7 +123,7 @@ namespace wsgi_boost {
 				io_service.reset();
 
 			boost::asio::ip::tcp::endpoint endpoint;
-			if (config.address.size()>0)
+			if (config.address.size() > 0)
 				endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(config.address), config.port);
 			else
 				endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), config.port);
@@ -128,8 +136,10 @@ namespace wsgi_boost {
 
 			//If num_threads>1, start m_io_service.run() in (num_threads-1) threads for thread-pooling
 			threads.clear();
-			for (size_t c = 1; c < config.num_threads; ++c) {
-				threads.emplace_back([this]() {
+			for (size_t c = 1; c < config.num_threads; ++c)
+			{
+				threads.emplace_back([this]()
+				{
 					io_service.run();
 				});
 			}
@@ -152,14 +162,16 @@ namespace wsgi_boost {
 			io_service.run();
 
 			//Wait for the rest of the threads, if any, to finish as well
-			for (auto& t : threads) {
+			for (auto& t : threads)
+			{
 				t.join();
 			}
 
 			log_thread.join();
         }
         
-        void stop() {
+        void stop()
+		{
             acceptor.close();
             io_service.stop();
 			is_running = false;
@@ -271,24 +283,30 @@ namespace wsgi_boost {
 		}
 		
 
-        std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds) {
+        std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, size_t seconds)
+		{
             std::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(io_service));
             timer->expires_from_now(boost::posix_time::seconds(seconds));
-            timer->async_wait([socket](const boost::system::error_code& ec){
-                if(!ec) {
-                    boost::system::error_code ec;
-                    socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-                    socket->lowest_layer().close();
-                }
+            timer->async_wait([socket](const boost::system::error_code& ec)
+			{
+				if(!ec)
+				{
+					boost::system::error_code ec;
+					socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+					socket->lowest_layer().close();
+				}
             });
             return timer;
         }
         
-        std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request, size_t seconds) {
+        std::shared_ptr<boost::asio::deadline_timer> set_timeout_on_socket(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request, size_t seconds)
+		{
             std::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(io_service));
             timer->expires_from_now(boost::posix_time::seconds(seconds));
-            timer->async_wait(request->strand.wrap([socket](const boost::system::error_code& ec){
-                if(!ec) {
+            timer->async_wait(request->strand.wrap([socket](const boost::system::error_code& ec)
+			{
+                if(!ec)
+				{
                     boost::system::error_code ec;
                     socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
                     socket->lowest_layer().close();
@@ -297,7 +315,8 @@ namespace wsgi_boost {
             return timer;
         }
         
-        void read_request_and_content(std::shared_ptr<socket_type> socket) {
+        void read_request_and_content(std::shared_ptr<socket_type> socket)
+		{
             //Create new streambuf (Request::streambuf) for async_read_until()
             //shared_ptr is used to pass temporary objects to the asynchronous functions
             std::shared_ptr<Request> request(new Request(io_service));
@@ -305,89 +324,102 @@ namespace wsgi_boost {
 
             //Set timeout on the following boost::asio::async-read or write function
             std::shared_ptr<boost::asio::deadline_timer> timer;
-            if(timeout_request>0)
+            if(timeout_request > 0)
                 timer=set_timeout_on_socket(socket, timeout_request);
                         
             boost::asio::async_read_until(*socket, request->streambuf, "\r\n\r\n",
-                    [this, socket, request, timer](const boost::system::error_code& ec, size_t bytes_transferred) {
-                if(timeout_request>0)
+                    [this, socket, request, timer](const boost::system::error_code& ec, size_t bytes_transferred)
+			{
+                if(timeout_request > 0)
                     timer->cancel();
-                if(!ec) {
+                if(!ec)
+				{
                     //request->streambuf.size() is not necessarily the same as bytes_transferred, from Boost-docs:
                     //"After a successful async_read_until operation, the streambuf may contain additional data beyond the delimiter"
                     //The chosen solution is to extract lines from the stream directly when parsing the header. What is left of the
                     //streambuf (maybe some bytes of the content) is appended to in the async_read-function below (for retrieving content).
-                    size_t num_additional_bytes=request->streambuf.size()-bytes_transferred;
+                    size_t num_additional_bytes = request->streambuf.size() - bytes_transferred;
                     
                     if(!parse_request(request, request->content))
                         return;
                     
-                    //If content, read that as well
-                    auto it=request->header.find("Content-Length");
-                    if(it!=request->header.end()) {
+					std::string cl = request->get_header("Content-Length");
+                    if(cl != "")
+					{
                         //Set timeout on the following boost::asio::async-read or write function
                         std::shared_ptr<boost::asio::deadline_timer> timer;
-                        if(timeout_content>0)
+                        if(timeout_content > 0)
                             timer=set_timeout_on_socket(socket, timeout_content);
                         unsigned long long content_length;
-                        try {
-                            content_length=stoull(it->second);
+                        try
+						{
+                            content_length = stoull(cl);
                         }
-                        catch(const std::exception &e) {
+                        catch(const std::exception &e)
+						{
                             return;
                         }
-                        if(content_length>num_additional_bytes) {
+                        if(content_length > num_additional_bytes)
+						{
                             boost::asio::async_read(*socket, request->streambuf,
-                                    boost::asio::transfer_exactly(content_length-num_additional_bytes),
-                                    [this, socket, request, timer]
-                                    (const boost::system::error_code& ec, size_t /*bytes_transferred*/) {
-                                if(timeout_content>0)
-                                    timer->cancel();
-                                if(!ec)
-                                    find_resource(socket, request);
-                            });
+								boost::asio::transfer_exactly(content_length - num_additional_bytes),
+								[this, socket, request, timer]
+								(const boost::system::error_code& ec, size_t /*bytes_transferred*/)
+								{
+									if(timeout_content > 0)
+										timer->cancel();
+									if(!ec)
+										find_resource(socket, request);
+								});
                         }
                         else {
-                            if(timeout_content>0)
+                            if(timeout_content > 0)
                                 timer->cancel();
                             find_resource(socket, request);
                         }
                     }
-                    else {
+                    else
+					{
                         find_resource(socket, request);
                     }
                 }
             });
         }
 
-        bool parse_request(std::shared_ptr<Request> request, std::istream& stream) const {
+        bool parse_request(std::shared_ptr<Request> request, std::istream& stream) const
+		{
             std::string line;
             getline(stream, line);
             size_t method_end;
-            if((method_end=line.find(' '))!=std::string::npos) {
+            if((method_end=line.find(' ')) != std::string::npos)
+			{
                 size_t path_end;
-                if((path_end=line.find(' ', method_end+1))!=std::string::npos) {
+                if((path_end=line.find(' ', method_end + 1)) != std::string::npos)
+				{
                     request->method=line.substr(0, method_end);
-                    request->path=line.substr(method_end+1, path_end-method_end-1);
+                    request->path=line.substr(method_end + 1, path_end-method_end - 1);
 
                     size_t protocol_end;
-                    if((protocol_end=line.find('/', path_end+1))!=std::string::npos) {
-                        if(line.substr(path_end+1, protocol_end-path_end-1)!="HTTP")
+                    if((protocol_end=line.find('/', path_end+1))!=std::string::npos)
+					{
+                        if(line.substr(path_end + 1, protocol_end-path_end - 1)!="HTTP")
                             return false;
-                        request->http_version=line.substr(protocol_end+1, line.size()-protocol_end-2);
+                        request->http_version=line.substr(protocol_end + 1, line.size() - protocol_end - 2);
                     }
                     else
                         return false;
 
                     getline(stream, line);
                     size_t param_end;
-                    while((param_end=line.find(':'))!=std::string::npos) {
+                    while((param_end=line.find(':')) != std::string::npos)
+					{
                         size_t value_start=param_end+1;
-                        if((value_start)<line.size()) {
+                        if((value_start) < line.size())
+						{
                             if(line[value_start]==' ')
-                                value_start++;
+                                ++value_start;
                             if(value_start<line.size())
-                                request->header.insert(std::make_pair(line.substr(0, param_end), line.substr(value_start, line.size()-value_start-1)));
+                                request->header.insert(std::make_pair(line.substr(0, param_end), line.substr(value_start, line.size() - value_start-1)));
                         }
     
                         getline(stream, line);
@@ -401,7 +433,8 @@ namespace wsgi_boost {
             return true;
         }
 
-        void find_resource(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request) {
+        void find_resource(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request)
+		{
             for(const auto& route: static_routes)
 			{                
                 boost::smatch sm_res;
@@ -416,13 +449,15 @@ namespace wsgi_boost {
             write_response(socket, request);
         }
         
-        void write_response(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request) {
+        void write_response(std::shared_ptr<socket_type> socket, std::shared_ptr<Request> request)
+		{
             //Set timeout on the following boost::asio::async-read or write function
             std::shared_ptr<boost::asio::deadline_timer> timer;
-            if(timeout_content>0)
+            if(timeout_content > 0)
                 timer=set_timeout_on_socket(socket, request, timeout_content);
 
-            boost::asio::spawn(request->strand, [this, socket, request, timer](boost::asio::yield_context yield) {
+            boost::asio::spawn(request->strand, [this, socket, request, timer](boost::asio::yield_context yield)
+			{
                 Response response(*socket, yield);
                 
 				if (request->content_dir == "")
@@ -434,26 +469,31 @@ namespace wsgi_boost {
 					handle_static_request(response, request);
 				}                
                 
-                if(response.size()>0) {
+                if(response.size() > 0)
+				{
                     try {
                         response.flush();
                     }
-                    catch(const std::exception &e) {
+                    catch(const std::exception &e)
+					{
                         return;
                     }
                 }
-                if(timeout_content>0)
+                if(timeout_content > 0)
                     timer->cancel();
                 float http_version;
-                try {
+                try
+				{
                     http_version=stof(request->http_version);
                 }
-                catch(const std::exception &e) {
+                catch(const std::exception &e)
+				{
                     return;
                 }
                 
                 auto range=request->header.equal_range("Connection");
-                for(auto it=range.first;it!=range.second;it++) {
+                for(auto it = range.first; it != range.second; it++)
+				{
                     if(boost::iequals(it->second, "close"))
                         return;
                 }
@@ -469,22 +509,26 @@ namespace wsgi_boost {
     typedef boost::asio::ip::tcp::socket HTTP;
     
     template<>
-    class Server<HTTP> : public ServerBase<HTTP> {
+    class Server<HTTP> : public ServerBase<HTTP>
+	{
     public:
         Server(unsigned short port, size_t num_threads=1, size_t timeout_request=5, size_t timeout_content=300) :
 			ServerBase<HTTP>::ServerBase(port, num_threads, timeout_request, timeout_content) {}
 
     private:
-        void accept() {
+        void accept()
+		{
             //Create new socket for this connection
             //Shared_ptr is used to pass temporary objects to the asynchronous functions
             std::shared_ptr<HTTP> socket(new HTTP(io_service));
                         
-            acceptor.async_accept(*socket, [this, socket](const boost::system::error_code& ec){
+            acceptor.async_accept(*socket, [this, socket](const boost::system::error_code& ec)
+			{
                 //Immediately start accepting a new connection
                 accept();
                                 
-                if(!ec) {
+                if(!ec)
+				{
                     boost::asio::ip::tcp::no_delay option(true);
                     socket->set_option(option);
                     
