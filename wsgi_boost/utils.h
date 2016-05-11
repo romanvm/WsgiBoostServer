@@ -5,7 +5,6 @@ Various utility functions
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
-#include "request.h"
 #include "exceptions.h"
 
 #include <boost/algorithm/string.hpp>
@@ -119,16 +118,6 @@ namespace wsgi_boost
 		{
 			return m_iterator.attr(at.c_str());
 		}
-	};
-
-
-	// Allocate and automacially deallocate a buffer of char
-	struct SafeCharBuffer
-	{
-		char* data;
-
-		explicit SafeCharBuffer(size_t size) : data{ new char[size] } {}
-		~SafeCharBuffer() { delete[] data; }
 	};
 
 

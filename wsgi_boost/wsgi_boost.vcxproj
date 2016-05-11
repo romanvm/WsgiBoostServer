@@ -172,14 +172,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="connection.h" />
     <ClInclude Include="exceptions.h" />
     <ClInclude Include="request_handlers.h" />
     <ClInclude Include="request.h" />
-    <ClInclude Include="server_http.h" />
+    <ClInclude Include="response.h" />
+    <ClInclude Include="server.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="connection.cpp" />
+    <ClCompile Include="request.cpp" />
     <ClCompile Include="request_handlers.cpp" />
+    <ClCompile Include="response.cpp" />
+    <ClCompile Include="server.cpp" />
     <ClCompile Include="utils.cpp" />
     <ClCompile Include="wsgi_boost.cpp" />
   </ItemGroup>

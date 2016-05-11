@@ -2,13 +2,12 @@
 
 #include <boost/python.hpp>
 
-#include <string>
 
 namespace wsgi_boost
 {
 	struct StopIteration : public std::exception {};
 
-	inline void stop_iteration_translator(const StopIteration& ex)
+	void stop_iteration_translator(const StopIteration&)
 	{
 		PyErr_SetString(PyExc_StopIteration, "Stop!");
 	}

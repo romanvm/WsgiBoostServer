@@ -1,188 +1,87 @@
-/*
-Request and related classes
-
-Based on: https://github.com/eidheim/Simple-Web-Server
-
-Copyright (c) 2014 Ole Christian Eidheim
-Copyright (c) 2016 Roman Miroshnychenko (modified version)
-
-License: MIT, see License.txt
-*/
 #pragma once
 
-#include <boost/algorithm/string.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/spawn.hpp>
+#include "connection.h"
+
+#include<boost/asio.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/regex.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
-#include <iostream>
 #include <unordered_map>
+#include <cctype>
 
 
-namespace wsgi_boost
+struct iequal_to
 {
-	// Moved from server_http.h
-	// Based on http://www.boost.org/doc/libs/1_60_0/doc/html/unordered/hash_equality.html
-	class iequal_to
+	bool operator()(const std::string &key1, const std::string &key2) const
 	{
-	public:
-		bool operator()(const std::string &key1, const std::string &key2) const
-		{
-			return boost::algorithm::iequals(key1, key2);
-		}
-	};
+		return boost::algorithm::iequals(key1, key2);
+	}
+};
 
 
-	class ihash
+struct ihash
+{
+	size_t operator()(const std::string &key) const
 	{
-	public:
-		size_t operator()(const std::string &key) const
-		{
-			std::size_t seed = 0;
-			for (auto &c : key)
-				boost::hash_combine(seed, std::tolower(c));
-			return seed;
-		}
-	};
+		std::size_t seed = 0;
+		for (auto &c : key)
+			boost::hash_combine(seed, std::tolower(c));
+		return seed;
+	}
+};
 
 
-	class Content : public std::istream
+class Request
+{
+public:
+	std::string method;
+	std::string path;
+	std::string http_version;
+	std::unordered_map<std::string, std::string, ihash, iequal_to> headers;
+
+	Request(const Request&) = delete;
+	Request& operator=(const Request&) = delete;
+
+	explicit Request(Connection& connection) : m_connection{ connection }
 	{
-	public:
-		explicit Content(boost::asio::streambuf &streambuf) : std::istream(&streambuf), streambuf(streambuf) {}
+		read_remote_endpoint_data();
+	}
 
-		size_t size()
-		{
-			return streambuf.size();
-		}
+	bool parse_header();
 
-		std::string string()
-		{
-			std::stringstream ss;
-			ss << rdbuf();
-			return ss.str();
-		}
+	// Check if a header contains a specific value
+	bool check_header(const std::string& header, std::string value);
 
-	private:
-		boost::asio::streambuf &streambuf;
-	};
+	// Get header value or "" if the header is missing
+	std::string get_header(const std::string& header);
 
+	// Read remote IP-address and port from socket
+	void read_remote_endpoint_data();
 
-	struct Request
+	std::string post_content();
+
+	std::string remote_address()
 	{
-		explicit Request(boost::asio::io_service &io_service, std::shared_ptr<boost::asio::ip::tcp::socket> socket) :
-			content(streambuf), strand(io_service), socket(socket), timer(io_service) {}
+		return m_remote_address;
+	}
 
-		std::string method;
-		std::string path;
-		std::string http_version;
-		std::string content_dir;
-		std::string remote_endpoint_address;
-		std::string server_name;
-		std::string host_name;
-		std::string url_scheme;
+	unsigned short remote_port()
+	{
+		return m_remote_port;
+	}
 
-		Content content;
+	bool persistent()
+	{
+		return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
+	}
 
-		std::unordered_multimap<std::string, std::string, ihash, iequal_to> header;
+	Connection& connection()
+	{
+		return m_connection;
+	}
 
-		boost::regex path_regex;
-
-		unsigned short remote_endpoint_port;
-		unsigned short local_endpoint_port;
-
-		boost::asio::streambuf streambuf;
-
-		boost::asio::strand strand;
-
-		boost::asio::deadline_timer timer;
-		size_t timeout;
-
-		std::shared_ptr<boost::asio::ip::tcp::socket> socket;
-
-		unsigned long long content_length;
-		unsigned long long bytes_left = 0;
-
-		void read_remote_endpoint_data()
-		{
-			try
-			{
-				remote_endpoint_address = socket->lowest_layer().remote_endpoint().address().to_string();
-				remote_endpoint_port = socket->lowest_layer().remote_endpoint().port();
-			}
-			catch (const std::exception& e) {}
-		}
-
-		// Check if a certain header is present and includes a requested string
-		bool check_header(const std::string& hdr, const std::string& val)
-		{
-			auto iter = header.find(hdr);
-			return iter != header.end() && iter->second.find(val) != std::string::npos;
-		}
-
-		std::string get_header(const std::string& hdr)
-		{
-			auto iter = header.find(hdr);
-			if (iter != header.end())
-			{
-				return iter->second;
-			}
-			return "";
-		}
-
-		std::string read(unsigned long long size = 0)
-		{
-			std::ostringstream ss;
-			if (bytes_left > 0)
-			{			
-				boost::asio::spawn(strand, [this, &size, &ss](boost::asio::yield_context yc)
-				{
-					std::istream stream{ &streambuf };
-					boost::system::error_code ec;
-					size_t bytes_transferred = boost::asio::async_read(*socket, streambuf, boost::asio::transfer_exactly(std::min(bytes_left, size)), yc[ec]);
-					if (!ec)
-					{
-						bytes_left -= bytes_transferred;
-						ss << stream.rdbuf();
-					}
-				});
-			}
-			return ss.str();
-		}
-
-		std::string readline()
-		{
-			std::ostringstream ss;
-			if (bytes_left > 0)
-			{
-				boost::asio::spawn(strand, [this, &ss](boost::asio::yield_context yc)
-				{
-					std::istream stream{ &streambuf };
-					boost::system::error_code ec;
-					size_t bytes_transferred = boost::asio::async_read_until(*socket, streambuf, "\n", yc[ec]);
-					if (!ec)
-					{
-						bytes_left -= bytes_transferred;
-						ss << stream.rdbuf();
-					}
-				});
-			}
-			return ss.str();
-		}
-
-		void set_timeout()
-		{
-			timer.expires_from_now(boost::posix_time::seconds(timeout));
-			timer.async_wait([this](const boost::system::error_code& ec)
-				{
-					if (!ec)
-					{
-						boost::system::error_code ec;
-						socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-						socket->lowest_layer().close();
-					}
-				});
-		}
-	};
-}
+private:
+	Connection& m_connection;
+	std::string m_remote_address;
+	unsigned short m_remote_port;
+};
