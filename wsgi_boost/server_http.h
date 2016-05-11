@@ -319,13 +319,13 @@ namespace wsgi_boost {
 		{
             //Create new streambuf (Request::streambuf) for async_read_until()
             //shared_ptr is used to pass temporary objects to the asynchronous functions
-            std::shared_ptr<Request> request(new Request(io_service));
+            std::shared_ptr<Request> request(new Request(io_service, socket));
             request->read_remote_endpoint_data(*socket);
 
             //Set timeout on the following boost::asio::async-read or write function
             std::shared_ptr<boost::asio::deadline_timer> timer;
             if(timeout_request > 0)
-                timer=set_timeout_on_socket(socket, timeout_request);
+                timer = set_timeout_on_socket(socket, timeout_request);
                         
             boost::asio::async_read_until(*socket, request->streambuf, "\r\n\r\n",
                     [this, socket, request, timer](const boost::system::error_code& ec, size_t bytes_transferred)
@@ -349,7 +349,7 @@ namespace wsgi_boost {
                         //Set timeout on the following boost::asio::async-read or write function
                         std::shared_ptr<boost::asio::deadline_timer> timer;
                         if(timeout_content > 0)
-                            timer=set_timeout_on_socket(socket, timeout_content);
+                            timer = set_timeout_on_socket(socket, timeout_content);
                         unsigned long long content_length;
                         try
 						{
@@ -361,22 +361,12 @@ namespace wsgi_boost {
                         }
                         if(content_length > num_additional_bytes)
 						{
-                            boost::asio::async_read(*socket, request->streambuf,
-								boost::asio::transfer_exactly(content_length - num_additional_bytes),
-								[this, socket, request, timer]
-								(const boost::system::error_code& ec, size_t /*bytes_transferred*/)
-								{
-									if(timeout_content > 0)
-										timer->cancel();
-									if(!ec)
-										find_resource(socket, request);
-								});
-                        }
-                        else {
-                            if(timeout_content > 0)
-                                timer->cancel();
-                            find_resource(socket, request);
-                        }
+							request->content_length = content_length;
+							request->bytes_left = content_length - num_additional_bytes;
+                        }                        
+                        if(timeout_content > 0)
+                            timer->cancel();
+                        find_resource(socket, request);
                     }
                     else
 					{
@@ -454,7 +444,7 @@ namespace wsgi_boost {
             //Set timeout on the following boost::asio::async-read or write function
             std::shared_ptr<boost::asio::deadline_timer> timer;
             if(timeout_content > 0)
-                timer=set_timeout_on_socket(socket, request, timeout_content);
+                timer = set_timeout_on_socket(socket, request, timeout_content);
 
             boost::asio::spawn(request->strand, [this, socket, request, timer](boost::asio::yield_context yield)
 			{
@@ -492,7 +482,7 @@ namespace wsgi_boost {
                 }
                 
                 auto range=request->header.equal_range("Connection");
-                for(auto it = range.first; it != range.second; it++)
+                for(auto it = range.first; it != range.second; ++it)
 				{
                     if(boost::iequals(it->second, "close"))
                         return;

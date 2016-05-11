@@ -127,8 +127,8 @@ namespace wsgi_boost
 	{
 		char* data;
 
-		inline explicit SafeCharBuffer(size_t size) : data{ new char[size] } {}
-		inline ~SafeCharBuffer() { delete[] data; }
+		explicit SafeCharBuffer(size_t size) : data{ new char[size] } {}
+		~SafeCharBuffer() { delete[] data; }
 	};
 
 
@@ -136,8 +136,8 @@ namespace wsgi_boost
 	class GilRelease
 	{
 	public:
-		inline GilRelease() { m_state = PyEval_SaveThread(); }
-		inline ~GilRelease() { PyEval_RestoreThread(m_state); }
+		GilRelease() { m_state = PyEval_SaveThread(); }
+		~GilRelease() { PyEval_RestoreThread(m_state); }
 
 	private:
 		PyThreadState* m_state;
@@ -147,8 +147,8 @@ namespace wsgi_boost
 	class GilAcquire
 	{
 	public:
-		inline GilAcquire() { m_gstate = PyGILState_Ensure(); };
-		inline ~GilAcquire() { PyGILState_Release(m_gstate); };
+		GilAcquire() { m_gstate = PyGILState_Ensure(); };
+		~GilAcquire() { PyGILState_Release(m_gstate); };
 
 	private:
 		PyGILState_STATE m_gstate;

@@ -71,7 +71,8 @@ namespace wsgi_boost
 
 	struct Request
 	{
-		explicit Request(boost::asio::io_service &io_service) : content(streambuf), strand(io_service) {}
+		explicit Request(boost::asio::io_service &io_service, std::shared_ptr<boost::asio::ip::tcp::socket> socket) :
+			content(streambuf), strand(io_service), socket(socket), timer(io_service) {}
 
 		std::string method;
 		std::string path;
@@ -95,12 +96,20 @@ namespace wsgi_boost
 
 		boost::asio::strand strand;
 
-		void read_remote_endpoint_data(boost::asio::ip::tcp::socket& socket)
+		boost::asio::deadline_timer timer;
+		size_t timeout;
+
+		std::shared_ptr<boost::asio::ip::tcp::socket> socket;
+
+		unsigned long long content_length;
+		unsigned long long bytes_left = 0;
+
+		void read_remote_endpoint_data()
 		{
 			try
 			{
-				remote_endpoint_address = socket.lowest_layer().remote_endpoint().address().to_string();
-				remote_endpoint_port = socket.lowest_layer().remote_endpoint().port();
+				remote_endpoint_address = socket->lowest_layer().remote_endpoint().address().to_string();
+				remote_endpoint_port = socket->lowest_layer().remote_endpoint().port();
 			}
 			catch (const std::exception& e) {}
 		}
@@ -120,6 +129,60 @@ namespace wsgi_boost
 				return iter->second;
 			}
 			return "";
+		}
+
+		std::string read(unsigned long long size = 0)
+		{
+			std::ostringstream ss;
+			if (bytes_left > 0)
+			{			
+				boost::asio::spawn(strand, [this, &size, &ss](boost::asio::yield_context yc)
+				{
+					std::istream stream{ &streambuf };
+					boost::system::error_code ec;
+					size_t bytes_transferred = boost::asio::async_read(*socket, streambuf, boost::asio::transfer_exactly(std::min(bytes_left, size)), yc[ec]);
+					if (!ec)
+					{
+						bytes_left -= bytes_transferred;
+						ss << stream.rdbuf();
+					}
+				});
+			}
+			return ss.str();
+		}
+
+		std::string readline()
+		{
+			std::ostringstream ss;
+			if (bytes_left > 0)
+			{
+				boost::asio::spawn(strand, [this, &ss](boost::asio::yield_context yc)
+				{
+					std::istream stream{ &streambuf };
+					boost::system::error_code ec;
+					size_t bytes_transferred = boost::asio::async_read_until(*socket, streambuf, "\n", yc[ec]);
+					if (!ec)
+					{
+						bytes_left -= bytes_transferred;
+						ss << stream.rdbuf();
+					}
+				});
+			}
+			return ss.str();
+		}
+
+		void set_timeout()
+		{
+			timer.expires_from_now(boost::posix_time::seconds(timeout));
+			timer.async_wait([this](const boost::system::error_code& ec)
+				{
+					if (!ec)
+					{
+						boost::system::error_code ec;
+						socket->lowest_layer().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+						socket->lowest_layer().close();
+					}
+				});
 		}
 	};
 }
