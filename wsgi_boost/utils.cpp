@@ -5,68 +5,6 @@ namespace py = boost::python;
 
 namespace wsgi_boost
 {
-#pragma region InputWrapper
-
-	string InputWrapper::read(size_t size)
-	{
-		if (size > 0 && size < m_is.size())
-		{
-			SafeCharBuffer buffer{ size };
-			m_is.read(buffer.data, size);
-			return buffer.data;
-		}
-		return m_is.string();
-	}
-
-	string InputWrapper::readline(size_t size)
-	{
-		string ret;
-		getline(m_is, ret);
-		if (m_is.good())
-			ret += "\n";
-		if (size > 0 && ret.length() > size)
-			return ret.substr(0, size);
-		return ret;
-	}
-
-	py::list InputWrapper::readlines(size_t hint)
-	{
-		py::list listing;
-		size_t total_read = 0;
-		while (m_is.good())
-		{
-			listing.append(readline());
-			total_read += m_is.gcount();
-			if (hint > 0 && total_read >= hint)
-				break;
-		}
-		return listing;
-	}
-
-	InputWrapper* InputWrapper::iter()
-	{
-		return this;
-	}
-
-	std::string InputWrapper::next()
-	{
-		if (m_is.good())
-		{
-			return readline();
-		}
-		else
-		{
-			throw StopIteration();
-		}
-	}
-
-	size_t InputWrapper::len()
-	{
-		return m_is.size();
-	}
-
-#pragma endregion
-
 #pragma region StringQueue
 
 	void StringQueue::push(string item)

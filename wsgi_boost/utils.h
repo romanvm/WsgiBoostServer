@@ -5,7 +5,6 @@ Various utility functions
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
-#include "exceptions.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/python.hpp>
@@ -60,27 +59,6 @@ namespace wsgi_boost
 #pragma endregion
 
 #pragma region classes
-
-	class InputWrapper
-	{
-	private:
-		Content& m_is;
-
-	public:
-		explicit InputWrapper(Content& is) : m_is{ is } {}
-
-		std::string read(size_t size = 0);
-
-		std::string readline(size_t size = 0);
-
-		boost::python::list readlines(size_t hint = 0);
-
-		InputWrapper* iter();
-
-		std::string next();
-
-		size_t len();
-	};
 
 	class StringQueue
 	{
