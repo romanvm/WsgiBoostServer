@@ -6,8 +6,6 @@ Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
 
-#define WSGI_BOOST_VERSION "0.0.1"
-
 #include "connection.h"
 
 #include <boost/system/error_code.hpp>
@@ -24,7 +22,6 @@ namespace wsgi_boost
 	{
 	private:
 		Connection& m_connection;
-		const std::string m_server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
 
 	public:
 		std::string http_version = "HTTP/1.1";
@@ -34,10 +31,10 @@ namespace wsgi_boost
 
 		explicit Response(Connection& connection) : m_connection{ connection } {}
 
-		boost::system::error_code send_header(const std::string& status_code, const std::string& status_msg, headers_type& headers);
+		boost::system::error_code send_header(const std::string& status, headers_type& headers);
 
 		boost::system::error_code send_data(const std::string& data);
 
-		boost::system::error_code send_mesage(const std::string& status_code, const std::string& status_msg, const std::string& message = std::string());
+		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string());
 	};
 }

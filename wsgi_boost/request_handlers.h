@@ -5,7 +5,10 @@ Request handlers for WSGI apps and static files
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
+#define WSGI_BOOST_VERSION "0.0.1"
 
+#include "request.h"
+#include "response.h"
 #include "utils.h"
 
 #include <boost/regex.hpp>
@@ -28,7 +31,7 @@ namespace wsgi_boost
 		std::vector<std::pair<std::string, std::string>> out_headers;
 		std::string status;
 
-		BaseRequestHandler(std::ostream& response, std::shared_ptr<Request> request);
+		BaseRequestHandler(Request& request, Response& response);
 
 		virtual ~BaseRequestHandler(){}
 
@@ -37,13 +40,10 @@ namespace wsgi_boost
 
 		virtual void handle_request() = 0;
 
-		void send_status(const std::string message = "");
-
-		void send_http_header();	
-
 	protected:
-		std::ostream& m_response;
-		std::shared_ptr<Request> m_request;
+		const std::string m_server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
+		Request& m_request;
+		Response& m_response;
 
 		void initialize_headers();
 
