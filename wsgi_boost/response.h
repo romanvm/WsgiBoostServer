@@ -1,4 +1,12 @@
 #pragma once
+/*
+HTTP response
+
+Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
+License: MIT, see License.txt
+*/
+
+#define WSGI_BOOST_VERSION "0.0.1"
 
 #include "connection.h"
 
@@ -7,26 +15,29 @@
 #include <vector>
 #include <string>
 
-typedef std::vector<std::pair<std::string, std::string>> headers_type;
 
-
-class Response
+namespace wsgi_boost
 {
-private:
-	Connection& m_connection;
-	const std::string m_server_name = "asio_http Server";
+	typedef std::vector<std::pair<std::string, std::string>> headers_type;
 
-public:
-	std::string http_version = "HTTP/1.1";
+	class Response
+	{
+	private:
+		Connection& m_connection;
+		const std::string m_server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
 
-	Response(const Response&) = delete;
-	Response& operator=(const Response&) = delete;
+	public:
+		std::string http_version = "HTTP/1.1";
 
-	explicit Response(Connection& connection) : m_connection{ connection } {}
+		Response(const Response&) = delete;
+		Response& operator=(const Response&) = delete;
 
-	boost::system::error_code send_header(const std::string& status_code, const std::string& status_msg, headers_type& headers);
+		explicit Response(Connection& connection) : m_connection{ connection } {}
 
-	boost::system::error_code send_data(const std::string& data);
+		boost::system::error_code send_header(const std::string& status_code, const std::string& status_msg, headers_type& headers);
 
-	boost::system::error_code send_mesage(const std::string& status_code, const std::string& status_msg, const std::string& message = std::string());
-};
+		boost::system::error_code send_data(const std::string& data);
+
+		boost::system::error_code send_mesage(const std::string& status_code, const std::string& status_msg, const std::string& message = std::string());
+	};
+}
