@@ -5,6 +5,7 @@ HTTP connection for receiving and sending data
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
+
 #include "exceptions.h"
 
 #include<boost/asio.hpp>

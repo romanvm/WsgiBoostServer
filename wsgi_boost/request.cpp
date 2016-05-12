@@ -7,100 +7,103 @@ namespace alg = boost::algorithm;
 namespace sys = boost::system;
 
 
-bool Request::parse_header()
+namespace wsgi_boost
 {
-	string line;
-	sys::error_code ec = m_connection.read_header_line(line);
-	if (ec)
-		return false;
-	vector<string> parts;
-	alg::split(parts, line, alg::is_space(), alg::token_compress_on);
-	try
+	bool Request::parse_header()
 	{
-		method = parts.at(0);
-		path = parts.at(1);
-		http_version = parts.at(2);
-	}
-	catch (const exception&)
-	{
-		return false;
-	}
-	while (true)
-	{
-		ec = m_connection.read_header_line(line);
+		string line;
+		sys::error_code ec = m_connection.read_header_line(line);
 		if (ec)
 			return false;
-		if (!line.length())
-			break;
-		size_t pos = line.find(':');
-		if (pos != string::npos)
-		{
-			string header = alg::trim_copy(line.substr(0, pos));
-			string value = alg::trim_copy(line.substr(pos + 1));
-			alg::to_lower(value);
-			if (headers.find(header) == headers.end())
-			{
-				headers[header] = value;
-			}
-			else
-			{
-				headers[header] += "," + value;
-			}
-		}
-	}
-	string cl_header = get_header("Content-Length");
-	if (cl_header != "")
-	{
+		vector<string> parts;
+		alg::split(parts, line, alg::is_space(), alg::token_compress_on);
 		try
 		{
-			long long cl = stoll(cl_header);
-			m_connection.set_post_content_length(cl);
+			method = parts.at(0);
+			path = parts.at(1);
+			http_version = parts.at(2);
 		}
 		catch (const exception&)
 		{
+			return false;
+		}
+		while (true)
+		{
+			ec = m_connection.read_header_line(line);
+			if (ec)
+				return false;
+			if (!line.length())
+				break;
+			size_t pos = line.find(':');
+			if (pos != string::npos)
+			{
+				string header = alg::trim_copy(line.substr(0, pos));
+				string value = alg::trim_copy(line.substr(pos + 1));
+				alg::to_lower(value);
+				if (headers.find(header) == headers.end())
+				{
+					headers[header] = value;
+				}
+				else
+				{
+					headers[header] += "," + value;
+				}
+			}
+		}
+		string cl_header = get_header("Content-Length");
+		if (cl_header != "")
+		{
+			try
+			{
+				long long cl = stoll(cl_header);
+				m_connection.set_post_content_length(cl);
+			}
+			catch (const exception&)
+			{
+				m_connection.set_post_content_length(0);
+			}
+		}
+		else
+		{
 			m_connection.set_post_content_length(0);
 		}
+		return true;
 	}
-	else
+
+
+	bool Request::check_header(const string& header, string value)
 	{
-		m_connection.set_post_content_length(0);
+		alg::to_lower(value);
+		auto it = headers.find(header);
+		return it != headers.end() && it->second.find(value) != string::npos;
 	}
-	return true;
-}
 
 
-bool Request::check_header(const string& header, string value)
-{
-	alg::to_lower(value);
-	auto it = headers.find(header);
-	return it != headers.end() && it->second.find(value) != string::npos;
-}
-
-
-string Request::get_header(const string& header)
-{
-	auto it = headers.find(header);
-	if (it != headers.end())
-		return it->second;
-	return "";
-}
-
-
-void Request::read_remote_endpoint_data()
-{
-	try
+	string Request::get_header(const string& header)
 	{
-		socket_ptr socket = m_connection.socket();
-		m_remote_address = socket->remote_endpoint().address().to_string();
-		m_remote_port = socket->remote_endpoint().port();
+		auto it = headers.find(header);
+		if (it != headers.end())
+			return it->second;
+		return "";
 	}
-	catch (const exception&) {}
-}
 
 
-string Request::post_content()
-{
-	string data;
-	m_connection.read_bytes(data);
-	return data;
+	void Request::read_remote_endpoint_data()
+	{
+		try
+		{
+			socket_ptr socket = m_connection.socket();
+			m_remote_address = socket->remote_endpoint().address().to_string();
+			m_remote_port = socket->remote_endpoint().port();
+		}
+		catch (const exception&) {}
+	}
+
+
+	string Request::post_content()
+	{
+		string data;
+		m_connection.read_bytes(data);
+		return data;
+	}
 }

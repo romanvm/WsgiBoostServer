@@ -1,4 +1,10 @@
 #pragma once
+/*
+HTTP request
+
+Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
+License: MIT, see License.txt
+*/
 
 #include "connection.h"
 
@@ -9,79 +15,81 @@
 #include <unordered_map>
 #include <cctype>
 
-
-struct iequal_to
+namespace wsgi_boost
 {
-	bool operator()(const std::string &key1, const std::string &key2) const
+	struct iequal_to
 	{
-		return boost::algorithm::iequals(key1, key2);
-	}
-};
+		bool operator()(const std::string &key1, const std::string &key2) const
+		{
+			return boost::algorithm::iequals(key1, key2);
+		}
+	};
 
 
-struct ihash
-{
-	size_t operator()(const std::string &key) const
+	struct ihash
 	{
-		std::size_t seed = 0;
-		for (auto &c : key)
-			boost::hash_combine(seed, std::tolower(c));
-		return seed;
-	}
-};
+		size_t operator()(const std::string &key) const
+		{
+			std::size_t seed = 0;
+			for (auto &c : key)
+				boost::hash_combine(seed, std::tolower(c));
+			return seed;
+		}
+	};
 
 
-class Request
-{
-public:
-	std::string method;
-	std::string path;
-	std::string http_version;
-	std::unordered_map<std::string, std::string, ihash, iequal_to> headers;
-
-	Request(const Request&) = delete;
-	Request& operator=(const Request&) = delete;
-
-	explicit Request(Connection& connection) : m_connection{ connection }
+	class Request
 	{
-		read_remote_endpoint_data();
-	}
+	public:
+		std::string method;
+		std::string path;
+		std::string http_version;
+		std::unordered_map<std::string, std::string, ihash, iequal_to> headers;
 
-	bool parse_header();
+		Request(const Request&) = delete;
+		Request& operator=(const Request&) = delete;
 
-	// Check if a header contains a specific value
-	bool check_header(const std::string& header, std::string value);
+		explicit Request(Connection& connection) : m_connection{ connection }
+		{
+			read_remote_endpoint_data();
+		}
 
-	// Get header value or "" if the header is missing
-	std::string get_header(const std::string& header);
+		bool parse_header();
 
-	// Read remote IP-address and port from socket
-	void read_remote_endpoint_data();
+		// Check if a header contains a specific value
+		bool check_header(const std::string& header, std::string value);
 
-	std::string post_content();
+		// Get header value or "" if the header is missing
+		std::string get_header(const std::string& header);
 
-	std::string remote_address()
-	{
-		return m_remote_address;
-	}
+		// Read remote IP-address and port from socket
+		void read_remote_endpoint_data();
 
-	unsigned short remote_port()
-	{
-		return m_remote_port;
-	}
+		std::string post_content();
 
-	bool persistent()
-	{
-		return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
-	}
+		std::string remote_address()
+		{
+			return m_remote_address;
+		}
 
-	Connection& connection()
-	{
-		return m_connection;
-	}
+		unsigned short remote_port()
+		{
+			return m_remote_port;
+		}
 
-private:
-	Connection& m_connection;
-	std::string m_remote_address;
-	unsigned short m_remote_port;
-};
+		bool persistent()
+		{
+			return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
+		}
+
+		Connection& connection()
+		{
+			return m_connection;
+		}
+
+	private:
+		Connection& m_connection;
+		std::string m_remote_address;
+		unsigned short m_remote_port;
+	};
+}

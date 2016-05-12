@@ -17,18 +17,18 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 	py::register_exception_translator<StopIteration>(&stop_iteration_translator);
 	
-	py::scope current;
-	current.attr("__doc__") = "This module provides WSGI/HTTP server class";
-	current.attr("__version__") = WSGI_BOOST_VERSION;
-	current.attr("__author__") = "Roman Miroshnychenko";
-	current.attr("__email__") = "romanvm@yandex.ua";
-	current.attr("__license__") = "MIT";
-	list all;
+	py::scope module;
+	module.attr("__doc__") = "This module provides WSGI/HTTP server class";
+	module.attr("__version__") = WSGI_BOOST_VERSION;
+	module.attr("__author__") = "Roman Miroshnychenko";
+	module.attr("__email__") = "romanvm@yandex.ua";
+	module.attr("__license__") = "MIT";
+	py::list all;
 	all.append("WsgiBoostHttp");
-	current.attr("__all__") = all;
+	module.attr("__all__") = all;
 	
 
-	class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
+	py::class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
 
 		"WsgiBoostHttp(port, num_threads=1, timeout_request=5, timeout_content=300)\n\n"
 
@@ -73,7 +73,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"		server_thread.join()\n"
 		,
 
-		init<unsigned short, optional<size_t, size_t, size_t>>(args("port", "num_threads", "timeout_request", "timeout_content")))
+		py::init<unsigned short, py::optional<size_t, size_t, size_t>>(py::args("port", "num_threads", "timeout_request", "timeout_content")))
 
 		.def_readonly("name", &HttpServer::server_name, "Get server name")
 
@@ -84,7 +84,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 			"When set to ``True`` server logs to the console basic request data.\n\n"
 
-			".. warning:: Enabling logging may have impact on server performance."
+			".. warning:: Enabling logging may impact server performance."
 		)
 
 		.def_readwrite("url_scheme", &HttpServer::url_scheme,
@@ -128,11 +128,11 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		)
 		;
 
-	class_<InputWrapper>("InputWrapper", no_init)
-		.def("read", &InputWrapper::read, (arg("size")=0))
-		.def("readline", &InputWrapper::readline, (arg("size") = 0))
-		.def("readlines", &InputWrapper::readlines, (arg("size") = 0))
-		.def("__iter__", &InputWrapper::iter, return_value_policy<manage_new_object>())
+	py::class_<InputWrapper>("InputWrapper", py::no_init)
+		.def("read", &InputWrapper::read, (py::arg("size") = -1))
+		.def("readline", &InputWrapper::readline, (py::arg("size") = -1))
+		.def("readlines", &InputWrapper::readlines, (py::arg("size") = -1))
+		.def("__iter__", &InputWrapper::iter, py::return_value_policy<py::manage_new_object>())
 #if PY_MAJOR_VERSION < 3
 		.def("next", &InputWrapper::next)
 #else
