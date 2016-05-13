@@ -124,7 +124,20 @@ namespace wsgi_boost
 	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app) :
 		BaseRequestHandler(request, response), m_app{ app }
 	{
-		std::function<void(py::str, py::list, py::object)> sr{
+		function<void(py::object)> wr{
+			[this](py::object data)
+			{
+				sys::error_code ec = m_response.send_header(status, m_out_headers);
+				if (ec)
+					return;
+				m_headers_sent = true;
+				string cpp_data = py::extract<char*>(data);
+				GilRelease release_gil;
+				m_response.send_data(cpp_data);
+			}
+		};
+		m_write = py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
+		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
 			{
 				if (!exc_info.is_none())
@@ -134,16 +147,18 @@ namespace wsgi_boost
 					exc_info = py::object();
 				}
 				this->status = py::extract<char*>(status);
+				m_out_headers.clear();
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
 					py::object header = headers[i];
 					m_out_headers.emplace_back(py::extract<char*>(header[0]), py::extract<char*>(header[1]));
 				}
+				return m_write;
 			}
 		};
 		m_start_response = py::make_function(sr, py::default_call_policies(),
 			(py::arg("status"), "headers", py::arg("exc_info") = py::object()),
-			boost::mpl::vector<void, py::str, py::list, py::object>());
+			boost::mpl::vector<py::object, py::str, py::list, py::object>());
 	}
 
 
@@ -155,11 +170,11 @@ namespace wsgi_boost
 			m_response.send_mesage(status, "Error 500: Internal server error! WSGI application is not set.");
 			return;
 		}
+		prepare_environ();
 		if (m_request.check_header("Expect", "100-continue"))
 		{
 			m_response.send_mesage("100 Continue");
 		}
-		prepare_environ();
 		py::object args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
 		Iterator iterable{ get_python_object(PyEval_CallObject(m_app.ptr(), args.ptr())) };
 		send_iterable(iterable);
@@ -225,13 +240,16 @@ namespace wsgi_boost
 #else
 				std::string chunk = py::extract<char*>(iterator.attr("__next__")());
 #endif
+				sys::error_code ec;
 				if (!m_headers_sent)
 				{
-					m_response.send_header(status, m_out_headers);
+					ec = m_response.send_header(status, m_out_headers);
+					if (ec)
+						break;
 					m_headers_sent = true;
 				}
 				GilRelease release_gil;
-				sys::error_code ec = m_response.send_data(chunk);
+				ec = m_response.send_data(chunk);
 				if (ec)
 					break;
 			}

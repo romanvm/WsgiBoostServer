@@ -62,6 +62,7 @@ namespace wsgi_boost
 		bool m_headers_sent = false;
 		boost::python::object& m_app;
 		boost::python::dict m_environ;
+		boost::python::object m_write;
 		boost::python::object m_start_response;
 
 		void prepare_environ();
