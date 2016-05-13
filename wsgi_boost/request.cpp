@@ -17,16 +17,11 @@ namespace wsgi_boost
 			return false;
 		vector<string> parts;
 		alg::split(parts, line, alg::is_space(), alg::token_compress_on);
-		try
-		{
-			method = parts.at(0);
-			path = parts.at(1);
-			http_version = parts.at(2);
-		}
-		catch (const exception&)
-		{
+		if (parts.size() != 3)
 			return false;
-		}
+		method = parts[0];
+		path = parts[1];
+		http_version = parts[2];
 		while (true)
 		{
 			ec = m_connection.read_header_line(line);
@@ -84,7 +79,7 @@ namespace wsgi_boost
 		auto it = headers.find(header);
 		if (it != headers.end())
 			return it->second;
-		return "";
+		return string();
 	}
 
 
@@ -97,13 +92,5 @@ namespace wsgi_boost
 			m_remote_port = socket->remote_endpoint().port();
 		}
 		catch (const exception&) {}
-	}
-
-
-	string Request::post_content()
-	{
-		string data;
-		m_connection.read_bytes(data);
-		return data;
 	}
 }

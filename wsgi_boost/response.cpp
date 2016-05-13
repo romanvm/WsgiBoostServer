@@ -10,6 +10,7 @@ namespace wsgi_boost
 	{
 		m_connection << http_version << " " << status << "\r\n";
 		headers.emplace_back("Server", m_server_name);
+		headers.emplace_back("Date", get_current_gmt_time());
 		if (http_version == "HTTP/1.1")
 			headers.emplace_back("Connection", "keep-alive");
 		for (const auto& header : headers)

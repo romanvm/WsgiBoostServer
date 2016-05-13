@@ -5,14 +5,11 @@ Request handlers for WSGI apps and static files
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
-#define WSGI_BOOST_VERSION "0.0.1"
 
 #include "request.h"
 #include "response.h"
 #include "utils.h"
 
-#include <boost/regex.hpp>
-#include <boost/python.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
@@ -28,44 +25,41 @@ namespace wsgi_boost
 	class BaseRequestHandler
 	{
 	public:
-		std::vector<std::pair<std::string, std::string>> out_headers;
 		std::string status;
 
-		BaseRequestHandler(Request& request, Response& response);
-
-		virtual ~BaseRequestHandler(){}
+		BaseRequestHandler(Request& request, Response& response) : m_request{ request }, m_response{ response } {}
 
 		BaseRequestHandler(const BaseRequestHandler&) = delete;
-		BaseRequestHandler(BaseRequestHandler&&) = delete;
+		BaseRequestHandler& operator=(const BaseRequestHandler&) = delete;
 
-		virtual void handle_request() = 0;
+		virtual ~BaseRequestHandler() {}
+
+		virtual void handle() = 0;
 
 	protected:
-		const std::string m_server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
 		Request& m_request;
 		Response& m_response;
-
-		void initialize_headers();
-
 	};
 
 
 	class StaticRequestHandler : public BaseRequestHandler
 	{
 	public:
-		StaticRequestHandler(std::ostream& response, std::shared_ptr<Request> request) : BaseRequestHandler(response, request) {}
+		StaticRequestHandler(Request& request, Response& response) : BaseRequestHandler(request, response) {}
 
-		void handle_request();
+		void handle();
 
 	private:
 		void serve_file(const boost::filesystem::path& content_dir_path);
-		void send_file(std::istream& content_stream);
+		void send_file(std::istream& content_stream, headers_type& headers);
 	};
 
 
 	class WsgiRequestHandler : public BaseRequestHandler
 	{
 	private:
+		headers_type m_out_headers;
+		bool m_headers_sent = false;
 		boost::python::object& m_app;
 		boost::python::dict m_environ;
 		boost::python::object m_start_response;
@@ -74,8 +68,8 @@ namespace wsgi_boost
 		void send_iterable(Iterator& iterable);
 
 	public:
-		WsgiRequestHandler(std::ostream& response, std::shared_ptr<Request> request, boost::python::object& app);
+		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app);
 
-		void handle_request();		
+		void handle();
 	};
 }

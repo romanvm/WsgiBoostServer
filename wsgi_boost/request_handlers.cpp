@@ -10,45 +10,26 @@ License: MIT, see License.txt
 using namespace std;
 namespace py = boost::python;
 namespace fs = boost::filesystem;
+namespace sys = boost::system;
+
 
 namespace wsgi_boost
 {
-#pragma region BaseRequestHandler
-
-	BaseRequestHandler::BaseRequestHandler(Request& request, Response& response) : m_request{ request }, m_response{ response }
-	{
-		initialize_headers();
-	}
-
-
-	void BaseRequestHandler::initialize_headers()
-	{
-		out_headers.emplace_back("Server", m_server_name);
-		out_headers.emplace_back("Date", get_current_gmt_time());
-		string conn = m_request.get_header("Connection");
-		if (m_request.http_version == "HTTP/1.1" || m_request.check_header("Connection", "keep-alive"))
-		{
-			out_headers.emplace_back("Connection", "keep-alive");
-		}
-	}
-
-#pragma endregion
-
 #pragma region StaticRequestHandler
 
-	void StaticRequestHandler::handle_request()
+	void StaticRequestHandler::handle()
 	{
-		const auto content_dir_path = boost::filesystem::path{ m_request->content_dir };
+		const auto content_dir_path = boost::filesystem::path{ m_request.content_dir };
 		if (!boost::filesystem::exists(content_dir_path))
 		{
 			status = "500 Internal Server Error";
-			send_status("500: Internal server error! Invalid content directory.");
+			m_response.send_mesage(status, "Error 500: Internal server error! Invalid content directory.");
 			return;
 		}
-		if (m_request->method != "GET" && m_request->method != "HEAD")
+		if (m_request.method != "GET" && m_request.method != "HEAD")
 		{
 			status = "405 Method Not Allowed";
-			send_status();
+			m_response.send_mesage(status);
 			return;
 		}
 		serve_file(content_dir_path);
@@ -58,7 +39,7 @@ namespace wsgi_boost
 	void StaticRequestHandler::serve_file(const fs::path& content_dir_path)
 	{
 		fs::path path = content_dir_path;
-		path /= boost::regex_replace(m_request->path, m_request->path_regex, "");
+		path /= boost::regex_replace(m_request.path, m_request.path_regex, "");
 		if (fs::exists(path))
 		{
 			path = fs::canonical(path);
@@ -77,18 +58,19 @@ namespace wsgi_boost
 					if (ifs)
 					{
 						time_t last_modified = fs::last_write_time(path);
-						string ims = m_request->get_header("If-Modified-Since");
+						string ims = m_request.get_header("If-Modified-Since");
 						if (ims != "" && last_modified > header_to_time(ims))
 						{
 							status = "304 Not Modified";
-							send_status();
+							m_response.send_mesage(status);
 							return;
 						}
 						MimeTypes mime_types;
 						string mime = mime_types[path.extension().string()];
+						headers_type out_headers;
 						out_headers.emplace_back("Content-Type", mime);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
-						if (mime_types.is_compressable(mime) && m_request->check_header("Accept-Encoding", "gzip"))
+						if (mime_types.is_compressable(mime) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
@@ -96,24 +78,11 @@ namespace wsgi_boost
 							stringstream compressed;
 							boost::iostreams::copy(gzstream, compressed);
 							out_headers.emplace_back("Content-Encoding", "gzip");
-							if (m_request->method == "HEAD")
-							{
-								compressed.str("");
-							}
-							send_file(compressed);
+							send_file(compressed, out_headers);
 						}
 						else
 						{
-							if (m_request->method == "GET")
-							{
-								send_file(ifs);
-							}
-							else
-							{
-								stringstream ss;
-								ss.str("");
-								send_file(ss);
-							}
+							send_file(ifs, out_headers);
 						}
 						ifs.close();
 						return;
@@ -122,25 +91,29 @@ namespace wsgi_boost
 			}
 		}
 		status = "404 Not Found";
-		send_status("Error 404: Requested content not found!");
+		m_response.send_mesage(status, "Error 404: Requested content not found!");
 	}
 
-	void StaticRequestHandler::send_file(istream& content_stream)
+	void StaticRequestHandler::send_file(istream& content_stream, headers_type& headers)
 	{
 		content_stream.seekg(0, ios::end);
 		size_t length = content_stream.tellg();
 		content_stream.seekg(0, ios::beg);
-		out_headers.emplace_back("Content-Length", to_string(length));
+		headers.emplace_back("Content-Length", to_string(length));
 		status = "200 OK";
-		send_http_header();
-		//read and send 128 KB at a time
-		const size_t buffer_size = 131072;
-		SafeCharBuffer buffer{ buffer_size };
-		size_t read_length;
-		while ((read_length = content_stream.read(buffer.data, buffer_size).gcount()) > 0)
+		m_response.send_header(status, headers);
+		if (m_request.method == "GET")
 		{
-			m_response.write(buffer.data, read_length);
-			m_response.flush();
+			//read and send 128 KB at a time
+			const size_t buffer_size = 131072;
+			vector<char> buffer(buffer_size);
+			size_t read_length;
+			while ((read_length = content_stream.read(&buffer[0], buffer_size).gcount()) > 0)
+			{
+				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length));
+				if (ec)
+					return;
+			}
 		}
 	}
 
@@ -148,8 +121,8 @@ namespace wsgi_boost
 
 #pragma region WsgiRequestHandler
 
-	WsgiRequestHandler::WsgiRequestHandler(ostream& response, std::shared_ptr<Request> request, py::object& app) :
-		BaseRequestHandler(response, request), m_app{ app }
+	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app) :
+		BaseRequestHandler(request, response), m_app{ app }
 	{
 		std::function<void(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
@@ -164,7 +137,7 @@ namespace wsgi_boost
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
 					py::object header = headers[i];
-					this->out_headers.emplace_back(py::extract<char*>(header[0]), py::extract<char*>(header[1]));
+					m_out_headers.emplace_back(py::extract<char*>(header[0]), py::extract<char*>(header[1]));
 				}
 			}
 		};
@@ -174,17 +147,17 @@ namespace wsgi_boost
 	}
 
 
-	void WsgiRequestHandler::handle_request()
+	void WsgiRequestHandler::handle()
 	{
 		if (m_app.is_none())
 		{
 			status = "500 Internal Server Error";
-			send_status("500: Internal server error! WSGI application is not set.");
+			m_response.send_mesage(status, "Error 500: Internal server error! WSGI application is not set.");
 			return;
 		}
-		if (m_request->check_header("Expect", "100-continue"))
+		if (m_request.check_header("Expect", "100-continue"))
 		{
-			m_response << "HTTP/" << m_request->http_version << " 100 Continue\r\n\r\n";
+			m_response.send_mesage("100 Continue");
 		}
 		prepare_environ();
 		py::object args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
@@ -195,26 +168,25 @@ namespace wsgi_boost
 
 	void WsgiRequestHandler::prepare_environ()
 	{
-		m_environ["SERVER_SOFTWARE"] = m_request->server_name;
-		m_environ["REQUEST_METHOD"] = m_request->method;
+		m_environ["REQUEST_METHOD"] = m_request.method;
 		m_environ["SCRIPT_NAME"] = "";
-		pair<string, string> path_and_query = split_path(m_request->path);
+		pair<string, string> path_and_query = split_path(m_request.path);
 		m_environ["PATH_INFO"] = path_and_query.first;
 		m_environ["QUERY_STRING"] = path_and_query.second;
-		string ct = m_request->get_header("Content-Type");
+		string ct = m_request.get_header("Content-Type");
 		if (ct != "")
 		{
 			m_environ["CONTENT_TYPE"] = ct;
 		}
-		string cl = m_request->get_header("Content-Length");
+		string cl = m_request.get_header("Content-Length");
 		if (cl != "")
 		{
 			m_environ["CONTENT_LENGTH"] = cl;
 		}
-		m_environ["SERVER_NAME"] = m_request->host_name;
-		m_environ["SERVER_PORT"] = to_string(m_request->local_endpoint_port);
-		m_environ["SERVER_PROTOCOL"] = "HTTP/" + m_request->http_version;
-		for (auto& header : m_request->header)
+		m_environ["SERVER_NAME"] = m_request.host_name;
+		m_environ["SERVER_PORT"] = to_string(m_request.local_endpoint_port);
+		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
+		for (auto& header : m_request.headers)
 		{
 			std::string env_header = transform_header(header.first);
 			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
@@ -231,11 +203,10 @@ namespace wsgi_boost
 			}
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
-		m_environ["wsgi.url_scheme"] = m_request->url_scheme;
-		InputWrapper input{ m_request->content };
-		m_environ["wsgi.input"] = input;
-		py::object errors = py::import("sys").attr("stderr");
-		m_environ["wsgi.errors"] = errors;
+		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
+		InputWrapper input{ m_request.connection() };
+		m_environ["wsgi.input"] = input; 
+		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
@@ -245,7 +216,6 @@ namespace wsgi_boost
 	void WsgiRequestHandler::send_iterable(Iterator& iterable)
 	{
 		py::object iterator = iterable.attr("__iter__")();
-		bool headers_sent = false;
 		while (true)
 		{
 			try
@@ -255,13 +225,15 @@ namespace wsgi_boost
 #else
 				std::string chunk = py::extract<char*>(iterator.attr("__next__")());
 #endif
-				if (!headers_sent)
+				if (!m_headers_sent)
 				{
-					send_http_header();
-					headers_sent = true;
+					m_response.send_header(status, m_out_headers);
+					m_headers_sent = true;
 				}
 				GilRelease release_gil;
-				m_response << chunk;
+				sys::error_code ec = m_response.send_data(chunk);
+				if (ec)
+					break;
 			}
 			catch (const py::error_already_set& ex)
 			{

@@ -8,9 +8,10 @@ License: MIT, see License.txt
 
 #include "connection.h"
 
-#include<boost/asio.hpp>
+#include <boost/asio.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/regex.hpp>
 
 #include <unordered_map>
 #include <cctype>
@@ -45,6 +46,11 @@ namespace wsgi_boost
 		std::string path;
 		std::string http_version;
 		std::unordered_map<std::string, std::string, ihash, iequal_to> headers;
+		boost::regex path_regex;
+		std::string content_dir;
+		std::string url_scheme;
+		std::string host_name;
+		unsigned short local_endpoint_port;
 
 		Request(const Request&) = delete;
 		Request& operator=(const Request&) = delete;
@@ -64,8 +70,6 @@ namespace wsgi_boost
 
 		// Read remote IP-address and port from socket
 		void read_remote_endpoint_data();
-
-		std::string post_content();
 
 		std::string remote_address()
 		{

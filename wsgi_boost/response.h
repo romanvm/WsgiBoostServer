@@ -5,8 +5,10 @@ HTTP response
 Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
+#define WSGI_BOOST_VERSION "0.0.1"
 
 #include "connection.h"
+#include "utils.h"
 
 #include <boost/system/error_code.hpp>
 
@@ -21,6 +23,7 @@ namespace wsgi_boost
 	class Response
 	{
 	private:
+		const std::string m_server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
 		Connection& m_connection;
 
 	public:

@@ -1,7 +1,6 @@
 #include "server.h"
 
 #include <boost/asio/spawn.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <memory>
 #include <signal.h>
@@ -9,6 +8,7 @@
 using namespace std;
 namespace asio = boost::asio;
 namespace sys = boost::system;
+namespace py = boost::python;
 
 namespace wsgi_boost
 {
@@ -47,46 +47,73 @@ namespace wsgi_boost
 			Response response{ connection };
 			if (request.parse_header())
 			{
+				check_static_route(request);
 				response.http_version == request.http_version;
-				if (!send_response(request, response) && request.persistent())
-					process_request(socket);
+				handle_request(request, response);
 			}
 			else
 			{
-				response.send_mesage("400", "Bad Request");
+				response.send_mesage("400 Bad Request", "Error 400: Bad request!");
 			}
 		});
 	}
 
-	sys::error_code HttpServer::send_response(Request& request, Response& response)
+	void HttpServer::check_static_route(Request& request)
 	{
-		ostringstream oss;
-		oss << "Hello World!\n\n";
-		oss << "Thread #" << this_thread::get_id() << "\n\n";
-		oss << "Method: " << request.method << "\n";
-		oss << "Path: " << request.path << "\n\n";
-		if (request.get_header("Content-Length") != "")
-			oss << "POST content: " << request.post_content() << "\n\n";
-		oss << "Request headers:\n";
-		for (const auto& item : request.headers)
+		for (const auto& route : m_static_routes)
 		{
-			oss << item.first << ": " << item.second << "\n";
+			boost::regex regex{ route.first, boost::regex_constants::icase };
+			if (boost::regex_match(request.path, regex))
+			{
+				request.path_regex = regex;
+				request.content_dir = route.second;
+				break;
+			}
 		}
-		headers_type headers;
-		headers.emplace_back("Connection", "keep-alive");
-		headers.emplace_back("Content-Type", "text/plain");
-		headers.emplace_back("Content-Length", to_string(oss.str().length()));
-		sys::error_code ec = response.send_header("200", "OK", headers);
-		if (!ec)
+	}
+
+	void HttpServer::handle_request(Request& request, Response& response)
+	{
+		if (request.content_dir != string())
 		{
-			ec = response.send_data(oss.str());
+			request.url_scheme = url_scheme;
+			request.host_name = m_host_name;
+			request.local_endpoint_port = m_port;
+			GilAcquire acquire_gil;
+			WsgiRequestHandler handler{ request, response, m_app };
+			try
+			{
+				handler.handle();
+			}
+			catch (const py::error_already_set&)
+			{
+
+			}
+			catch (const exception& ex)
+			{
+
+			}
 		}
-		return ec;
+		else
+		{
+			StaticRequestHandler handler{ request, response };
+			try
+			{
+				handler.handle();
+			}
+			catch (const exception& ex)
+			{
+
+			}
+		}
+		if (request.persistent())
+			process_request(request.connection().socket());
 	}
 
 
 	void HttpServer::start()
 	{
+		GilRelease release_gil;
 		if (m_io_service.stopped())
 			m_io_service.reset();
 		asio::ip::tcp::endpoint endpoint;
@@ -103,6 +130,7 @@ namespace wsgi_boost
 		m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
 		m_acceptor.bind(endpoint);
 		m_acceptor.listen();
+		m_host_name = asio::ip::host_name();
 		accept();
 		for (unsigned int i = 1; i < m_num_threads; ++i)
 		{
