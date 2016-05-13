@@ -28,22 +28,8 @@ def simple_app(environ, start_response):
 
 
 print('Startig WsgiBoost server...')
-httpd =  wsgi_boost.WsgiBoostHttp(8000, 4)
-httpd.logging = True
-httpd.abort_on_errors = True
+httpd =  wsgi_boost.WsgiBoostHttp(num_threads=4)
 httpd.add_static_route('^/static', cwd)
 httpd.set_app(simple_app)
-server_thread = threading.Thread(target=httpd.start)
-server_thread.daemon = True
-server_thread.start()
-time.sleep(0.5)
-print('WsgiBoost server started. To stop it press Ctrl+C.')
-try:
-    while True:
-        time.sleep(0.1)
-except KeyboardInterrupt:
-    pass
-finally:
-    httpd.stop()
-    server_thread.join()
+httpd.start()
 print('WsgiBoost server stopped.')

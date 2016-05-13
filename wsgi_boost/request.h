@@ -76,7 +76,7 @@ namespace wsgi_boost
 			return m_remote_address;
 		}
 
-		unsigned short remote_port()
+		unsigned short remote_port() const
 		{
 			return m_remote_port;
 		}
@@ -86,7 +86,7 @@ namespace wsgi_boost
 			return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
 		}
 
-		Connection& connection()
+		Connection& connection() const
 		{
 			return m_connection;
 		}

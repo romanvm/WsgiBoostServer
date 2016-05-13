@@ -67,7 +67,7 @@ namespace wsgi_boost
 			return m_socket;
 		}
 
-		long long content_length()
+		long long content_length() const
 		{
 			return m_content_length;
 		}

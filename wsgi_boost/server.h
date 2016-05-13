@@ -36,6 +36,7 @@ namespace wsgi_boost
 		unsigned int content_timeout = 300;
 		bool reuse_address = true;
 		std::string url_scheme = "http";
+		bool logging = false;
 
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;
@@ -46,5 +47,10 @@ namespace wsgi_boost
 		void set_app(boost::python::object app);
 		void start();
 		void stop();
+
+		bool is_running() const
+		{
+			return !m_io_service.stopped();
+		}
 	};
 }

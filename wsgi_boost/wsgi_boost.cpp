@@ -30,12 +30,19 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 	py::class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
 
-		"WsgiBoostHttp(port, num_threads=1, timeout_request=5, timeout_content=300)\n\n"
+		"WsgiBoostHttp(ip_address='', port=8000, num_threads=1)\n\n"
 
-		"PEP333-compliant multi-threaded WSGI server\n\n"
+		"PEP3333-compliant multi-threaded WSGI server\n\n"
 
 		"The server is able to serve both Python WSGI applications and static files.\n"
 		"For static files gzip compression and 'If-Modified-Since' headers are supported.\n\n"
+
+		":param ip_adderess: server's IP address\n"
+		":type ip_address: str\n"
+		":param port: server's port\n"
+		":type port: int\n"
+		":param num_threads: the number of threads for the server to run\n"
+		":type num_threads: int\n\n"
 
 		"Usage::\n\n"
 
@@ -56,7 +63,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"		return[content]\n\n"
 
 		"	cwd = os.path.dirname(os.path.abspath(__file__))\n"
-		"	httpd = wsgi_boost.WsgiBoostHttp(8000, 4)\n"
+		"	httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)\n"
 		"	httpd.add_static_route('^/static', cwd)\n"
 		"	httpd.set_app(simple_app)\n"
 		"	server_thread = threading.Thread(target = httpd.start)\n"
@@ -73,11 +80,9 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"		server_thread.join()\n"
 		,
 
-		py::init<unsigned short, py::optional<size_t, size_t, size_t>>(py::args("port", "num_threads", "timeout_request", "timeout_content")))
+		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("num_threads") = 1)))
 
-		.def_readonly("name", &HttpServer::server_name, "Get server name")
-
-		.def_readonly("is_running", &HttpServer::is_running, "Get running status")
+		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 
 		.def_readwrite("logging", &HttpServer::logging,
 			"Get or set logging state (default: ``False``)\n\n"
@@ -88,22 +93,14 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		)
 
 		.def_readwrite("url_scheme", &HttpServer::url_scheme,
-			"Get os set url scheme -- http or https.\n\n"
-
-			"Default: ``'http'``"
-			)
-
-		.def_readwrite("abort_on_errors", &HttpServer::abort_on_errors,
-			"Get or set ``abort_on_errors`` flag\n\n"
-
-			"If ``True`` the server stops in case of any errors. Default: ``False``."
+			"Get os set url scheme -- http or https (Default: ``'http'``)"
 			)
 
 		.def("start", &HttpServer::start, "Start processing HTTP requests")
 
 		.def("stop", &HttpServer::stop, "Stop processing HTTP requests")
 
-		.def("add_static_route", &HttpServer::add_static_route, args("path", "content_dir"),
+		.def("add_static_route", &HttpServer::add_static_route, py::args("path", "content_dir"),
 
 			"Add a route for serving static files\n\n"
 
@@ -121,10 +118,10 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			"    will be directed to that route and a WSGI application will never be reached."
 		)
 
-		.def("set_app", &HttpServer::set_app, args("app"),
+		.def("set_app", &HttpServer::set_app, py::args("app"),
 			"Set a WSGI application to be served\n\n"
 
-			":param app: an application to be served as an executable object"
+			":param app: a WSGI application to be served as an executable object"
 		)
 		;
 

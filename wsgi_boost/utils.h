@@ -133,7 +133,7 @@ namespace wsgi_boost
 			{
 				return m_mime_types.at(ext);
 			}
-			catch (const std::out_of_range& ex)
+			catch (const std::out_of_range&)
 			{
 				return m_default_mime;
 			}

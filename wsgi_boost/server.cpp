@@ -74,7 +74,7 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
-		if (request.content_dir != string())
+		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
 			request.host_name = m_host_name;
@@ -87,11 +87,11 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
-
+				PyErr_Print();
 			}
 			catch (const exception& ex)
 			{
-
+				cerr << ex.what() << endl;
 			}
 		}
 		else
@@ -103,11 +103,23 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-
+				cerr << ex.what();
 			}
 		}
 		if (request.persistent())
 			process_request(request.connection().socket());
+	}
+
+
+	void HttpServer::add_static_route(string path, string content_dir)
+	{
+		m_static_routes.emplace_back(path, content_dir);
+	}
+
+
+	void HttpServer::set_app(py::object app)
+	{
+		m_app = app;
 	}
 
 
@@ -139,10 +151,7 @@ namespace wsgi_boost
 				m_io_service.run();
 			});
 		}
-		m_signals.async_wait([this](sys::error_code, int)
-		{
-			stop();
-		});
+		m_signals.async_wait([this](sys::error_code, int) { stop(); });
 		m_io_service.run();
 		for (auto& t : m_threads)
 		{
