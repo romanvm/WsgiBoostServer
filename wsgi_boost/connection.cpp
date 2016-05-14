@@ -17,14 +17,14 @@ namespace wsgi_boost
 	void Connection::set_timeout(unsigned int timeout)
 	{
 		m_timer.expires_from_now(boost::posix_time::seconds(timeout));
-		m_timer.async_wait([this](const sys::error_code& ec)
+		m_timer.async_wait(m_strand.wrap([this](const sys::error_code& ec)
 		{
 			if (!ec)
 			{
 				m_socket->shutdown(asio::ip::tcp::socket::shutdown_both);
 				m_socket->close();
 			}
-		});
+		}));
 	}
 
 
@@ -65,7 +65,9 @@ namespace wsgi_boost
 		}
 		sys::error_code ec;
 		set_timeout(m_content_timeout);
-		size_t bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
+		// For receivind POST content I'm uisng a syncronous read because a stackful coroutine can be resumed
+		// in a different thread while the GIL is held which results in Python crash.
+		size_t bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
 		if (!ec || ec && bytes_read > 0)
 		{
 			m_timer.cancel();
@@ -132,7 +134,9 @@ namespace wsgi_boost
 	{
 		sys::error_code ec;
 		set_timeout(m_content_timeout);
-		asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
+		// For sending HTTP response I'm using a syncronous write because a stackful coroutine can be resumed
+		// in a different thread while the GIL is held which results in Python crash.
+		asio::write(*m_socket, m_ostreambuf, ec);
 		if (!ec)
 			m_timer.cancel();
 		return ec;

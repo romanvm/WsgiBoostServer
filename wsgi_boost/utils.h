@@ -18,7 +18,8 @@ License: MIT, see License.txt
 #include <cctype>
 #include <mutex>
 #include <queue>
-
+#include <iostream>
+#include <thread>
 
 namespace wsgi_boost
 {
@@ -103,8 +104,15 @@ namespace wsgi_boost
 	class GilRelease
 	{
 	public:
-		GilRelease() { m_state = PyEval_SaveThread(); }
-		~GilRelease() { PyEval_RestoreThread(m_state); }
+		GilRelease() 
+		{
+			m_state = PyEval_SaveThread();
+		}
+
+		~GilRelease()
+		{ 
+			PyEval_RestoreThread(m_state);
+		}
 
 	private:
 		PyThreadState* m_state;
@@ -114,8 +122,15 @@ namespace wsgi_boost
 	class GilAcquire
 	{
 	public:
-		GilAcquire() { m_gstate = PyGILState_Ensure(); };
-		~GilAcquire() { PyGILState_Release(m_gstate); };
+		GilAcquire() 
+		{
+			m_gstate = PyGILState_Ensure();
+		}
+
+		~GilAcquire() 
+		{
+			PyGILState_Release(m_gstate);
+		}
 
 	private:
 		PyGILState_STATE m_gstate;

@@ -62,10 +62,9 @@ namespace wsgi_boost
 	{
 		for (const auto& route : m_static_routes)
 		{
-			boost::regex regex{ route.first, boost::regex_constants::icase };
-			if (boost::regex_match(request.path, regex))
+			if (boost::regex_search(request.path, route.first))
 			{
-				request.path_regex = regex;
+				request.path_regex = route.first;
 				request.content_dir = route.second;
 				break;
 			}
@@ -113,7 +112,8 @@ namespace wsgi_boost
 
 	void HttpServer::add_static_route(string path, string content_dir)
 	{
-		m_static_routes.emplace_back(path, content_dir);
+		boost::regex regex{ path, boost::regex_constants::icase };
+		m_static_routes.emplace_back(regex, content_dir);
 	}
 
 
@@ -144,6 +144,7 @@ namespace wsgi_boost
 		m_acceptor.listen();
 		m_host_name = asio::ip::host_name();
 		accept();
+		m_threads.clear();
 		for (unsigned int i = 1; i < m_num_threads; ++i)
 		{
 			m_threads.emplace_back([this]()

@@ -22,7 +22,7 @@ namespace wsgi_boost
 		std::string m_ip_address;
 		unsigned short m_port;
 		boost::asio::signal_set m_signals;
-		std::vector<std::pair<std::string, std::string>> m_static_routes;
+		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
 		boost::python::object m_app;
 		std::string m_host_name;
 

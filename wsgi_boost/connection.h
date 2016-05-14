@@ -28,6 +28,7 @@ namespace wsgi_boost
 		boost::asio::streambuf m_istreambuf;
 		boost::asio::streambuf m_ostreambuf;
 		boost::asio::deadline_timer m_timer;
+		boost::asio::strand m_strand;
 		unsigned int m_header_timeout;
 		unsigned int m_content_timeout;
 		long long m_bytes_left = -1;
@@ -41,10 +42,11 @@ namespace wsgi_boost
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
 
-		Connection(socket_ptr socket, boost::asio::yield_context& yc,
-			boost::asio::io_service& io_service, unsigned int header_timeout, unsigned int content_timeout) :
+		Connection(socket_ptr socket, boost::asio::yield_context& yc, boost::asio::io_service& io_service,
+			unsigned int header_timeout, unsigned int content_timeout) :
 			std::ostream(&m_ostreambuf),
-			m_socket{ socket }, m_yc{ yc }, m_timer{ io_service }, m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
+			m_socket{ socket }, m_yc{ yc }, m_strand{ io_service }, m_timer{ io_service },
+			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
 		// Read header line
 		boost::system::error_code read_header_line(std::string& line);

@@ -240,6 +240,7 @@ namespace wsgi_boost
 #else
 				std::string chunk = py::extract<char*>(iterator.attr("__next__")());
 #endif
+				GilRelease release_gil;
 				sys::error_code ec;
 				if (!m_headers_sent)
 				{
@@ -248,7 +249,6 @@ namespace wsgi_boost
 						break;
 					m_headers_sent = true;
 				}
-				GilRelease release_gil;
 				ec = m_response.send_data(chunk);
 				if (ec)
 					break;

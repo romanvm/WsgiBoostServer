@@ -4,20 +4,20 @@
 from __future__ import print_function
 import os
 import sys
-import threading
-import time
-import atexit
 
 cwd = os.path.dirname(os.path.abspath(__file__))
-wsgi_boost_dir = os.path.join(os.path.dirname(cwd), 'wsgi_boost')
-sys.path.insert(0, wsgi_boost_dir)
+# wsgi_boost_dir = os.path.join(os.path.dirname(cwd), 'wsgi_boost')
+# sys.path.insert(0, wsgi_boost_dir)
 
 import wsgi_boost
 
 
 def simple_app(environ, start_response):
     content = 'Hello World!\n\n'
-    content += 'POST data: {0}\n\n'.format(environ['wsgi.input'].read())
+    content += 'POST data:\n\n'
+    for line in environ['wsgi.input']:
+        print("line: " + line)
+        content += line
     content += 'environ variables:\n'
     for key, value in environ.iteritems():
         content += '{0}: {1}\n'.format(key, value)
