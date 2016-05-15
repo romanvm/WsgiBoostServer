@@ -32,7 +32,7 @@ namespace wsgi_boost
 	{
 		sys::error_code ec;
 		set_timeout(m_header_timeout);
-		size_t bytes_read = asio::async_read_until(*m_socket, m_istreambuf, "\r\n", m_yc[ec]);
+		size_t bytes_read = asio::read_until(*m_socket, m_istreambuf, "\r\n", ec);
 		if (!ec)
 		{
 			m_timer.cancel();
@@ -65,13 +65,12 @@ namespace wsgi_boost
 		}
 		sys::error_code ec;
 		set_timeout(m_content_timeout);
-		// For receivind POST content I'm uisng a syncronous read because a stackful coroutine can be resumed
+		// For receivind POST content I'm using a syncronous read because a stackful coroutine can be resumed
 		// in a different thread while the GIL is held which results in Python crash.
 		size_t bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
-		if (!ec || ec && bytes_read > 0)
+		if (!ec || (ec && bytes_read > 0))
 		{
 			m_timer.cancel();
-			m_bytes_left -= bytes_read;
 			return true;
 		}
 		return false;
@@ -83,9 +82,8 @@ namespace wsgi_boost
 		bool result = read_into_buffer(length);
 		if (result)
 		{
-			istream is{ &m_istreambuf };
 			ostringstream oss;
-			oss << is.rdbuf();
+			oss << &m_istreambuf;
 			data = oss.str();
 			m_bytes_left -= oss.str().length();
 		}
@@ -102,21 +100,20 @@ namespace wsgi_boost
 			string temp = string();
 			getline(is, temp);
 			line += temp;
+			m_bytes_left -= temp.length();
 			if (!is.eof())
 			{
 				line += '\n';
+				--m_bytes_left;
 				break;
+			}
+			if (read_into_buffer(min(long long(128), m_bytes_left)))
+			{
+				is.clear();
 			}
 			else
 			{
-				if (read_into_buffer(128))
-				{
-					is.clear();
-				}
-				else
-				{
-					break;
-				}
+				break;
 			}
 		}
 		return line;

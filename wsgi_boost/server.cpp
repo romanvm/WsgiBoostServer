@@ -39,23 +39,20 @@ namespace wsgi_boost
 
 
 	void HttpServer::process_request(socket_ptr socket)
-	{
-		asio::spawn(m_io_service, [this, socket](asio::yield_context yc)
+	{		
+		Connection connection{ socket, m_io_service, header_timeout, content_timeout };
+		Request request{ connection };
+		Response response{ connection };
+		if (request.parse_header())
 		{
-			Connection connection{ socket, yc, m_io_service, header_timeout, content_timeout };
-			Request request{ connection };
-			Response response{ connection };
-			if (request.parse_header())
-			{
-				check_static_route(request);
-				response.http_version == request.http_version;
-				handle_request(request, response);
-			}
-			else
-			{
-				response.send_mesage("400 Bad Request", "Error 400: Bad request!");
-			}
-		});
+			check_static_route(request);
+			response.http_version == request.http_version;
+			handle_request(request, response);
+		}
+		else
+		{
+			response.send_mesage("400 Bad Request", "Error 400: Bad request!");
+		}
 	}
 
 	void HttpServer::check_static_route(Request& request)

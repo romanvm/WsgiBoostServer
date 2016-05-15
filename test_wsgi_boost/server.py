@@ -16,8 +16,9 @@ def simple_app(environ, start_response):
     content = 'Hello World!\n\n'
     content += 'POST data:\n\n'
     for line in environ['wsgi.input']:
-        print("line: " + line)
         content += line
+    # content += environ['wsgi.input'].read()
+    content += '\n\n'
     content += 'environ variables:\n'
     for key, value in environ.iteritems():
         content += '{0}: {1}\n'.format(key, value)
