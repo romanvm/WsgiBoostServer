@@ -43,7 +43,7 @@ namespace wsgi_boost
 		Connection connection{ socket, m_io_service, header_timeout, content_timeout };
 		Request request{ connection };
 		Response response{ connection };
-		boost::system::error_code ec = request.parse_header();
+		sys::error_code ec = request.parse_header();
 		if (!ec)
 		{
 			check_static_route(request);
@@ -129,12 +129,13 @@ namespace wsgi_boost
 		if (m_ip_address != "")
 		{
 			asio::ip::tcp::resolver resolver(m_io_service);
-			boost::system::error_code ec;
+			sys::error_code ec;
 			endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) }, ec);
 			if (ec)
 			{
-				cerr << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << ", aborting" << endl;
-				return;
+				ostringstream oss;
+				oss << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << "!";
+				throw RuntimeError(oss.str());
 			}
 		}
 		else

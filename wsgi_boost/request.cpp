@@ -18,7 +18,7 @@ namespace wsgi_boost
 		vector<string> parts;
 		alg::split(parts, line, alg::is_space(), alg::token_compress_on);
 		if (parts.size() != 3)
-			return boost::system::error_code(boost::system::errc::bad_message, boost::system::system_category());
+			return sys::error_code(sys::errc::bad_message, sys::system_category());
 		method = parts[0];
 		path = parts[1];
 		http_version = parts[2];
@@ -62,7 +62,7 @@ namespace wsgi_boost
 		{
 			m_connection.set_post_content_length(0);
 		}
-		return boost::system::error_code(boost::system::errc::success, boost::system::system_category());
+		return sys::error_code(sys::errc::success, sys::system_category());
 	}
 
 
