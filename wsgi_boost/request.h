@@ -60,7 +60,7 @@ namespace wsgi_boost
 			read_remote_endpoint_data();
 		}
 
-		bool parse_header();
+		boost::system::error_code parse_header();
 
 		// Check if a header contains a specific value
 		bool check_header(const std::string& header, std::string value);

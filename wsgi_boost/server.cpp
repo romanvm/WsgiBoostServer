@@ -43,15 +43,16 @@ namespace wsgi_boost
 		Connection connection{ socket, m_io_service, header_timeout, content_timeout };
 		Request request{ connection };
 		Response response{ connection };
-		if (request.parse_header())
+		boost::system::error_code ec = request.parse_header();
+		if (!ec)
 		{
 			check_static_route(request);
 			response.http_version == request.http_version;
 			handle_request(request, response);
 		}
-		else
+		else if (ec == boost::system::errc::bad_message)
 		{
-			response.send_mesage("400 Bad Request", "Error 400: Bad request!");
+			response.send_mesage("400 Bad Request");
 		}
 	}
 
@@ -109,8 +110,7 @@ namespace wsgi_boost
 
 	void HttpServer::add_static_route(string path, string content_dir)
 	{
-		boost::regex regex{ path, boost::regex_constants::icase };
-		m_static_routes.emplace_back(regex, content_dir);
+		m_static_routes.emplace_back(boost::regex(path, boost::regex_constants::icase), content_dir);
 	}
 
 
@@ -129,7 +129,13 @@ namespace wsgi_boost
 		if (m_ip_address != "")
 		{
 			asio::ip::tcp::resolver resolver(m_io_service);
-			endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
+			boost::system::error_code ec;
+			endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) }, ec);
+			if (ec)
+			{
+				cerr << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << ", aborting" << endl;
+				return;
+			}
 		}
 		else
 		{

@@ -8,8 +8,8 @@ License: MIT, see License.txt
 
 #include "exceptions.h"
 
-#include<boost/asio.hpp>
-#include<boost/asio/spawn.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/spawn.hpp>
 #include <boost/python.hpp>
 
 #include<memory>

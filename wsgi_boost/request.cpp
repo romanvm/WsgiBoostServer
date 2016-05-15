@@ -9,16 +9,16 @@ namespace sys = boost::system;
 
 namespace wsgi_boost
 {
-	bool Request::parse_header()
+	boost::system::error_code Request::parse_header()
 	{
 		string line;
 		sys::error_code ec = m_connection.read_header_line(line);
 		if (ec)
-			return false;
+			return ec;
 		vector<string> parts;
 		alg::split(parts, line, alg::is_space(), alg::token_compress_on);
 		if (parts.size() != 3)
-			return false;
+			return boost::system::error_code(boost::system::errc::bad_message, boost::system::system_category());
 		method = parts[0];
 		path = parts[1];
 		http_version = parts[2];
@@ -26,7 +26,7 @@ namespace wsgi_boost
 		{
 			ec = m_connection.read_header_line(line);
 			if (ec)
-				return false;
+				return ec;
 			if (!line.length())
 				break;
 			size_t pos = line.find(':');
@@ -62,7 +62,7 @@ namespace wsgi_boost
 		{
 			m_connection.set_post_content_length(0);
 		}
-		return true;
+		return boost::system::error_code(boost::system::errc::success, boost::system::system_category());
 	}
 
 
