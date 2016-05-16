@@ -7,13 +7,14 @@ License: MIT, see License.txt
 */
 
 #include "exceptions.h"
+#include "utils.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/python.hpp>
 
-#include<memory>
-#include<iostream>
+#include <memory>
+#include <iostream>
 
 namespace wsgi_boost
 {

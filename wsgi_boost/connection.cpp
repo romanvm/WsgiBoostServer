@@ -19,7 +19,7 @@ namespace wsgi_boost
 		m_timer.expires_from_now(boost::posix_time::seconds(timeout));
 		m_timer.async_wait(m_strand.wrap([this](const sys::error_code& ec)
 		{
-			if (!ec)
+			if (ec != asio::error::operation_aborted)
 			{
 				m_socket->shutdown(asio::ip::tcp::socket::shutdown_both);
 				m_socket->close();
@@ -144,6 +144,7 @@ namespace wsgi_boost
 
 	string InputWrapper::read(long long size)
 	{
+		GilRelease release_gil;
 		string data;
 		if (m_connection.read_bytes(data, size))
 			return data;
@@ -152,26 +153,28 @@ namespace wsgi_boost
 
 	string InputWrapper::readline(long long size)
 	{
+		GilRelease release_gil;
 		string line = m_connection.read_line();
 		if (size > 0 && line.length() > size)
 			line = line.substr(0, size);
 		return line;
 	}
 
-	py::list InputWrapper::readlines(long long hint)
+	py::list InputWrapper::readlines(long long sizehint)
 	{
 		py::list listing;
-		while (true)
+		string line;
+		long long total_length = 0;
+		while ((line = readline()) != "")
 		{
-			string line = readline();
-			if (line != "")
+			listing.append(line);
+			if (sizehint >= 0)
 			{
-				listing.append(line);
+				total_length += line.length();
+				if (total_length > sizehint)
+					break;
 			}
-			else
-			{
-				break;
-			}
+			
 		}
 		return listing;
 	}
