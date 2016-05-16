@@ -3,7 +3,7 @@
 #include <boost/asio/spawn.hpp>
 
 #include <memory>
-#include <signal.h>
+#include <csignal>
 
 using namespace std;
 namespace asio = boost::asio;
@@ -71,6 +71,7 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
+		string message = "Error 500: Internal server error!\n\n";
 		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
@@ -84,11 +85,21 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
-				PyErr_Print();
+				if (wsgi_debug)
+				{
+					stop();
+					return;
+				}
+				else
+				{
+					PyErr_Print();
+				}
+				response.send_mesage("500 Internal Server Error", message);
 			}
 			catch (const exception& ex)
 			{
 				cerr << ex.what() << endl;
+				response.send_mesage("500 Internal Server Error", message);
 			}
 		}
 		else
@@ -101,6 +112,7 @@ namespace wsgi_boost
 			catch (const exception& ex)
 			{
 				cerr << ex.what();
+				response.send_mesage("500 Internal Server Error", message);
 			}
 		}
 		if (request.persistent())
@@ -122,53 +134,62 @@ namespace wsgi_boost
 
 	void HttpServer::start()
 	{
-		GilRelease release_gil;
-		if (m_io_service.stopped())
+		if (!is_running())
+		{
+			cout << "Starting WsgiBoostHttp server..." << endl;
+			GilRelease release_gil;
 			m_io_service.reset();
-		asio::ip::tcp::endpoint endpoint;
-		if (m_ip_address != "")
-		{
-			asio::ip::tcp::resolver resolver(m_io_service);
-			sys::error_code ec;
-			endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) }, ec);
-			if (ec)
+			asio::ip::tcp::endpoint endpoint;
+			if (m_ip_address != "")
 			{
-				ostringstream oss;
-				oss << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << "!";
-				throw RuntimeError(oss.str());
+				asio::ip::tcp::resolver resolver(m_io_service);
+				try
+				{
+					endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
+				}
+				catch (const exception&)
+				{
+					ostringstream oss;
+					oss << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << "!";
+					throw RuntimeError(oss.str());
+				}
 			}
-		}
-		else
-		{
-			endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), m_port);
-		}
-		m_acceptor.open(endpoint.protocol());
-		m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
-		m_acceptor.bind(endpoint);
-		m_acceptor.listen();
-		m_host_name = asio::ip::host_name();
-		accept();
-		m_threads.clear();
-		for (unsigned int i = 1; i < m_num_threads; ++i)
-		{
-			m_threads.emplace_back([this]()
+			else
 			{
-				m_io_service.run();
-			});
-		}
-		m_signals.async_wait([this](sys::error_code, int) { stop(); });
-		m_io_service.run();
-		for (auto& t : m_threads)
-		{
-			t.join();
+				endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), m_port);
+			}
+			m_acceptor.open(endpoint.protocol());
+			m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
+			m_acceptor.bind(endpoint);
+			m_acceptor.listen();
+			m_host_name = asio::ip::host_name();
+			accept();
+			m_threads.clear();
+			for (unsigned int i = 1; i < m_num_threads; ++i)
+			{
+				m_threads.emplace_back([this]()
+				{
+					m_io_service.run();
+				});
+			}
+			m_signals.async_wait([this](sys::error_code, int) { stop(); });
+			m_io_service.run();
+			for (auto& t : m_threads)
+			{
+				t.join();
+			}
 		}
 	}
 
 
 	void HttpServer::stop()
 	{
-		m_acceptor.close();
-		m_io_service.stop();
-		m_signals.cancel();
+		if (is_running())
+		{
+			m_acceptor.close();
+			m_io_service.stop();
+			m_signals.cancel();
+			cout << "WsgiBoostHttp server stopped." << endl;
+		}
 	}
 }

@@ -30,14 +30,14 @@ namespace wsgi_boost
 	public:
 		RuntimeError(std::string message = "") : m_message{ message } {}
 
-		const char* what()
+		const char* what() const
 		{
 			return m_message.c_str();
 		}
 	};
 
 
-	inline void runtime_error_translator(RuntimeError& ex)
+	inline void runtime_error_translator(const RuntimeError& ex)
 	{
 		PyErr_SetString(PyExc_RuntimeError, ex.what());
 	}

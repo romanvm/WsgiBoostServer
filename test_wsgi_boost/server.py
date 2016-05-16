@@ -4,6 +4,8 @@
 from __future__ import print_function
 import os
 import sys
+import time
+from wsgiref.validate import validator
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 # wsgi_boost_dir = os.path.join(os.path.dirname(cwd), 'wsgi_boost')
@@ -14,7 +16,7 @@ import wsgi_boost
 
 def simple_app(environ, start_response):
     content = 'Hello World!\n\n'
-    content += 'POST data:\n\n'
+    content += 'POST data:\n'
     for line in environ['wsgi.input']:
         content += line
     # content += environ['wsgi.input'].read()
@@ -28,9 +30,9 @@ def simple_app(environ, start_response):
     return [content]
 
 
-print('Startig WsgiBoost server...')
-httpd =  wsgi_boost.WsgiBoostHttp(num_threads=4)
+httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
+httpd.wsgi_debug = True
 httpd.add_static_route('^/static', cwd)
 httpd.set_app(simple_app)
 httpd.start()
-print('WsgiBoost server stopped.')
+time.sleep(1.0)

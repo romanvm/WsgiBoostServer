@@ -253,7 +253,7 @@ namespace wsgi_boost
 				if (ec)
 					break;
 			}
-			catch (const py::error_already_set& ex)
+			catch (const py::error_already_set&)
 			{
 				PyObject *e, *v, *t;
 				PyErr_Fetch(&e, &v, &t);

@@ -37,6 +37,7 @@ namespace wsgi_boost
 		bool reuse_address = true;
 		std::string url_scheme = "http";
 		bool logging = false;
+		bool wsgi_debug = false;
 
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;

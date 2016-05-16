@@ -16,6 +16,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	PyEval_InitThreads(); // Initialize GIL
 
 	py::register_exception_translator<StopIteration>(&stop_iteration_translator);
+	py::register_exception_translator<RuntimeError>(&runtime_error_translator);
 	
 	py::scope module;
 	module.attr("__doc__") = "This module provides WSGI/HTTP server class";
@@ -84,10 +85,12 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 
+		.def_readwrite("wsgi_debug", &HttpServer::wsgi_debug, "Abort the server on unhandled Python exceptions in a WSGI app (default: ``False``)")
+
 		.def_readwrite("logging", &HttpServer::logging,
 			"Get or set logging state (default: ``False``)\n\n"
 
-			"When set to ``True`` server logs to the console basic request data.\n\n"
+			"When set to ``True`` the server logs basic requests info to the console .\n\n"
 
 			".. warning:: Enabling logging may impact server performance."
 		)
