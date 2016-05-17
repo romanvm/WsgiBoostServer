@@ -187,7 +187,6 @@
     <ClCompile Include="request_handlers.cpp" />
     <ClCompile Include="response.cpp" />
     <ClCompile Include="server.cpp" />
-    <ClCompile Include="utils.cpp" />
     <ClCompile Include="wsgi_boost.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

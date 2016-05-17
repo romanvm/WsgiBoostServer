@@ -44,9 +44,6 @@
     <ClCompile Include="request_handlers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="connection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -29,52 +29,65 @@ namespace wsgi_boost
 	inline boost::python::object get_python_object(PyObject* pyobj)
 	{
 		return boost::python::object(boost::python::handle<>(pyobj));
-	};
+	}
 
 
 	// Converts POSIX time to HTTP header format
-	std::string time_to_header(std::time_t posix_time);
+	inline std::string time_to_header(time_t posix_time)
+	{
+		std::stringstream ss;
+		ss.imbue(std::locale("C"));
+		ss << std::put_time(std::gmtime(&posix_time), "%a, %d %b %Y %H:%M:%S GMT");
+		return ss.str();
+	}
 
 
 	// Parses HTTP "time" headers to POSIX time
-	std::time_t header_to_time(const std::string& time_string);
+	inline time_t header_to_time(const std::string& time_string)
+	{
+		tm t;
+		std::stringstream ss{ time_string };
+		ss.imbue(std::locale("C"));
+		ss >> std::get_time(&t, "%a, %d %b %Y %H:%M:%S GMT");
+		return mktime(&t);
+	}
 
 
 	// Splits a full path into a path proper and a query string
-	std::pair<std::string, std::string> split_path(const std::string& path);
+	inline std::pair<std::string, std::string> split_path(const std::string& path)
+	{
+		size_t pos = path.find("?");
+		if (pos != std::string::npos)
+		{
+			return std::pair<std::string, std::string>{path.substr(0, pos), path.substr(pos + 1)};
+		}
+		return std::pair<std::string, std::string>(path, "");
+	}
 
 
 	// Transform a HTTP header to WSGI environ format HTTP_
-	std::string transform_header(std::string header);
+	inline std::string transform_header(std::string header)
+	{
+		for (auto& ch : header)
+		{
+			if (ch == '-')
+				ch = '_';
+		}
+		boost::to_upper(header);
+		header = "HTTP_" + header;
+		return header;
+	}
 
 
-	// Get current timezone time as string
-	std::string get_current_local_time();
-
-
+	// Get current GMT time in HTTP header format
 	inline std::string get_current_gmt_time()
 	{
 		return time_to_header(std::time(nullptr));
-	};
+	}
 
 #pragma endregion
 
 #pragma region classes
-
-	class StringQueue
-	{
-	private:
-		std::mutex m_mutex;
-		std::queue<std::string> m_queue;
-
-	public:
-		void push(std::string item);
-
-		std::string pop();
-
-		bool is_empty();
-	};
-
 
 	// RAII implementation for auto-closing an iterator object passed from a WSGI application
 	class Iterator
@@ -117,6 +130,7 @@ namespace wsgi_boost
 	private:
 		PyThreadState* m_state;
 	};
+
 
 	// Scoped GIL acquire
 	class GilAcquire
