@@ -134,50 +134,48 @@ namespace wsgi_boost
 
 	void HttpServer::start()
 	{
-		if (!is_running())
-		{
-			cout << "Starting WsgiBoostHttp server..." << endl;
-			GilRelease release_gil;
+		cout << "Starting WsgiBoostHttp server..." << endl;
+		GilRelease release_gil;
+		if (m_io_service.stopped())
 			m_io_service.reset();
-			asio::ip::tcp::endpoint endpoint;
-			if (m_ip_address != "")
+		asio::ip::tcp::endpoint endpoint;
+		if (m_ip_address != "")
+		{
+			asio::ip::tcp::resolver resolver(m_io_service);
+			try
 			{
-				asio::ip::tcp::resolver resolver(m_io_service);
-				try
-				{
-					endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
-				}
-				catch (const exception&)
-				{
-					ostringstream oss;
-					oss << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << "!";
-					throw RuntimeError(oss.str());
-				}
+				endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
 			}
-			else
+			catch (const exception&)
 			{
-				endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), m_port);
+				ostringstream oss;
+				oss << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << "!";
+				throw RuntimeError(oss.str());
 			}
-			m_acceptor.open(endpoint.protocol());
-			m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
-			m_acceptor.bind(endpoint);
-			m_acceptor.listen();
-			m_host_name = asio::ip::host_name();
-			accept();
-			m_threads.clear();
-			for (unsigned int i = 1; i < m_num_threads; ++i)
+		}
+		else
+		{
+			endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), m_port);
+		}
+		m_acceptor.open(endpoint.protocol());
+		m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
+		m_acceptor.bind(endpoint);
+		m_acceptor.listen();
+		m_host_name = asio::ip::host_name();
+		accept();
+		m_threads.clear();
+		for (unsigned int i = 1; i < m_num_threads; ++i)
+		{
+			m_threads.emplace_back([this]()
 			{
-				m_threads.emplace_back([this]()
-				{
-					m_io_service.run();
-				});
-			}
-			m_signals.async_wait([this](sys::error_code, int) { stop(); });
-			m_io_service.run();
-			for (auto& t : m_threads)
-			{
-				t.join();
-			}
+				m_io_service.run();
+			});
+		}
+		m_signals.async_wait([this](sys::error_code, int) { stop(); });
+		m_io_service.run();
+		for (auto& t : m_threads)
+		{
+			t.join();
 		}
 	}
 

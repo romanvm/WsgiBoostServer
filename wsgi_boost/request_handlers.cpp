@@ -255,16 +255,12 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
-				PyObject *e, *v, *t;
-				PyErr_Fetch(&e, &v, &t);
-				PyErr_NormalizeException(&e, &v, &t);
-				if (PyErr_GivenExceptionMatches(PyExc_StopIteration, e))
+				if (PyErr_ExceptionMatches(PyExc_StopIteration))
 				{
 					PyErr_Clear();
 					break;
 				}
 				{
-					PyErr_Restore(e, v, t);
 					throw;
 				}
 			}
