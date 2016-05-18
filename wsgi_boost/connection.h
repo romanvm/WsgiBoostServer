@@ -64,18 +64,13 @@ namespace wsgi_boost
 		boost::system::error_code flush();
 
 		// Get asio socket pointer
-		std::shared_ptr<boost::asio::ip::tcp::socket> socket() const
-		{
-			return m_socket;
-		}
+		std::shared_ptr<boost::asio::ip::tcp::socket> socket() const;
 
-		long long content_length() const
-		{
-			return m_content_length;
-		}
+		// Get POST content length
+		long long content_length() const;
 	};
 
-
+	// Wraps Connection instance to provide Python file-like object for wsgi.input
 	class InputWrapper
 	{
 	private:
@@ -84,16 +79,22 @@ namespace wsgi_boost
 	public:
 		explicit InputWrapper(Connection& conn) : m_connection{ conn } {}
 
+		// Read data from input content
 		std::string read(long long size = -1);
 
+		// Read a line from input content
 		std::string readline(long long size = -1);
 
-		boost::python::list readlines(long long hint = -1);
+		// Read a list of lines from input content
+		boost::python::list readlines(long long sizehint = -1);
 
+		// Return Python iterator
 		InputWrapper* iter();
 
+		// Iterate the iterator
 		std::string next();
 
+		// Return the length of input content
 		long long len();
 	};
 }

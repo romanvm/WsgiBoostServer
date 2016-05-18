@@ -138,6 +138,17 @@ namespace wsgi_boost
 			m_timer.cancel();
 		return ec;
 	}
+
+	inline std::shared_ptr<boost::asio::ip::tcp::socket> Connection::socket() const
+	{
+		return m_socket;
+	}
+
+	inline long long Connection::content_length() const
+	{
+		return m_content_length;
+	}
+
 #pragma endregion
 
 #pragma region InputWrapper
