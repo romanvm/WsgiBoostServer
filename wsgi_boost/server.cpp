@@ -50,9 +50,13 @@ namespace wsgi_boost
 			response.http_version == request.http_version;
 			handle_request(request, response);
 		}
-		else if (ec == boost::system::errc::bad_message)
+		else if (ec == sys::errc::bad_message)
 		{
 			response.send_mesage("400 Bad Request");
+		}
+		else if (ec == sys::errc::invalid_argument)
+		{
+			response.send_mesage("411 Length Required");
 		}
 	}
 

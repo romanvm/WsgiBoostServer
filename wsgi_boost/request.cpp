@@ -55,13 +55,15 @@ namespace wsgi_boost
 			}
 			catch (const exception&)
 			{
-				m_connection.set_post_content_length(0);
+				m_connection.set_post_content_length(-1);
 			}
 		}
 		else
 		{
-			m_connection.set_post_content_length(0);
+			m_connection.set_post_content_length(-1);
 		}
+		if ((method == "POST" || method == "PUT") && m_connection.content_length() == -1)
+			return sys::error_code(sys::errc::invalid_argument, sys::system_category());
 		return sys::error_code(sys::errc::success, sys::system_category());
 	}
 
@@ -82,15 +84,14 @@ namespace wsgi_boost
 		return string();
 	}
 
-
-	void Request::read_remote_endpoint_data()
+	bool Request::persistent()
 	{
-		try
-		{
-			socket_ptr socket = m_connection.socket();
-			m_remote_address = socket->remote_endpoint().address().to_string();
-			m_remote_port = socket->remote_endpoint().port();
-		}
-		catch (const exception&) {}
+		return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
+	}
+
+
+	Connection& Request::connection() const
+	{
+		return m_connection;
 	}
 }

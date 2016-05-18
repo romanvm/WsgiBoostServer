@@ -18,6 +18,8 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
+	// 2 structs below are used for unordered_map with case-insensitive string keys
+
 	struct iequal_to
 	{
 		bool operator()(const std::string &key1, const std::string &key2) const
@@ -39,6 +41,7 @@ namespace wsgi_boost
 	};
 
 
+	// HTTP request parameters
 	class Request
 	{
 	public:
@@ -55,11 +58,9 @@ namespace wsgi_boost
 		Request(const Request&) = delete;
 		Request& operator=(const Request&) = delete;
 
-		explicit Request(Connection& connection) : m_connection{ connection }
-		{
-			read_remote_endpoint_data();
-		}
+		explicit Request(Connection& connection) : m_connection{ connection } {}
 
+		// Parse HTTP request headers
 		boost::system::error_code parse_header();
 
 		// Check if a header contains a specific value
@@ -68,32 +69,13 @@ namespace wsgi_boost
 		// Get header value or "" if the header is missing
 		std::string get_header(const std::string& header);
 
-		// Read remote IP-address and port from socket
-		void read_remote_endpoint_data();
+		// Check if the connection is persistent (keep-alive)
+		bool persistent();
 
-		std::string remote_address()
-		{
-			return m_remote_address;
-		}
-
-		unsigned short remote_port() const
-		{
-			return m_remote_port;
-		}
-
-		bool persistent()
-		{
-			return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
-		}
-
-		Connection& connection() const
-		{
-			return m_connection;
-		}
+		// Get Connection object for this request
+		Connection& connection() const;
 
 	private:
 		Connection& m_connection;
-		std::string m_remote_address;
-		unsigned short m_remote_port;
 	};
 }

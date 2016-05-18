@@ -139,12 +139,12 @@ namespace wsgi_boost
 		return ec;
 	}
 
-	inline std::shared_ptr<boost::asio::ip::tcp::socket> Connection::socket() const
+	std::shared_ptr<boost::asio::ip::tcp::socket> Connection::socket() const
 	{
 		return m_socket;
 	}
 
-	inline long long Connection::content_length() const
+	long long Connection::content_length() const
 	{
 		return m_content_length;
 	}
