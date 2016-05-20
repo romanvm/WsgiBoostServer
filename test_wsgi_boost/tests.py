@@ -15,8 +15,7 @@ print('Running Python tests')
 cwd = os.path.dirname(os.path.abspath(__file__))
 os.chdir(cwd)
 project_dir = os.path.dirname(cwd)
-wsgi_boost_dir = os.path.join(project_dir, 'wsgi_boost')
-sys.path.insert(0, wsgi_boost_dir)
+sys.path.insert(0, project_dir)
 
 import wsgi_boost
 

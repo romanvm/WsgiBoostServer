@@ -145,14 +145,15 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(ProjectDir)"</Command>
-    </CustomBuildStep>
-    <PostBuildEvent>
       <Command>
       </Command>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy /y "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>copy module to the project dir and run tests</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -35,4 +35,3 @@ httpd.wsgi_debug = True
 httpd.add_static_route('^/static', cwd)
 httpd.set_app(simple_app)
 httpd.start()
-time.sleep(1.0)
