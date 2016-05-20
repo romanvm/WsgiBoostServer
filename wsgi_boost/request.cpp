@@ -34,7 +34,6 @@ namespace wsgi_boost
 			{
 				string header = alg::trim_copy(line.substr(0, pos));
 				string value = alg::trim_copy(line.substr(pos + 1));
-				alg::to_lower(value);
 				if (headers.find(header) == headers.end())
 				{
 					headers[header] = value;
@@ -70,9 +69,18 @@ namespace wsgi_boost
 
 	bool Request::check_header(const string& header, string value)
 	{
-		alg::to_lower(value);
 		auto it = headers.find(header);
-		return it != headers.end() && it->second.find(value) != string::npos;
+		if (it != headers.end())
+		{
+			string actual_value = it->second;
+			alg::to_lower(value);
+			alg::to_lower(actual_value);
+			return actual_value.find(value) != string::npos;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 

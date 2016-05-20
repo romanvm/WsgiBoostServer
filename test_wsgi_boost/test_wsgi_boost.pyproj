@@ -31,11 +31,6 @@
     <Content Include="profile_pic.png" />
     <Content Include="vs_run_tests.bat" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="server.py">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
 </Project>

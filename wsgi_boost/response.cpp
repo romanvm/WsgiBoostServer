@@ -32,10 +32,10 @@ namespace wsgi_boost
 	sys::error_code Response::send_mesage(const string& status, const string& message)
 	{
 		headers_type headers;
+		headers.emplace_back("Content-Length", to_string(message.length()));
 		if (message.length() > 0)
 		{
 			headers.emplace_back("Content-Type", "text/plain");
-			headers.emplace_back("Content-Length", to_string(message.length()));
 		}
 		sys::error_code ec = send_header(status, headers);
 		if (!ec)
