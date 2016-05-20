@@ -35,7 +35,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		"PEP3333-compliant multi-threaded WSGI server\n\n"
 
-		"The server is able to serve both Python WSGI applications and static files.\n"
+		"The server can serve both Python WSGI applications and static files.\n"
 		"For static files gzip compression and 'If-Modified-Since' headers are supported.\n\n"
 
 		":param ip_adderess: server's IP address\n"
@@ -48,52 +48,45 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"Usage::\n\n"
 
 		"	import os\n"
-		"	import threading\n"
 		"	import time\n"
 		"	import wsgi_boost\n\n"
 
-		"	def simple_app(environ, start_response):\n"
-		"		content = 'Hello World!\\n\\n'\n"
-		"		content += 'POST data: {0}\\n\\n'.format(environ['wsgi.input'].read())\n"
-		"		content += 'environ variables:\\n'\n"
-		"		for key, value in environ.iteritems():\n"
-		"			content += '{0}: {1}\\n'.format(key, value)\n"
+		"	def hello_app(environ, start_response):\n"
+		"		content = 'Hello World!'\n"
 		"		status = '200 OK'\n"
 		"		response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))]\n"
 		"		start_response(status, response_headers)\n"
 		"		return[content]\n\n"
 
-		"	cwd = os.path.dirname(os.path.abspath(__file__))\n"
 		"	httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)\n"
-		"	httpd.add_static_route('^/static', cwd)\n"
-		"	httpd.set_app(simple_app)\n"
-		"	server_thread = threading.Thread(target = httpd.start)\n"
-		"	server_thread.daemon = True\n"
-		"	server_thread.start()\n"
-		"	time.sleep(0.5)\n"
-		"	try:\n"
-		"		while True :\n"
-		"			time.sleep(0.1)\n"
-		"	except KeyboardInterrupt:\n"
-		"		pass\n"
-		"	finally:\n"
-		"		httpd.stop()\n"
-		"		server_thread.join()\n"
+		"	httpd.set_app(hello_app)\n"
+		"	httpd.start()\n"
 		,
 
 		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("num_threads") = 1)))
 
 		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 
-		.def_readwrite("wsgi_debug", &HttpServer::wsgi_debug, "Abort the server on unhandled Python exceptions in a WSGI app (default: ``False``)")
+		.def_readwrite("wsgi_debug", &HttpServer::wsgi_debug, "Abort the server on unhandled Python exceptions in a WSGI app, default: ``False``")
 
-		.def_readwrite("logging", &HttpServer::logging,
-			"Get or set logging state (default: ``False``)\n\n"
+		.def_readwrite("use_gzip", &HttpServer::use_gzip, "Use gzip compression for static content, default: ``False``")
 
-			"When set to ``True`` the server logs basic requests info to the console .\n\n"
+		.def_readwrite("host_hame", &HttpServer::host_name, "Get or set the host name, default: automatically determined")
 
-			".. warning:: Enabling logging may impact server performance."
-		)
+		.def_readwrite("header_timeout", &HttpServer::header_timeout,
+			"Get or set timeout for receiving HTTP request headers\n\n"
+
+			"This is the max. interval for reciving request headers before closing connection.\n"
+			"Defaul: 5s"
+			)
+
+		.def_readwrite("content_timeout", &HttpServer::content_timeout,
+			"Get or set timeout for receiving POST/PUT content or sending response\n\n"
+
+			"This is the max. interval for receiving POST/PUT content\n"
+			"or sending response before closing connection.\n"
+			"Defaul: 300s"
+			)
 
 		.def_readwrite("url_scheme", &HttpServer::url_scheme,
 			"Get os set url scheme -- http or https (Default: ``'http'``)"
@@ -127,6 +120,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			":param app: a WSGI application to be served as an executable object"
 		)
 		;
+
 
 	py::class_<InputWrapper>("InputWrapper", py::no_init)
 		.def("read", &InputWrapper::read, (py::arg("size") = -1))
