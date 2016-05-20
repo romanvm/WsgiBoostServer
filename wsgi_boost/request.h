@@ -54,6 +54,7 @@ namespace wsgi_boost
 		std::string url_scheme;
 		std::string host_name;
 		unsigned short local_endpoint_port;
+		bool use_gzip;
 
 		Request(const Request&) = delete;
 		Request& operator=(const Request&) = delete;

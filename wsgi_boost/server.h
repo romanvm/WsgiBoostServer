@@ -37,6 +37,7 @@ namespace wsgi_boost
 		std::string url_scheme = "http";
 		bool wsgi_debug = false;
 		std::string host_name;
+		bool use_gzip = true;
 
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;

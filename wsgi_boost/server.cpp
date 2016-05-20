@@ -108,6 +108,7 @@ namespace wsgi_boost
 		}
 		else
 		{
+			request.use_gzip = use_gzip;
 			StaticRequestHandler handler{ request, response };
 			try
 			{

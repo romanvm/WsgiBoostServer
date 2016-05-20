@@ -30,11 +30,11 @@ namespace wsgi_boost
 			m_response.send_mesage("405 Method Not Allowed");
 			return;
 		}
-		serve_file(content_dir_path);
+		open_file(content_dir_path);
 	}
 
 
-	void StaticRequestHandler::serve_file(const fs::path& content_dir_path)
+	void StaticRequestHandler::open_file(const fs::path& content_dir_path)
 	{
 		fs::path path = content_dir_path;
 		path /= boost::regex_replace(m_request.path, m_request.path_regex, "");
@@ -67,7 +67,7 @@ namespace wsgi_boost
 						headers_type out_headers;
 						out_headers.emplace_back("Content-Type", mime);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
-						if (mime_types.is_compressable(mime) && m_request.check_header("Accept-Encoding", "gzip"))
+						if (m_request.use_gzip && mime_types.is_compressable(mime) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
