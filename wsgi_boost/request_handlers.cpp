@@ -19,17 +19,15 @@ namespace wsgi_boost
 
 	void StaticRequestHandler::handle()
 	{
-		const auto content_dir_path = boost::filesystem::path{ m_request.content_dir };
-		if (!boost::filesystem::exists(content_dir_path))
+		const auto content_dir_path = fs::path{ m_request.content_dir };
+		if (!fs::exists(content_dir_path))
 		{
-			status = "500 Internal Server Error";
-			m_response.send_mesage(status, "Error 500: Internal server error! Invalid content directory.");
+			m_response.send_mesage("500 Internal Server Error", "Error 500: Internal server error! Invalid content directory.");
 			return;
 		}
 		if (m_request.method != "GET" && m_request.method != "HEAD")
 		{
-			status = "405 Method Not Allowed";
-			m_response.send_mesage(status);
+			m_response.send_mesage("405 Method Not Allowed");
 			return;
 		}
 		serve_file(content_dir_path);
@@ -61,8 +59,7 @@ namespace wsgi_boost
 						string ims = m_request.get_header("If-Modified-Since");
 						if (ims != "" && last_modified > header_to_time(ims))
 						{
-							status = "304 Not Modified";
-							m_response.send_mesage(status);
+							m_response.send_mesage("304 Not Modified");
 							return;
 						}
 						MimeTypes mime_types;
@@ -90,8 +87,7 @@ namespace wsgi_boost
 				}
 			}
 		}
-		status = "404 Not Found";
-		m_response.send_mesage(status, "Error 404: Requested content not found!");
+		m_response.send_mesage("404 Not Found", "Error 404: Requested content not found!");
 	}
 
 	void StaticRequestHandler::send_file(istream& content_stream, headers_type& headers)
@@ -100,8 +96,7 @@ namespace wsgi_boost
 		size_t length = content_stream.tellg();
 		content_stream.seekg(0, ios::beg);
 		headers.emplace_back("Content-Length", to_string(length));
-		status = "200 OK";
-		m_response.send_header(status, headers);
+		m_response.send_header("200 OK", headers);
 		if (m_request.method == "GET")
 		{
 			//read and send 128 KB at a time
@@ -127,7 +122,7 @@ namespace wsgi_boost
 		function<void(py::object)> wr{
 			[this](py::object data)
 			{
-				sys::error_code ec = m_response.send_header(status, m_out_headers);
+				sys::error_code ec = m_response.send_header(m_status, m_out_headers);
 				if (ec)
 					return;
 				m_headers_sent = true;
@@ -146,7 +141,7 @@ namespace wsgi_boost
 					cerr << py::extract<char*>(format_exc) << endl;
 					exc_info = py::object();
 				}
-				this->status = py::extract<char*>(status);
+				this->m_status = py::extract<char*>(status);
 				m_out_headers.clear();
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
@@ -166,8 +161,7 @@ namespace wsgi_boost
 	{
 		if (m_app.is_none())
 		{
-			status = "500 Internal Server Error";
-			m_response.send_mesage(status, "Error 500: Internal server error! WSGI application is not set.");
+			m_response.send_mesage("500 Internal Server Error", "Error 500: Internal server error! WSGI application is not set.");
 			return;
 		}
 		prepare_environ();
@@ -244,7 +238,7 @@ namespace wsgi_boost
 				sys::error_code ec;
 				if (!m_headers_sent)
 				{
-					ec = m_response.send_header(status, m_out_headers);
+					ec = m_response.send_header(m_status, m_out_headers);
 					if (ec)
 						break;
 					m_headers_sent = true;

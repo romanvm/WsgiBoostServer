@@ -25,8 +25,6 @@ namespace wsgi_boost
 	class BaseRequestHandler
 	{
 	public:
-		std::string status;
-
 		BaseRequestHandler(Request& request, Response& response) : m_request{ request }, m_response{ response } {}
 
 		BaseRequestHandler(const BaseRequestHandler&) = delete;
@@ -41,12 +39,13 @@ namespace wsgi_boost
 		Response& m_response;
 	};
 
-
+	// Handles static content
 	class StaticRequestHandler : public BaseRequestHandler
 	{
 	public:
 		StaticRequestHandler(Request& request, Response& response) : BaseRequestHandler(request, response) {}
 
+		// Handle request
 		void handle();
 
 	private:
@@ -54,10 +53,11 @@ namespace wsgi_boost
 		void send_file(std::istream& content_stream, headers_type& headers);
 	};
 
-
+	// Handles WSGI requests
 	class WsgiRequestHandler : public BaseRequestHandler
 	{
 	private:
+		std::string m_status;
 		headers_type m_out_headers;
 		bool m_headers_sent = false;
 		boost::python::object& m_app;
@@ -71,6 +71,7 @@ namespace wsgi_boost
 	public:
 		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app);
 
+		// Handle request
 		void handle();
 	};
 }
