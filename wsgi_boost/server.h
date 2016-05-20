@@ -24,7 +24,6 @@ namespace wsgi_boost
 		boost::asio::signal_set m_signals;
 		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
 		boost::python::object m_app;
-		std::string m_host_name;
 
 		void accept();
 		void process_request(socket_ptr socket);
@@ -36,22 +35,27 @@ namespace wsgi_boost
 		unsigned int content_timeout = 300;
 		bool reuse_address = true;
 		std::string url_scheme = "http";
-		bool logging = false;
 		bool wsgi_debug = false;
+		std::string host_name;
 
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;
 
 		HttpServer(std::string ip_address = "", unsigned short port = 8000, unsigned int num_threads = 1);
 
+		// Add a path to static content
 		void add_static_route(std::string path, std::string content_dir);
+
+		// Set WSGI application
 		void set_app(boost::python::object app);
+
+		// Start handling HTTP requests
 		void start();
+
+		// Stop handling http requests
 		void stop();
 
-		bool is_running() const
-		{
-			return !m_io_service.stopped();
-		}
+		// Check if the server is running
+		bool is_running() const;
 	};
 }

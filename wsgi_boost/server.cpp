@@ -79,7 +79,7 @@ namespace wsgi_boost
 		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
-			request.host_name = m_host_name;
+			request.host_name = host_name;
 			request.local_endpoint_port = m_port;
 			GilAcquire acquire_gil;
 			WsgiRequestHandler handler{ request, response, m_app };
@@ -102,7 +102,7 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-				cerr << ex.what() << endl;
+				cerr << ex.what() << '\n';
 				response.send_mesage("500 Internal Server Error", message);
 			}
 		}
@@ -115,7 +115,7 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-				cerr << ex.what();
+				cerr << ex.what() << '\n';
 				response.send_mesage("500 Internal Server Error", message);
 			}
 		}
@@ -165,7 +165,8 @@ namespace wsgi_boost
 		m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
 		m_acceptor.bind(endpoint);
 		m_acceptor.listen();
-		m_host_name = asio::ip::host_name();
+		if (host_name == string())
+			host_name = asio::ip::host_name();
 		accept();
 		m_threads.clear();
 		for (unsigned int i = 1; i < m_num_threads; ++i)
@@ -193,5 +194,11 @@ namespace wsgi_boost
 			m_signals.cancel();
 			cout << "WsgiBoostHttp server stopped." << endl;
 		}
+	}
+
+
+	bool HttpServer::is_running() const
+	{
+		return !m_io_service.stopped();
 	}
 }
