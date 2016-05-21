@@ -39,27 +39,35 @@ namespace wsgi_boost
 
 
 	void HttpServer::process_request(socket_ptr socket)
-	{		
-		Connection connection{ socket, m_io_service, header_timeout, content_timeout };
-		Request request{ connection };
-		Response response{ connection };
-		sys::error_code ec = request.parse_header();
-		if (!ec)
+	{
+		// A stackful coroutine is needed here to correctly implement keep-alive
+		// in case if the number of concurent requests is greater than
+		// the number of server threads.
+		// Without the coroutine the next 'keep-alive' request while all threads are busy
+		// hangs in limbo and causes io_service to crash.
+		asio::spawn(m_io_service, [this, socket](asio::yield_context yc)
 		{
-			check_static_route(request);
-			response.http_version == request.http_version;
-			handle_request(request, response);
-		}
-		else if (ec == sys::errc::bad_message)
-		{
-			response.send_mesage("400 Bad Request");
-		}
-		else if (ec == sys::errc::invalid_argument)
-		{
-			response.send_mesage("411 Length Required");
-		}
-		if (request.persistent())
-			process_request(request.connection().socket());
+			Connection connection{ socket, m_io_service, yc, header_timeout, content_timeout };
+			Request request{ connection };
+			Response response{ connection };
+			sys::error_code ec = request.parse_header();
+			if (!ec)
+			{
+				check_static_route(request);
+				response.http_version == request.http_version;
+				handle_request(request, response);
+			}
+			else if (ec == sys::errc::bad_message)
+			{
+				response.send_mesage("400 Bad Request");
+			}
+			else if (ec == sys::errc::invalid_argument)
+			{
+				response.send_mesage("411 Length Required");
+			}
+			if (request.persistent())
+				process_request(request.connection().socket());
+		});
 	}
 
 	void HttpServer::check_static_route(Request& request)
@@ -77,7 +85,7 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
-		string message = "Error 500: Internal server error!\n\n";
+		string message = "Error 500: Internal server error!";
 		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
@@ -153,9 +161,7 @@ namespace wsgi_boost
 			}
 			catch (const exception&)
 			{
-				ostringstream oss;
-				oss << "Unable to reslove IP address " << m_ip_address << " and port " << m_port << "!";
-				throw RuntimeError(oss.str());
+				throw RuntimeError("Unable to reslove IP address " + m_ip_address + " and port " + to_string(m_port) + "!");
 			}
 		}
 		else
