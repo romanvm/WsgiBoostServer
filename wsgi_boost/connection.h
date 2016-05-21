@@ -48,8 +48,8 @@ namespace wsgi_boost
 			m_socket{ socket }, m_strand{ io_service }, m_timer{ io_service },
 			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
-		// Read header line
-		boost::system::error_code read_header_line(std::string& line);
+		// Read HTTp header
+		boost::system::error_code read_header(std::string& header);
 
 		// Read line including a new line charachter
 		std::string read_line();

@@ -58,6 +58,8 @@ namespace wsgi_boost
 		{
 			response.send_mesage("411 Length Required");
 		}
+		if (request.persistent())
+			process_request(request.connection().socket());
 	}
 
 	void HttpServer::check_static_route(Request& request)
@@ -120,8 +122,6 @@ namespace wsgi_boost
 				response.send_mesage("500 Internal Server Error", message);
 			}
 		}
-		if (request.persistent())
-			process_request(request.connection().socket());
 	}
 
 

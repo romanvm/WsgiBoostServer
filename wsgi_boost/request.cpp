@@ -11,10 +11,14 @@ namespace wsgi_boost
 {
 	boost::system::error_code Request::parse_header()
 	{
-		string line;
-		sys::error_code ec = m_connection.read_header_line(line);
+		string header;
+		sys::error_code ec = m_connection.read_header(header);
 		if (ec)
 			return ec;
+		istringstream iss{ header };
+		string line;
+		getline(iss, line);
+		line.pop_back();
 		vector<string> parts;
 		alg::split(parts, line, alg::is_space(), alg::token_compress_on);
 		if (parts.size() != 3)
@@ -24,11 +28,10 @@ namespace wsgi_boost
 		http_version = parts[2];
 		while (true)
 		{
-			ec = m_connection.read_header_line(line);
-			if (ec)
-				return ec;
-			if (!line.length())
+			getline(iss, line);
+			if (!iss.good())
 				break;
+			line.pop_back();
 			size_t pos = line.find(':');
 			if (pos != string::npos)
 			{

@@ -28,18 +28,18 @@ namespace wsgi_boost
 	}
 
 
-	sys::error_code Connection::read_header_line(string& line)
+	sys::error_code Connection::read_header(string& header)
 	{
 		sys::error_code ec;
 		set_timeout(m_header_timeout);
-		size_t bytes_read = asio::read_until(*m_socket, m_istreambuf, "\r\n", ec);
+		size_t bytes_read = asio::read_until(*m_socket, m_istreambuf, "\r\n\r\n", ec);
 		if (!ec)
 		{
 			m_timer.cancel();
 			vector<char> buffer(bytes_read);
 			istream is{ &m_istreambuf };
 			is.read(&buffer[0], bytes_read);
-			line = string(buffer.begin(), buffer.end() - 2);
+			header = string(buffer.begin(), buffer.end() - 2);
 		}
 		return ec;
 	}
