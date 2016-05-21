@@ -254,9 +254,7 @@ namespace wsgi_boost
 					PyErr_Clear();
 					break;
 				}
-				{
-					throw;
-				}
+				throw;
 			}
 		}
 	}
