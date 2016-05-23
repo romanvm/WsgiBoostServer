@@ -43,7 +43,7 @@ namespace wsgi_boost
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
 		// the number of server threads.
-		// Without the coroutine the next 'keep-alive' request while all threads are busy
+		// Without the coroutine the next request while all threads are busy
 		// hangs in limbo and causes io_service to crash.
 		asio::spawn(m_io_service, [this, socket](asio::yield_context yc)
 		{
@@ -147,7 +147,7 @@ namespace wsgi_boost
 
 	void HttpServer::start()
 	{
-		cout << "Starting WsgiBoostHttp server..." << endl;
+		cout << "Starting WsgiBoostHttp server...\n";
 		GilRelease release_gil;
 		if (m_io_service.stopped())
 			m_io_service.reset();
@@ -161,7 +161,7 @@ namespace wsgi_boost
 			}
 			catch (const exception&)
 			{
-				throw RuntimeError("Unable to reslove IP address " + m_ip_address + " and port " + to_string(m_port) + "!");
+				throw RuntimeError("Unable to resolve IP address " + m_ip_address + " and port " + to_string(m_port) + "!");
 			}
 		}
 		else
@@ -199,7 +199,7 @@ namespace wsgi_boost
 			m_acceptor.close();
 			m_io_service.stop();
 			m_signals.cancel();
-			cout << "WsgiBoostHttp server stopped." << endl;
+			cout << "WsgiBoostHttp server stopped.\n";
 		}
 	}
 
