@@ -21,6 +21,7 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="german.txt" />
     <Content Include="tests.py" />
   </ItemGroup>
   <ItemGroup>
