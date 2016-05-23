@@ -18,6 +18,7 @@ License: MIT, see License.txt
 #include <iostream>
 #include <unordered_map>
 #include <sstream>
+#include <string>
 
 
 namespace wsgi_boost

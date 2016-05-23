@@ -15,6 +15,7 @@ License: MIT, see License.txt
 
 #include <memory>
 #include <iostream>
+#include <string>
 
 namespace wsgi_boost
 {

@@ -9,6 +9,9 @@ License: MIT, see License.txt
 #include "request_handlers.h"
 
 #include <thread>
+#include <string>
+#include <vector>
+
 
 namespace wsgi_boost
 {
