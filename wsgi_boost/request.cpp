@@ -39,7 +39,7 @@ namespace wsgi_boost
 				string value = alg::trim_copy(line.substr(pos + 1));
 				if (headers.find(header) == headers.end())
 				{
-					headers[header] = value;
+					headers.emplace(header, value);
 				}
 				else
 				{
