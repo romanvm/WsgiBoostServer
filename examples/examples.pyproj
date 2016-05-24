@@ -23,7 +23,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="hello.py" />
-    <Compile Include="server.py" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
