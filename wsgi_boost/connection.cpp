@@ -83,10 +83,19 @@ namespace wsgi_boost
 		bool result = read_into_buffer(length);
 		if (result)
 		{
-			ostringstream oss;
-			oss << &m_istreambuf;
-			data = oss.str();
-			m_bytes_left -= oss.str().length();
+			istream is{ &m_istreambuf };
+			long long size;
+			if (length > 0)
+			{
+				size = min(length, m_bytes_left);
+			}
+			else
+			{
+				size = m_bytes_left;
+			}
+			vector<char> buffer(size);
+			is.read(&buffer[0], size);
+			data = string(buffer.begin(), buffer.end());
 		}
 		return result;
 	}
