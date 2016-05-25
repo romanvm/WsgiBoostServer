@@ -11,6 +11,7 @@ License: MIT, see License.txt
 #include <thread>
 #include <string>
 #include <vector>
+#include <atomic>
 
 
 namespace wsgi_boost
@@ -27,6 +28,7 @@ namespace wsgi_boost
 		boost::asio::signal_set m_signals;
 		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
 		boost::python::object m_app;
+		std::atomic_bool m_is_running = false;
 
 		void accept();
 		void process_request(socket_ptr socket);

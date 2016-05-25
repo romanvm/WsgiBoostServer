@@ -133,53 +133,63 @@ namespace wsgi_boost
 
 	void HttpServer::set_app(py::object app)
 	{
+		if (is_running())
+			throw RuntimeError("Attempt to set a WSGI app while the server is running!");
 		m_app = app;
 	}
 
 
 	void HttpServer::start()
 	{
-		cout << "Starting WsgiBoostHttp server...\n";
-		GilRelease release_gil;
-		if (m_io_service.stopped())
-			m_io_service.reset();
-		asio::ip::tcp::endpoint endpoint;
-		if (m_ip_address != "")
+		if (!is_running())
 		{
-			asio::ip::tcp::resolver resolver(m_io_service);
-			try
+			cout << "Starting WsgiBoostHttp server...\n";
+			GilRelease release_gil;
+			if (m_io_service.stopped())
+				m_io_service.reset();
+			asio::ip::tcp::endpoint endpoint;
+			if (m_ip_address != "")
 			{
-				endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
+				asio::ip::tcp::resolver resolver(m_io_service);
+				try
+				{
+					endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
+				}
+				catch (const exception&)
+				{
+					throw RuntimeError("Unable to resolve IP address " + m_ip_address + " and port " + to_string(m_port) + "!");
+				}
 			}
-			catch (const exception&)
+			else
 			{
-				throw RuntimeError("Unable to resolve IP address " + m_ip_address + " and port " + to_string(m_port) + "!");
+				endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), m_port);
+			}
+			m_acceptor.open(endpoint.protocol());
+			m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
+			m_acceptor.bind(endpoint);
+			m_acceptor.listen();
+			if (host_name == string())
+				host_name = asio::ip::host_name();
+			accept();
+			m_threads.clear();
+			for (unsigned int i = 1; i < m_num_threads; ++i)
+			{
+				m_threads.emplace_back([this]()
+				{
+					m_io_service.run();
+				});
+			}
+			m_signals.async_wait([this](sys::error_code, int) { stop(); });
+			m_is_running.store(true);
+			m_io_service.run();
+			for (auto& t : m_threads)
+			{
+				t.join();
 			}
 		}
 		else
 		{
-			endpoint = asio::ip::tcp::endpoint(asio::ip::tcp::v4(), m_port);
-		}
-		m_acceptor.open(endpoint.protocol());
-		m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
-		m_acceptor.bind(endpoint);
-		m_acceptor.listen();
-		if (host_name == string())
-			host_name = asio::ip::host_name();
-		accept();
-		m_threads.clear();
-		for (unsigned int i = 1; i < m_num_threads; ++i)
-		{
-			m_threads.emplace_back([this]()
-			{
-				m_io_service.run();
-			});
-		}
-		m_signals.async_wait([this](sys::error_code, int) { stop(); });
-		m_io_service.run();
-		for (auto& t : m_threads)
-		{
-			t.join();
+			cerr << "The server is already running!\n";
 		}
 	}
 
@@ -192,12 +202,13 @@ namespace wsgi_boost
 			m_io_service.stop();
 			m_signals.cancel();
 			cout << "WsgiBoostHttp server stopped.\n";
+			m_is_running.store(false);
 		}
 	}
 
 
 	bool HttpServer::is_running() const
 	{
-		return !m_io_service.stopped();
+		return m_is_running.load();
 	}
 }
