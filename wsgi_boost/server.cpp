@@ -99,16 +99,8 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
+				PyErr_Print();
 				response.send_mesage("500 Internal Server Error", "Error 500: WSGI application error!");
-				if (wsgi_debug)
-				{
-					stop();
-					return;
-				}
-				else
-				{
-					PyErr_Print();
-				}
 			}
 			catch (const exception& ex)
 			{

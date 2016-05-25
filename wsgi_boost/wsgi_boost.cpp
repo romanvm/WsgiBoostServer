@@ -67,8 +67,6 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 
-		.def_readwrite("wsgi_debug", &HttpServer::wsgi_debug, "Abort the server on unhandled Python exceptions in a WSGI app, default: ``False``")
-
 		.def_readwrite("use_gzip", &HttpServer::use_gzip, "Use gzip compression for static content, default: ``False``")
 
 		.def_readwrite("host_hame", &HttpServer::host_name, "Get or set the host name, default: automatically determined")

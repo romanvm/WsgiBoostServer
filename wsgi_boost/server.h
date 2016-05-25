@@ -38,7 +38,6 @@ namespace wsgi_boost
 		unsigned int content_timeout = 300;
 		bool reuse_address = true;
 		std::string url_scheme = "http";
-		bool wsgi_debug = false;
 		std::string host_name;
 		bool use_gzip = true;
 
