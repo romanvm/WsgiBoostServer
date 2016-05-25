@@ -16,6 +16,6 @@ def hello_app(environ, start_response):
     return [content]
 
 
-httpd = wsgi_boost.WsgiBoostHttp(num_threads=8)
+httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
 httpd.set_app(hello_app)
 httpd.start()
