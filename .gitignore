@@ -337,3 +337,4 @@ ENV/
 
 # --- Custom ignores ---#
 *.exe
+cmake/
