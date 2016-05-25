@@ -19,33 +19,20 @@ sys.path.insert(0, os.path.dirname(cwd))
 import wsgi_boost
 
 
-init_old = threading.Thread.__init__
-def init(self, *args, **kwargs):
-    init_old(self, *args, **kwargs)
-    run_old = self.run
-    def run_with_except_hook(*args, **kw):
-        try:
-            run_old(*args, **kw)
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            sys.excepthook(*sys.exc_info())
-    self.run = run_with_except_hook
-threading.Thread.__init__ = init
-
-
 class ServingStaticFilesTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
-        cls._server_thread = threading.Thread(target=cls._httpd.start)
         cls._httpd.add_static_route('^/static', cwd)
         cls._httpd.add_static_route('^/invalid_dir', '/foo/bar/baz/')
+        cls._server_thread = threading.Thread(target=cls._httpd.start)
+        cls._server_thread.daemon = True
         cls._server_thread.start()
 
     @classmethod
     def tearDownClass(cls):
         cls._httpd.stop()
+        cls._server_thread.join()
         del cls._httpd
 
     def test_forbidden_http_methods(self):
@@ -83,47 +70,60 @@ class ServingStaticFilesTestCase(unittest.TestCase):
 
 class App(object):
     """
-    A test WSGI application
+    Test WSGI application
     """
     def __call__(self, environ, start_response):
         self.environ = environ
         self.start_response = start_response
-        content == 'App OK'
+        content = 'App OK'
         if self.environ['PATH_INFO'] == '/test_write':
             content = 'Write OK'
+        elif self.environ['PATH_INFO'] == '/test_input_read':
+            self.test_input_read()
+            content = 'Input read OK'
         write = start_response('200 OK', [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))])
         if content == 'Write OK':
             write(content)
             content = ''
         return [content]
 
+    def test_input_read(self):
+        content = self.environ['wsgi.input'].read()
+        assert len(content) == 4194
+
 
 class WsgiServerTestCase(unittest.TestCase):
-    def setUp(self):
-        self._httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
-        self._httpd.wsgi_debug = True
+    @classmethod
+    def setUpClass(cls):
+        cls._httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
         app = App()
-        self._httpd.set_app(validator(app))
-        self._server_thread = threading.Thread(target=cls._httpd.start)
-        self._server_thread.start()
+        cls._httpd.set_app(validator(app))
+        cls._server_thread = threading.Thread(target=cls._httpd.start)
+        cls._server_thread.daemon = True
+        cls._server_thread.start()
+        with open('german.txt', mode='r') as fo:
+            cls._data = fo.read()
 
-    def tearDown(self):
-        self._server_thread.join()
+    @classmethod
+    def tearDownClass(cls):
+        cls._httpd.stop()
+        cls._server_thread.join()
         del cls._httpd
 
     def test_wsgi_app_response(self):
         resp = requests.get('http://127.0.0.1:8000/')
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('App OK' in resp.text)
-        self._httpd.stop()
-        time.sleep(0.1)
 
     def test_write_function(self):
         resp = requests.get('http://127.0.0.1:8000/test_write')
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Write OK.' in resp.text)
-        self._httpd.stop()
-        time.sleep(0.1)
+        self.assertTrue('Write OK' in resp.text)
+
+    def test_input_read(self):
+        resp = requests.post('http://127.0.0.1:8000/test_input_read', data=self._data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Input read OK' in resp.text)
 
 
 if __name__ == '__main__':

@@ -86,7 +86,6 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
-		string message = "Error 500: Internal server error!";
 		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
@@ -100,6 +99,7 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
+				response.send_mesage("500 Internal Server Error", "Error 500: WSGI application error!");
 				if (wsgi_debug)
 				{
 					stop();
@@ -109,12 +109,11 @@ namespace wsgi_boost
 				{
 					PyErr_Print();
 				}
-				response.send_mesage("500 Internal Server Error", message);
 			}
 			catch (const exception& ex)
 			{
 				cerr << ex.what() << '\n';
-				response.send_mesage("500 Internal Server Error", message);
+				response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!");
 			}
 		}
 		else
@@ -128,7 +127,7 @@ namespace wsgi_boost
 			catch (const exception& ex)
 			{
 				cerr << ex.what() << '\n';
-				response.send_mesage("500 Internal Server Error", message);
+				response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!");
 			}
 		}
 	}
