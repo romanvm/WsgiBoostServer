@@ -123,7 +123,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	py::class_<InputWrapper>("InputWrapper", py::no_init)
 		.def("read", &InputWrapper::read, (py::arg("size") = -1))
 		.def("readline", &InputWrapper::readline, (py::arg("size") = -1))
-		.def("readlines", &InputWrapper::readlines, (py::arg("size") = -1))
+		.def("readlines", &InputWrapper::readlines, (py::arg("sizehint") = -1))
 		.def("__iter__", &InputWrapper::iter, py::return_value_policy<py::manage_new_object>())
 #if PY_MAJOR_VERSION < 3
 		.def("next", &InputWrapper::next)
