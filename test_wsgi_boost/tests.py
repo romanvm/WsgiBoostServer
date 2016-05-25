@@ -76,28 +76,70 @@ class App(object):
         self.environ = environ
         self.start_response = start_response
         content = 'App OK'
-        if self.environ['PATH_INFO'] == '/test_write':
-            content = 'Write OK'
+        if self.environ['PATH_INFO'] == '/test_http_header':
+            content = self.test_http_header()
+        elif self.environ['PATH_INFO'] == '/test_query_string':
+            content = self.test_query_string()
         elif self.environ['PATH_INFO'] == '/test_input_read':
-            self.test_input_read()
-            content = 'Input read OK'
+            content = self.test_input_read()
+        elif self.environ['PATH_INFO'] == '/test_input_read_limited':
+            content = self.test_input_read_limited()
+        elif self.environ['PATH_INFO'] == '/test_input_readline':
+            content = self.test_input_readline()
+        elif self.environ['PATH_INFO'] == '/test_write':
+            content = 'Write OK'
         write = start_response('200 OK', [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))])
         if content == 'Write OK':
             write(content)
             content = ''
         return [content]
 
+    def test_http_header(self):
+        assert self.environ['HTTP_FOO'] == 'bar'
+        return 'HTTP header OK'
+
+    def test_query_string(self):
+        assert self.environ['QUERY_STRING'] == 'foo=bar'
+        return 'Query string OK'
+
     def test_input_read(self):
         content = self.environ['wsgi.input'].read()
         assert len(content) == 4194
+        return 'Input read OK'
+
+    def test_input_read_limited(self):
+        content = self.environ['wsgi.input'].read(50)
+        assert len(content) == 50
+        return 'Input read limited OK'
+
+    def test_input_readline(self):
+        line = self.environ['wsgi.input'].readline()
+        assert line == 'Mark Twain. The Awful German Language\n'
+        return 'Input readline OK'
 
 
-class WsgiServerTestCase(unittest.TestCase):
+class ValidateWsgiServerTestCase(unittest.TestCase):
+    def test_validate_wsgi_server_compliance(self):
+        httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
+        app = App()
+        httpd.set_app(validator(app))
+        server_thread = threading.Thread(target=httpd.start)
+        server_thread.daemon = True
+        server_thread.start()
+        resp = requests.get('http://127.0.0.1:8000/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('App OK' in resp.text)
+        httpd.stop()
+        server_thread.join()
+        del httpd
+
+
+class WsgiServerFunctionsTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
         app = App()
-        cls._httpd.set_app(validator(app))
+        cls._httpd.set_app(app)
         cls._server_thread = threading.Thread(target=cls._httpd.start)
         cls._server_thread.daemon = True
         cls._server_thread.start()
@@ -110,10 +152,15 @@ class WsgiServerTestCase(unittest.TestCase):
         cls._server_thread.join()
         del cls._httpd
 
-    def test_wsgi_app_response(self):
-        resp = requests.get('http://127.0.0.1:8000/')
+    def test_http_header(self):
+        resp = requests.get('http://127.0.0.1:8000/test_http_header', headers={'Foo': 'bar'})
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('App OK' in resp.text)
+        self.assertTrue('HTTP header OK' in resp.text)
+
+    def test_query_string(self):
+        resp = requests.get('http://127.0.0.1:8000/test_query_string', params={'foo': 'bar'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Query string OK' in resp.text)
 
     def test_write_function(self):
         resp = requests.get('http://127.0.0.1:8000/test_write')
@@ -124,6 +171,16 @@ class WsgiServerTestCase(unittest.TestCase):
         resp = requests.post('http://127.0.0.1:8000/test_input_read', data=self._data)
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('Input read OK' in resp.text)
+
+    def test_input_read_limited(self):
+        resp = requests.post('http://127.0.0.1:8000/test_input_read_limited', data=self._data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Input read limited OK' in resp.text)
+
+    def test_input_readline(self):
+        resp = requests.post('http://127.0.0.1:8000/test_input_readline', data=self._data)
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue('Input readline OK' in resp.text)
 
 
 if __name__ == '__main__':
