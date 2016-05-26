@@ -28,7 +28,7 @@ namespace wsgi_boost
 		boost::asio::signal_set m_signals;
 		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
 		boost::python::object m_app;
-		std::atomic_bool m_is_running = false;
+		std::atomic_bool m_is_running;
 
 		void accept();
 		void process_request(socket_ptr socket);
