@@ -126,7 +126,7 @@ namespace wsgi_boost
 				if (ec)
 					return;
 				m_headers_sent = true;
-				string cpp_data = py::extract<char*>(data);
+				string cpp_data = py::extract<string>(data);
 				GilRelease release_gil;
 				m_response.send_data(cpp_data);
 			}
@@ -138,15 +138,16 @@ namespace wsgi_boost
 				if (!exc_info.is_none())
 				{
 					py::object format_exc = py::import("traceback").attr("format_exc")();
-					cerr << py::extract<char*>(format_exc) << endl;
+					string exc_msg = py::extract<string>(format_exc);
+					cerr << exc_msg << '\n';
 					exc_info = py::object();
 				}
-				this->m_status = py::extract<char*>(status);
+				this->m_status = py::extract<string>(status);
 				m_out_headers.clear();
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
 					py::object header = headers[i];
-					m_out_headers.emplace_back(py::extract<char*>(header[0]), py::extract<char*>(header[1]));
+					m_out_headers.emplace_back(py::extract<string>(header[0]), py::extract<string>(header[1]));
 				}
 				return m_write;
 			}
@@ -230,9 +231,9 @@ namespace wsgi_boost
 			try
 			{
 #if PY_MAJOR_VERSION < 3
-				std::string chunk = py::extract<char*>(iterator.attr("next")());
+				std::string chunk = py::extract<string>(iterator.attr("next")());
 #else
-				std::string chunk = py::extract<char*>(iterator.attr("__next__")());
+				std::string chunk = py::extract<string>(iterator.attr("__next__")());
 #endif
 				GilRelease release_gil;
 				sys::error_code ec;

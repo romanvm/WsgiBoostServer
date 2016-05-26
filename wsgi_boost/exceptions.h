@@ -30,7 +30,7 @@ namespace wsgi_boost
 	public:
 		RuntimeError(std::string message = "") : m_message{ message } {}
 
-		const char* what() const
+		const char* what() const noexcept
 		{
 			return m_message.c_str();
 		}

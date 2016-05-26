@@ -175,7 +175,7 @@ namespace wsgi_boost
 
 	private:
 		// Common textual formats that can be gzip-ed
-		std::array<std::string, 8> m_compressables{
+		std::array<std::string, 8> m_compressables{ {
 			"text/plain",
 			"text/html",
 			"text/css",
@@ -184,7 +184,7 @@ namespace wsgi_boost
 			"application/xhtml+xml",
 			"application/rss+xml",
 			"application/javascript"
-		};
+		} };
 
 		std::string m_default_mime = "application/octet-stream";
 
