@@ -11,13 +11,8 @@ License: MIT, see License.txt
 #include "utils.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/copy.hpp>
 
-#include <iostream>
 #include <unordered_map>
-#include <sstream>
 #include <string>
 
 

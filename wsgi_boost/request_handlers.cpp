@@ -7,6 +7,14 @@ License: MIT, see License.txt
 
 #include "request_handlers.h"
 
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/copy.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 using namespace std;
 namespace py = boost::python;
 namespace fs = boost::filesystem;
