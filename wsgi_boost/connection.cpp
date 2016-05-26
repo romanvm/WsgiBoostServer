@@ -117,7 +117,7 @@ namespace wsgi_boost
 				--m_bytes_left;
 				break;
 			}
-			if (read_into_buffer(min(long long(128), m_bytes_left)))
+			if (read_into_buffer(min((long long)128, m_bytes_left)))
 			{
 				is.clear();
 			}

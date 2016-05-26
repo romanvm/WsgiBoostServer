@@ -51,7 +51,7 @@ if(WIN32)
 else(WIN32)	
 	find_package(Boost 1.54.0 COMPONENTS regex system thread coroutine context filesystem date_time iostreams python REQUIRED)
 
-	find_package(zlib REQUIRED)
+	find_package(ZLIB REQUIRED)
 	include_directories(${ZLIB_INCLUDE_DIRS})
 
 	target_link_libraries(wsgi_boost ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${ZLIB_LIBRARIES})
