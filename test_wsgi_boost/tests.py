@@ -97,12 +97,12 @@ class ValidateWsgiServerTestCase(unittest.TestCase):
         server_thread = threading.Thread(target=httpd.start)
         server_thread.daemon = True
         server_thread.start()
+        time.sleep(0.5)
         resp = requests.get('http://127.0.0.1:8000/')
         self.assertEqual(resp.status_code, 200)
         self.assertTrue('App OK' in resp.text)
         httpd.stop()
         server_thread.join()
-        del httpd
 
 
 class WsgiServerFunctionsTestCase(unittest.TestCase):
@@ -114,6 +114,7 @@ class WsgiServerFunctionsTestCase(unittest.TestCase):
         cls._server_thread = threading.Thread(target=cls._httpd.start)
         cls._server_thread.daemon = True
         cls._server_thread.start()
+        time.sleep(0.5)
         with open('german.txt', mode='r') as fo:
             cls._data = fo.read()
 
@@ -173,6 +174,7 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         cls._server_thread = threading.Thread(target=cls._httpd.start)
         cls._server_thread.daemon = True
         cls._server_thread.start()
+        time.sleep(0.5)
 
     @classmethod
     def tearDownClass(cls):
