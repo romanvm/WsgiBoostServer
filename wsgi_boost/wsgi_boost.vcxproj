@@ -73,8 +73,8 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.pyd</TargetExt>
     <CodeAnalysisRuleSet>NativeMinimumRules.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>$(PYTHON)\include;$(BOOST_ROOT);$(IncludePath)</IncludePath>
-    <LibraryPath>$(PYTHON)\libs;$(BOOST_LIBRARYDIR);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PYTHON_ROOT)\include;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath>$(PYTHON_ROOT)\libs;$(BOOST_LIBRARYDIR);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -83,8 +83,8 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetExt>.pyd</TargetExt>
     <CodeAnalysisRuleSet>NativeMinimumRules.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>$(PYTHON)\include;$(BOOST_ROOT);$(IncludePath)</IncludePath>
-    <LibraryPath>$(PYTHON)\libs;$(BOOST_LIBRARYDIR);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PYTHON_ROOT)\include;$(BOOST_ROOT);$(IncludePath)</IncludePath>
+    <LibraryPath>$(PYTHON_ROOT)\libs;$(BOOST_LIBRARYDIR);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
