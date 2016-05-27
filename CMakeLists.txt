@@ -40,12 +40,13 @@ find_package(PythonLibs ${PYTHON_VERSION} REQUIRED)
 include_directories(SYSTEM ${PYTHON_INCLUDE_PATH})
 target_link_libraries(wsgi_boost ${PYTHON_LIBRARIES})
 
-set(Boost_USE_STATIC_LIBS ON)
-add_definitions(-DBOOST_PYTHON_STATIC_LIB)
 find_package(Boost 1.54.0 COMPONENTS regex system thread coroutine context filesystem date_time iostreams python REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
-if(WIN32)    
+if(WIN32)
+    set(Boost_USE_STATIC_LIBS ON)
+    add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+
     find_package(Boost 1.54.0 COMPONENTS zlib REQUIRED)
     
     set_target_properties(wsgi_boost PROPERTIES SUFFIX ".pyd")
