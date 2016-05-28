@@ -56,7 +56,7 @@ namespace wsgi_boost
 			if (!ec)
 			{
 				check_static_route(request);
-				response.http_version == request.http_version;
+				response.http_version = request.http_version;
 				handle_request(request, response);
 			}
 			else if (ec == sys::errc::bad_message)
