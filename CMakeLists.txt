@@ -45,8 +45,9 @@ if(WIN32)
     
     set_target_properties(wsgi_boost PROPERTIES SUFFIX ".pyd")
 else()
-    find_package(ZLIB REQUIRED)
-    
+    set(Boost_USE_STATIC_RUNTIME OFF)
+
+    find_package(ZLIB REQUIRED)    
     include_directories(${ZLIB_INCLUDE_DIRS})
     target_link_libraries(wsgi_boost ${ZLIB_LIBRARIES})
 endif()
