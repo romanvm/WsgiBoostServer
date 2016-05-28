@@ -6,6 +6,7 @@ Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
 
+#include <cmath> // Needed to compile with MinGW
 #include <boost/python.hpp>
 
 #include <string>
