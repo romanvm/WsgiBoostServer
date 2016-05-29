@@ -2,43 +2,65 @@
 
 import os
 import sys
-from distutils.core import setup
-from distutils.extension import Extension
+try:
+    from setuptools import setup
+    from setuptools.extension import Extension
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
 
 
 class BuildError(Exception):
     pass
 
-extra_compile_args = ['-std=c++11']
+
+files = [
+    './wsgi_boost/connection.cpp',
+    './wsgi_boost/request.cpp',
+    './wsgi_boost/request_handlers.cpp',
+    './wsgi_boost/response.cpp',
+    './wsgi_boost/server.cpp',
+    './wsgi_boost/wsgi_boost.cpp',
+    ]
+
+include_dirs = ['./wsgi_boost']
+define_macros = [('BOOST_ALL_NO_LIB', None)]
+library_dirs=[]
+extra_compile_args = []
+extra_link_args = []
 
 if sys.platform == 'win32':
     try:
+        os.environ['VS90COMNTOOLS'] = os.environ['VS140COMNTOOLS']
+    except KeyError:
+        raise BuildError('Compatible compiler not found! Only MSVS 2015 SP2+ is supported.')
+    try:
         boost_root = os.environ['BOOST_ROOT']
     except KeyError:
-        raise BuildError('%BOOST_ROOT% variable is not defined!')
+        raise BuildError('BOOST_ROOT environment variable is not defined!')
+    include_dirs.append(boost_root)
     try:
         boost_librarydir = os.environ['BOOST_LIBRARYDIR']
     except KeyError:
-        raise BuildError('%BOOST_LIBRARYDIR% is not defined!')
-    include_dirs = ['./wsgi_boost', boost_root]
+        raise BuildError('BOOST_LIBRARYDIR environment variable is not defined!')
+    library_dirs.append(boost_librarydir)
     libraries=[
-        'mswsock',
-        'ws2_32',
-        'boost_regex-mt-s',
-        'boost_system-mt-s',
-        'boost_thread-mt-s',
-        'boost_coroutine-mt-s',
-        'boost_context-mt-s',
-        'boost_filesystem-mt-s',
-        'boost_date_time-mt-s',
-        'boost_iostreams-mt-s',
-        'boost_python-mt-s',
-        'boost_zlib-mt-s',
+        'libboost_regex-mt-s',
+        'libboost_system-mt-s',
+        'libboost_thread-mt-s',
+        'libboost_coroutine-mt-s',
+        'libboost_context-mt-s',
+        'libboost_filesystem-mt-s',
+        'libboost_date_time-mt-s',
+        'libboost_iostreams-mt-s',
+        'libboost_python-mt-s',
+        'libboost_zlib-mt-s',
         ]
-    library_dirs=[boost_librarydir]
-    extra_compile_args.append('-DBOOST_PYTHON_STATIC_LIB')
+    define_macros.append(('BOOST_PYTHON_STATIC_LIB', None))
+    extra_compile_args.append('/EHsk')
+    extra_compile_args.append('/MT')
+    extra_link_args.append('/SAFESEH:NO')
 else:
-    include_dirs = ['./wsgi_boost']
     libraries=[
         'boost_regex',
         'boost_system',
@@ -51,16 +73,7 @@ else:
         'boost_python',
         'z',
         ]
-    library_dirs=[]
-
-files = [
-    './wsgi_boost/connection.cpp',
-    './wsgi_boost/request.cpp',
-    './wsgi_boost/request_handlers.cpp',
-    './wsgi_boost/response.cpp',
-    './wsgi_boost/server.cpp',
-    './wsgi_boost/wsgi_boost.cpp',
-    ]
+    extra_compile_args.append('-std=c++11')
 
 setup(name='wsgi_boost',
       ext_modules=[
@@ -69,7 +82,9 @@ setup(name='wsgi_boost',
                     library_dirs=library_dirs,
                     libraries=libraries,
                     include_dirs=include_dirs,
+                    define_macros=define_macros,
                     extra_compile_args=extra_compile_args,
+                    extra_link_args=extra_link_args,
                     depends=[])
           ]
       )
