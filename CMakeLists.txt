@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 3.0.0)
-set(CMAKE_BUILD_TYPE "Release")
+
 project (WsgiBoostServer)
+
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CONFIGURATION_TYPES Release)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
+
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall")
@@ -13,11 +18,11 @@ elseif(MSVC14)
             CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
        if(${flag_var} MATCHES "/MD")
           string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-       endif(${flag_var} MATCHES "/MD")
-    endforeach(flag_var)
+       endif()
+    endforeach()
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
 else()
-    message(FATAL_ERROR "Your compiler (${CMAKE_CXX_COMPILER_ID}) is not supported! Only MSVS 2014 and GCC 5.0+ are supported.")
+    message(FATAL_ERROR "Your compiler (${CMAKE_CXX_COMPILER_ID}) is not supported! Only MSVS 2014 Update 2+ and GCC 5.0+ are supported.")
 endif()
 
 include_directories(wsgi_boost)
@@ -35,7 +40,6 @@ find_package(PythonLibs ${PYTHON_VERSION} REQUIRED)
 include_directories(${PYTHON_INCLUDE_PATH})
 target_link_libraries(wsgi_boost ${PYTHON_LIBRARIES})
 
-
 if(WIN32)
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_STATIC_RUNTIME ON)
@@ -45,8 +49,6 @@ if(WIN32)
     
     set_target_properties(wsgi_boost PROPERTIES SUFFIX ".pyd")
 else()
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_STATIC_RUNTIME OFF)
     find_package(Boost 1.58.0 COMPONENTS regex system thread coroutine context filesystem date_time iostreams python REQUIRED)
     include_directories(${Boost_INCLUDE_DIR})
 
