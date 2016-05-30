@@ -3,7 +3,6 @@
 import os
 import sys
 import re
-from distutils.msvc9compiler import get_build_version
 try:
     from setuptools import setup
     from setuptools.extension import Extension
@@ -54,6 +53,7 @@ library_dirs=[]
 extra_compile_args = []
 extra_link_args = []
 if sys.platform == 'win32':
+    from distutils.msvc9compiler import get_build_version
     # Monkey-patching the default distutils compliler to MSVS 2015
     vs_comntools = 'VS{0}COMNTOOLS'.format(int(get_build_version() * 10))
     try:
