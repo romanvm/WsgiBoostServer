@@ -40,11 +40,9 @@ include_dirs = ['./wsgi_boost']
 libraries = [
     'boost_regex',
     'boost_system',
-    'boost_thread',
     'boost_coroutine',
     'boost_context',
     'boost_filesystem',
-    'boost_date_time',
     'boost_iostreams',
     'boost_python',
     ]
