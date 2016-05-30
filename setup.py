@@ -2,6 +2,7 @@
 
 import os
 import sys
+import re
 from distutils.msvc9compiler import get_build_version
 try:
     from setuptools import setup
@@ -10,9 +11,22 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 
+cwd = os.path.dirname(os.path.abspath(__file__))
+
 
 class BuildError(Exception):
     pass
+
+
+def get_version():
+    with open(os.path.join(cwd, 'wsgi_boost', 'response.h'), 'r') as fo:
+        response_h = fo.read()
+    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+)"', response_h).group(1)
+
+
+def get_long_descr():
+    with open(os.path.join(cwd, 'Readme.rst'), 'r') as fo:
+        return fo.read()
 
 
 files = [
@@ -73,7 +87,13 @@ else:
     libraries.append('z')
     extra_compile_args.append('-std=c++11')
 
-setup(name='wsgi_boost',
+setup(name='WsgiBoostServer',
+      version=get_version(),
+      description='PEP3333-compatible WSGI server based on C++ Boost.Asio',
+      long_description=get_long_descr(),
+      author='Roman Miroshnychenko',
+      author_email='romanvm@yandex.ua',
+      url='https://github.com/romanvm/WsgiBoostServer',
       ext_modules=[
           Extension('wsgi_boost',
                     files,
