@@ -102,5 +102,6 @@ setup(name='WsgiBoostServer',
                     extra_compile_args=extra_compile_args,
                     extra_link_args=extra_link_args,
                     depends=[])
-          ]
+          ],
+      zip_safe=False
       )
