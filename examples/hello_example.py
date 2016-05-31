@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+This example demonstrates serving a very simple WSGI application
+"""
 
 import os
 import sys
@@ -9,6 +12,7 @@ sys.path.insert(0, os.path.dirname(cwd))
 import wsgi_boost
 
 
+# Very simple WSGI application
 def hello_app(environ, start_response):
     content = 'Hello World!'
     response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))]
@@ -16,6 +20,7 @@ def hello_app(environ, start_response):
     return [content]
 
 
+# Create a server on the default port 8000 with 4 threads
 httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
 httpd.set_app(hello_app)
 httpd.start()
