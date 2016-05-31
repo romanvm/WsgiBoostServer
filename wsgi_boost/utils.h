@@ -21,6 +21,7 @@ License: MIT, see License.txt
 #include <iostream>
 #include <thread>
 
+
 namespace wsgi_boost
 {
 #pragma region functions
@@ -49,7 +50,11 @@ namespace wsgi_boost
 		std::stringstream ss{ time_string };
 		ss.imbue(std::locale("C"));
 		ss >> std::get_time(&t, "%a, %d %b %Y %H:%M:%S GMT");
-		return mktime(&t);
+#ifdef _WIN32
+		return _mkgmtime(&t);
+#else
+		return timegm(&t);
+#endif
 	}
 
 

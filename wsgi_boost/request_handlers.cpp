@@ -65,7 +65,7 @@ namespace wsgi_boost
 					{
 						time_t last_modified = fs::last_write_time(path);
 						string ims = m_request.get_header("If-Modified-Since");
-						if (ims != "" && header_to_time(ims) > last_modified)
+						if (ims != "" && header_to_time(ims) >= last_modified)
 						{
 							m_response.send_mesage("304 Not Modified");
 							return;
