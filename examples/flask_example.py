@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 This example demonstrates serving a Flask application
-that returns a rendered web-page with static content (a picture)
+that returns a rendered web-page with static content (Bootstrap CSS and a picture)
 """
 
 import os
@@ -27,6 +27,8 @@ def hello_world(name='Roman'):
 
 # Create a server on the default port 8000 with 4 threads
 httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
-httpd.add_static_route('^/static', cwd)
+# Serve static files by "static/*" path from "static" subfolder.
+# Also see template.html.
+httpd.add_static_route('^/static', os.path.join(cwd, 'static'))
 httpd.set_app(app)
 httpd.start()
