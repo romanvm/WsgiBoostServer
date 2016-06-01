@@ -33,7 +33,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		"WsgiBoostHttp(ip_address='', port=8000, num_threads=1)\n\n"
 
-		"PEP3333-compliant multi-threaded WSGI server\n\n"
+		"PEP-3333-compliant multi-threaded WSGI server\n\n"
 
 		"The server can serve both Python WSGI applications and static files.\n"
 		"For static files gzip compression and 'If-Modified-Since' headers are supported.\n\n"
@@ -47,8 +47,6 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		"Usage::\n\n"
 
-		"	import os\n"
-		"	import time\n"
 		"	import wsgi_boost\n\n"
 
 		"	def hello_app(environ, start_response):\n"
@@ -90,7 +88,12 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			"Get os set url scheme -- http or https (Default: ``'http'``)"
 			)
 
-		.def("start", &HttpServer::start, "Start processing HTTP requests")
+		.def("start", &HttpServer::start,
+			"Start processing HTTP requests\n\n"
+			
+			".. note:: This method blocks the current thread until the server is stopped\n"
+			"	either by calling :meth:`WsgiBoostHttp.stop` or pressing :kbd:`Ctrl+C`"
+			)
 
 		.def("stop", &HttpServer::stop, "Stop processing HTTP requests")
 
@@ -115,7 +118,8 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		.def("set_app", &HttpServer::set_app, py::args("app"),
 			"Set a WSGI application to be served\n\n"
 
-			":param app: a WSGI application to be served as an executable object"
+			":param app: a WSGI application to be served as an executable object\n"
+			":raises: RuntimeError on attempt to set a WSGI application while the server is running"
 		)
 		;
 
