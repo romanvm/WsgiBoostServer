@@ -63,18 +63,20 @@ namespace wsgi_boost
 					ifs.open(path.string(), ifstream::in | ios::binary);
 					if (ifs)
 					{
+						headers_type out_headers;
+						out_headers.emplace_back("Cache-Control", "max-age=3600");
 						time_t last_modified = fs::last_write_time(path);
+						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
 						string ims = m_request.get_header("If-Modified-Since");
 						if (ims != "" && header_to_time(ims) >= last_modified)
 						{
-							m_response.send_mesage("304 Not Modified");
+							out_headers.emplace_back("Content-Length", "0");
+							m_response.send_header("304 Not Modified", out_headers);
 							return;
 						}
 						MimeTypes mime_types;
 						string mime = mime_types[path.extension().string()];
-						headers_type out_headers;
 						out_headers.emplace_back("Content-Type", mime);
-						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
 						if (m_request.use_gzip && mime_types.is_compressable(mime) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
