@@ -144,8 +144,9 @@ namespace wsgi_boost
 	{
 		if (!is_running())
 		{
-			cout << "Starting WsgiBoostHttp server...\n";
 			GilRelease release_gil;
+			cout << "WsgiBoostHttp server starting.\n";
+			cout << "Press Ctrl+C to stop it.\n";
 			if (m_io_service.stopped())
 				m_io_service.reset();
 			asio::ip::tcp::endpoint endpoint;
@@ -187,6 +188,8 @@ namespace wsgi_boost
 			{
 				t.join();
 			}
+			cout << "WsgiBoostHttp server stopped.\n";
+			m_is_running.store(false);
 		}
 		else
 		{
@@ -202,8 +205,10 @@ namespace wsgi_boost
 			m_acceptor.close();
 			m_io_service.stop();
 			m_signals.cancel();
-			cout << "WsgiBoostHttp server stopped.\n";
-			m_is_running.store(false);
+		}
+		else
+		{
+			cerr << "The server is not running!\n";
 		}
 	}
 
