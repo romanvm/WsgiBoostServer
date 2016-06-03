@@ -14,7 +14,7 @@ import wsgi_boost
 
 # Very simple WSGI application
 def hello_app(environ, start_response):
-    content = 'Hello World!'
+    content = b'Hello World!'
     response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))]
     start_response('200 OK', response_headers)
     return [content]
