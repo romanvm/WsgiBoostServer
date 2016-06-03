@@ -99,7 +99,6 @@ else:
         ))
 
     extra_compile_args.append('-std=c++11')
-    extra_compile_args.append('-fPIC')
 
 setup(
     name='WsgiBoostServer',
