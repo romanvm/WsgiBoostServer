@@ -8,7 +8,7 @@ addons:
             - ubuntu-toolchain-r-test
             - boost-latest
         packages:
-            - gcc++-5
+            - g++-5
             - libboost1.55-all-dev
             - zlib1g-dev
 env:
