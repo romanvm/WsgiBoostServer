@@ -1,0 +1,22 @@
+language: python
+python:
+    - "2.7"
+    - "3.5"
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+            - boost-latest
+        packages:
+            - gcc++-5
+            - libboost1.55-all-dev
+            - zlib1g-dev
+env:
+    - CC=g++-5 CXX=g++-5
+install:
+    - pip install requests
+script:
+    - python setup.py build
+    - python setup.py install
+    - cd test_wsgi_boost
+    - python tests.py
