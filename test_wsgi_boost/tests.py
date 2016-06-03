@@ -27,7 +27,7 @@ class App(object):
     def __call__(self, environ, start_response):
         self.environ = environ
         self.start_response = start_response
-        content = 'App OK'
+        content = b'App OK'
         if self.environ['PATH_INFO'] == '/test_http_header':
             content = self.test_http_header()
         elif self.environ['PATH_INFO'] == '/test_query_string':
@@ -43,35 +43,35 @@ class App(object):
         elif self.environ['PATH_INFO'] == '/test_input_iterator':
             content = self.test_input_iterator()
         elif self.environ['PATH_INFO'] == '/test_write':
-            content = 'Write OK'
+            content = b'Write OK'
         write = start_response('200 OK', [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))])
-        if content == 'Write OK':
+        if content == b'Write OK':
             write(content)
-            content = ''
+            content = b''
         return [content]
 
     def test_http_header(self):
         assert self.environ['HTTP_FOO'] == 'bar'
-        return 'HTTP header OK'
+        return b'HTTP header OK'
 
     def test_query_string(self):
         assert self.environ['QUERY_STRING'] == 'foo=bar'
-        return 'Query string OK'
+        return b'Query string OK'
 
     def test_input_read(self):
         content = self.environ['wsgi.input'].read()
         assert len(content) == 4194
-        return 'Input read OK'
+        return b'Input read OK'
 
     def test_input_read_limited(self):
         content = self.environ['wsgi.input'].read(50)
         assert len(content) == 50
-        return 'Input read limited OK'
+        return b'Input read limited OK'
 
     def test_input_readline(self):
         line = self.environ['wsgi.input'].readline()
         assert line == 'Mark Twain. The Awful German Language\n'
-        return 'Input readline OK'
+        return b'Input readline OK'
 
     def test_input_readlines(self):
         lines = self.environ['wsgi.input'].readlines()
@@ -79,14 +79,14 @@ class App(object):
         assert len(lines) == 61
         content = ''.join(lines)
         assert len(content) == 4194
-        return 'Input readlines OK'
+        return b'Input readlines OK'
 
     def test_input_iterator(self):
         lines = []
         for line in self.environ['wsgi.input']:
             lines.append(line)
         assert len(lines) == 61
-        return 'Input iterator OK'
+        return b'Input iterator OK'
 
 
 class ValidateWsgiServerTestCase(unittest.TestCase):
