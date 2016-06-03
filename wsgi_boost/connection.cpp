@@ -54,7 +54,7 @@ namespace wsgi_boost
 		size_t size;
 		if (length >= 0 && length > residual_bytes)
 		{
-			size = min(m_bytes_left, length - residual_bytes);
+			size = min(m_bytes_left, length - (long long)residual_bytes);
 		}
 		else if (length >= 0 && length <= residual_bytes)
 		{
