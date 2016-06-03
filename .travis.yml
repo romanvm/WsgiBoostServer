@@ -16,7 +16,10 @@ env:
 install:
     - pip install requests
 script:
+    - $CC --version
     - python setup.py build
     - python setup.py install
     - cd test_wsgi_boost
     - python tests.py
+notifications:
+    email: false
