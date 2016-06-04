@@ -84,19 +84,20 @@ if sys.platform == 'win32':
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
 else:
-    libraries += [
-    'boost_regex',
-    'boost_system',
-    'boost_coroutine',
-    'boost_context',
-    'boost_filesystem',
-    'boost_iostreams',
-    'z',
-    ]
-    libraries.append('boost_python-py{major}{minor}'.format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor
-        ))
+    if 'TRAVIS' not in os.environ:
+        libraries += [
+        'boost_regex',
+        'boost_system',
+        'boost_coroutine',
+        'boost_context',
+        'boost_filesystem',
+        'boost_iostreams',
+        'z',
+        ]
+        libraries.append('boost_python-py{major}{minor}'.format(
+            major=sys.version_info.major,
+            minor=sys.version_info.minor
+            ))
 
     extra_compile_args.append('-std=c++11')
 
