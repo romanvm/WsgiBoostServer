@@ -1,7 +1,6 @@
 language: python
 python:
     - "2.7"
-    - "3.5"
 addons:
     apt:
         sources:
@@ -9,14 +8,15 @@ addons:
             - boost-latest
         packages:
             - g++-5
-            - libboost1.54-all-dev
+            - libboost1.55-all-dev
             - zlib1g-dev
 env:
     - CC=g++-5 CXX=g++-5
 install:
     - pip install requests
 script:
-    - python setup.py build install
+    - cmake .
+    - make
     - cd test_wsgi_boost
     - python tests.py
 notifications:
