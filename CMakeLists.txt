@@ -8,10 +8,11 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall")
+    message(STATUS "CXX version: " ${CMAKE_CXX_COMPILER_VERSION})
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
         message(FATAL_ERROR "GCC version >=5.0 required.")
     endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall")
 elseif(MSVC14)
     foreach(flag_var
             CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
