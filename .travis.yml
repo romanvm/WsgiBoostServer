@@ -1,6 +1,7 @@
 language: python
 python:
     - "2.7"
+    - "3.5"
 addons:
     apt:
         sources:
@@ -19,10 +20,7 @@ env:
 install:
     - pip install requests
 script:
-    - cmake --version
     - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 .
     - make
-    - cd test_wsgi_boost
-    - python tests.py
 notifications:
     email: false
