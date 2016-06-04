@@ -16,7 +16,7 @@ addons:
 install:
     - pip install requests
 script:
-    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_CC_COMPILER=gcc-5 .
+    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_CC_COMPILER=g++-5 .
     - make
     - cd test_wsgi_boost
     - python tests.py
