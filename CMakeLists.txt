@@ -50,6 +50,9 @@ if(WIN32)
     
     set_target_properties(wsgi_boost PROPERTIES SUFFIX ".pyd")
 else()
+    #add_definitions(-DBOOST_ALL_NO_LIB)
+    set(Boost_USE_STATIC_LIBS OFF)
+    set(Boost_USE_STATIC_RUNTIME OFF)
     find_package(Boost 1.55.0 COMPONENTS regex system coroutine context filesystem iostreams python REQUIRED)
     include_directories(${Boost_INCLUDE_DIR})
 
@@ -57,7 +60,5 @@ else()
     include_directories(${ZLIB_INCLUDE_DIRS})
     target_link_libraries(wsgi_boost ${ZLIB_LIBRARIES})
 endif()
-
-add_definitions(-DBOOST_ALL_NO_LIB)
 
 target_link_libraries(wsgi_boost ${Boost_LIBRARIES})
