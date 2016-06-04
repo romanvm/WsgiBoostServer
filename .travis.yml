@@ -1,7 +1,7 @@
 language: python
 python:
     - "2.7"
-    - "3.5"
+#    - "3.5"
 addons:
     apt:
         sources:
@@ -20,10 +20,9 @@ env:
 install:
     - pip install requests
 script:
-    - python setup.py build install
+    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 -DPYTHON_VERSION=$TRAVIS_PYTHON_VERSION .
+    - make
     - cd test_wsgi_boost
     - python tests.py
-#    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 -DPYTHON_VERSION=$TRAVIS_PYTHON_VERSION .
-#    - make
 notifications:
     email: false

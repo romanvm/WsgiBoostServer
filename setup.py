@@ -85,21 +85,20 @@ if sys.platform == 'win32':
     extra_link_args.append('/SAFESEH:NO')
 else:
     libraries += [
-    'boost_python-py{major}{minor}'.format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor
-    ),
-    'boost_regex',
-    'boost_system',
-    'boost_coroutine',
-    'boost_context',
-    'boost_filesystem',
-    'boost_iostreams',
-    'z',
-    ]
+            'boost_python-py{major}{minor}'.format(
+                major=sys.version_info.major,
+                minor=sys.version_info.minor
+                ),
+            'boost_regex',
+            'boost_system',
+            'boost_coroutine',
+            'boost_context',
+            'boost_filesystem',
+            'boost_iostreams',
+            'z',
+        ]
 
     extra_compile_args.append('-std=c++11')
-    extra_link_args.append('-Bdynamic')
 
 setup(
     name='WsgiBoostServer',
