@@ -54,7 +54,7 @@ else()
     add_definitions(-DBOOST_ALL_NO_LIB)
     set(Boost_USE_STATIC_LIBS OFF)
     set(Boost_USE_STATIC_RUNTIME OFF)
-    find_package(Boost 1.55.0 COMPONENTS regex system coroutine context filesystem iostreams python REQUIRED)
+    find_package(Boost 1.55.0 COMPONENTS coroutine regex system context filesystem iostreams python REQUIRED)
     include_directories(${Boost_INCLUDE_DIR})
     target_link_libraries(wsgi_boost -Wl,-Bdynamic ${Boost_LIBRARIES})
 
