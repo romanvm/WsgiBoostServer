@@ -1,6 +1,10 @@
+# Travis CI is used only to test for compile-time errors on GCC compiler.
+# Currently Travis cannot produce a working build for functional tests
+# because of its limitations.
 language: python
 python:
     - "2.7"
+    - "3.5"
 addons:
     apt:
         sources:
@@ -12,12 +16,8 @@ addons:
             - zlib1g-dev
 env:
     - CC=g++-5 CXX=g++-5
-install:
-    - pip install requests
+install: true
 script:
-    - cmake .
-    - make
-    - cd test_wsgi_boost
-    - python tests.py
+    - python setup.py build
 notifications:
     email: false

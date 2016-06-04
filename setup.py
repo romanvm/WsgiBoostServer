@@ -84,19 +84,22 @@ if sys.platform == 'win32':
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
 else:
-    libraries += [
-    'boost_regex',
-    'boost_system',
-    'boost_coroutine',
-    'boost_context',
-    'boost_filesystem',
-    'boost_iostreams',
-    'z',
-    ]
-    libraries.append('boost_python-py{major}{minor}'.format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor
-        ))
+    # Don't link libraries when building in Travic CI.
+    # Currently Travis CI cannot produce a working module because of its limiations.
+    if 'TRAVIS' not in os.environ:
+        libraries += [
+                'boost_python-py{major}{minor}'.format(
+                    major=sys.version_info.major,
+                    minor=sys.version_info.minor
+                    ),
+                'boost_regex',
+                'boost_system',
+                'boost_coroutine',
+                'boost_context',
+                'boost_filesystem',
+                'boost_iostreams',
+                'z',
+            ]
 
     extra_compile_args.append('-std=c++11')
 
