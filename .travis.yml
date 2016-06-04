@@ -11,6 +11,8 @@ addons:
         packages:
             - g++-5
             - gcc-5
+            - libboost-coroutine1.55.0
+            - libboost-coroutine1.55-dev
             - libboost1.55-all-dev
             - zlib1g-dev
             - cmake
