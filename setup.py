@@ -46,10 +46,7 @@ include_dirs = [src]
 libraries = []
 library_dirs=[]
 
-if 'TRAVIS' in os.environ:
-    define_macros = []
-else:
-    define_macros = [('BOOST_PYTHON_STATIC_LIB', None)]
+define_macros = [('BOOST_PYTHON_STATIC_LIB', None)]
 extra_compile_args = []
 extra_link_args = []
 
@@ -87,24 +84,23 @@ if sys.platform == 'win32':
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
 else:
-    if 'TRAVIS' in os.environ:
-        define_macros.append(('BOOST_ALL_DYN_LINK', None))
-    else:
-        libraries += [
-        'boost_regex',
-        'boost_system',
-        'boost_coroutine',
-        'boost_context',
-        'boost_filesystem',
-        'boost_iostreams',
-        'z',
-        ]
-        libraries.append('boost_python-py{major}{minor}'.format(
-            major=sys.version_info.major,
-            minor=sys.version_info.minor
-            ))
+    libraries += [
+    'boost_python-py{major}{minor}'.format(
+        major=sys.version_info.major,
+        minor=sys.version_info.minor
+    ),
+    'boost_regex',
+    'boost_system',
+    'boost_coroutine',
+    'boost_context',
+    'boost_filesystem',
+    'boost_iostreams',
+    'z',
+    ]
+    libraries.append()
 
     extra_compile_args.append('-std=c++11')
+    extra_link_args.append('-Bdynamic')
 
 setup(
     name='WsgiBoostServer',
