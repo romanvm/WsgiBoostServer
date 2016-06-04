@@ -99,10 +99,10 @@ else:
         'boost_iostreams',
         'z',
         ]
-    libraries.append('boost_python-py{major}{minor}'.format(
-        major=sys.version_info.major,
-        minor=sys.version_info.minor
-        ))
+        libraries.append('boost_python-py{major}{minor}'.format(
+            major=sys.version_info.major,
+            minor=sys.version_info.minor
+            ))
 
     extra_compile_args.append('-std=c++11')
 
