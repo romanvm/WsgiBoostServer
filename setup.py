@@ -46,7 +46,7 @@ include_dirs = [src]
 libraries = []
 library_dirs=[]
 
-define_macros = [('BOOST_PYTHON_STATIC_LIB', None)]
+define_macros = []
 extra_compile_args = []
 extra_link_args = []
 
@@ -80,6 +80,7 @@ if sys.platform == 'win32':
     else:
         raise BuildError('Unable to find boost_python library!')
 
+    define_macros.append(('BOOST_PYTHON_STATIC_LIB', None))
     extra_compile_args.append('/EHsk')
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
