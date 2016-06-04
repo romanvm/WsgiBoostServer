@@ -97,7 +97,6 @@ else:
     'boost_iostreams',
     'z',
     ]
-    libraries.append()
 
     extra_compile_args.append('-std=c++11')
     extra_link_args.append('-Bdynamic')
