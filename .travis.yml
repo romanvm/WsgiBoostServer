@@ -6,17 +6,20 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
             - boost-latest
+            - george-edison55/cmake-3.x
         packages:
             - g++-5
             - gcc-5
             - libboost1.55-all-dev
             - zlib1g-dev
+            - cmake
 env:
     - CC=g++-5 CXX=g++-5
 install:
     - pip install requests
 script:
-    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_CC_COMPILER=gcc-5 .
+    - cmake --version
+    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 .
     - make
     - cd test_wsgi_boost
     - python tests.py
