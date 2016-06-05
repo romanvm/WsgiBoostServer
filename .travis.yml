@@ -1,33 +1,24 @@
 language: python
 python:
     - "2.7"
-#    - "3.5"
+    - "3.5"
 addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
             - boost-latest
-            - george-edison55-precise-backports
+            #- george-edison55-precise-backports
         packages:
             - g++-5
-            - gcc-5
             - libboost-coroutine1.55.0
             - libboost-coroutine1.55-dev
             - libboost1.55-all-dev
             - zlib1g-dev
-            - cmake
-            - cmake-data
 env:
     - CC=g++-5 CXX=g++-5
 install:
     - pip install requests
 script:
-    - cd /usr/lib/x86_64-linux-gnu
-    - ls
-    - cd $TRAVIS_BUILD_DIR
-    - cmake -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 -DPYTHON_VERSION=$TRAVIS_PYTHON_VERSION .
-    - make
-    - cd test_wsgi_boost
-    - python tests.py
+    - python setup.py build
 notifications:
     email: false
