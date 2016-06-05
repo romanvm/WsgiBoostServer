@@ -84,6 +84,8 @@ if sys.platform == 'win32':
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
 else:
+    # Don't link libraries when building in Travic CI.
+    # Currently Travis CI cannot produce a working module because of its limiations.
     if 'TRAVIS' not in os.environ:
         libraries += [
                 'boost_python-py{major}{minor}'.format(
