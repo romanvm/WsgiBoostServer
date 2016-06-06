@@ -4,7 +4,7 @@
 language: python
 python:
     - "2.7"
-    - "3.5"
+    #- "3.5"
 addons:
     apt:
         sources:
@@ -14,7 +14,7 @@ addons:
             - zlib1g-dev
             - libbz2-dev
 env:
-    - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR\boost_1_61_0 BOOST_LIBRARYDIR=$BOOST_ROOT\stage\lib
+    - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost_1_61_0 BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
 before_install:
     - wget https://github.com/boostorg/boost/archive/boost-1.61.0.tar.gz
     - tar -xzvf boost-1.61.0.tar.gz
