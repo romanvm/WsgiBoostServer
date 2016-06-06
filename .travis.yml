@@ -19,7 +19,7 @@ before_install:
     - wget https://github.com/boostorg/boost/archive/boost-1.61.0.tar.gz
     - tar -xzvf boost-1.61.0.tar.gz
     - cd $BOOST_ROOT
-    - ./booststrap.sh
+    - sh bootstrap.sh
     - ./b2 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 install:
     - echo "using python : $TRAVIS_PYTHON_VERSION ; " > ~/user-config.jam
