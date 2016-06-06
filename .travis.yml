@@ -30,7 +30,7 @@ install:
     - ./b2 link=static variant=release --layout=system --with-python
 script:
     - cd $TRAVIS_BUILD_DIR
-    - python setup.py build
+    - python setup.py build install
     - cd test_wsgi_boost
     - python tests.py
 notifications:
