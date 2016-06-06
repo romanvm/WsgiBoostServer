@@ -9,15 +9,29 @@ addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
-            - boost-latest
         packages:
             - g++-5
-            - libboost1.55-all-dev
             - zlib1g-dev
+            - libbz2-dev
 env:
-    - CC=g++-5 CXX=g++-5
-install: true
+    - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR\boost_1_61_0 BOOST_LIBRARYDIR=$BOOST_ROOT\stage\lib
+before_install:
+    - wget https://github.com/boostorg/boost/archive/boost-1.61.0.tar.gz
+    - tar -xzvf boost-1.61.0.tar.gz
+    - cd $BOOST_ROOT
+    - ./booststrap.sh
+    - ./b2 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+install:
+    - echo "using python : $TRAVIS_PYTHON_VERSION ; " > ~/user-config.jam
+    - cd $BOOST_LIBRARYDIR
+    - rm -f libbost_python.a
+    - cd $BOOST_ROOT
+    - rm -rf bin.v2
+    - ./b2 link=static variant=release --layout=system --with-python
 script:
+    - cd $TRAVIS_BUILD_DIR
     - python setup.py build
+    - cd test_wsgi_boost
+    - python tests.py
 notifications:
     email: false
