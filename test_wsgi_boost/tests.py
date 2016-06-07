@@ -207,8 +207,7 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         self.assertEqual(png_size, int(resp.headers['Content-Length']))
 
     def test_if_modified_since(self):
-        last_modified = time.mktime(time.strptime('2014-12-21 17:20:00', '%Y-%m-%d %H:%M:%S'))
-        os.utime(os.path.join(cwd, 'index.html'), (last_modified, last_modified))
+        os.utime(os.path.join(cwd, 'index.html'), (1419175200, 1419175200))
         resp = requests.get('http://127.0.0.1:8000/static/index.html', headers={'If-Modified-Since': 'Sun, 21 Dec 2014 15:19:00 GMT'})
         self.assertEqual(resp.status_code, 200)
         resp = requests.get('http://127.0.0.1:8000/static/index.html', headers={'If-Modified-Since': 'Sun, 21 Dec 2014 15:20:00 GMT'})
