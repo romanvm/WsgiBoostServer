@@ -27,7 +27,7 @@ install:
     - rm -f libbost_python.a
     - cd $BOOST_ROOT
     - rm -rf bin.v2
-    - ./b2 toolset=gcc-5 link=static variant=release --layout=system --with-python
+    - ./b2 toolset=gcc-5 link=static variant=release cxxflags=-fPIC --layout=system --with-python
 script:
     - cd $TRAVIS_BUILD_DIR
     - python setup.py build install
