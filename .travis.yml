@@ -2,7 +2,7 @@
 language: python
 python:
     - "2.7"
-    - "3.5"
+    #- "3.5"
 addons:
     apt:
         sources:
@@ -21,7 +21,7 @@ before_install:
     - ./bootstrap.sh
     - ./b2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 install:
-    - cd /usr/include
+    - cd /opt/python
     - ls
     - cd $TRAVIS_BUILD_DIR
     - python travis.py $TRAVIS_PYTHON_VERSION
