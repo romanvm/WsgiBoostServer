@@ -19,7 +19,7 @@ before_install:
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
     - ./bootstrap.sh
-    - ./b2 toolset=gcc-5 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+    - ./b2 toolset=gcc-5 link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 install:
     - cd $TRAVIS_BUILD_DIR
     - python travis.py $TRAVIS_PYTHON_VERSION
@@ -28,6 +28,7 @@ install:
     - cd $BOOST_ROOT
     - rm -rf bin.v2
     - ./b2 toolset=gcc-5 link=static variant=release cxxflags=-fPIC --layout=system --with-python
+    - pip install requests
 script:
     - cd $TRAVIS_BUILD_DIR
     - python setup.py build install
