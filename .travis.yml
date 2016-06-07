@@ -20,7 +20,7 @@ before_install:
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
     - sh bootstrap.sh
-    - ./b2 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+    - ./b2 link=static variant=release --layout=system --with-libraries=regex,system,coroutine,context,filesystem,iostreams,date_time
 install:
     - echo "using python : $TRAVIS_PYTHON_VERSION ; " > ~/user-config.jam
     - cd $BOOST_LIBRARYDIR
