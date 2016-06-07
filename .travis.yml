@@ -1,6 +1,3 @@
-# Travis CI is used only to test for compile-time errors on GCC compiler.
-# Currently Travis cannot produce a working build for functional tests
-# because of its limitations.
 language: python
 python:
     - "2.7"
@@ -19,7 +16,7 @@ before_install:
     - git clone https://github.com/romanvm/boost.git
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
-    - sh bootstrap.sh
+    - ./bootstrap.sh
     - ./b2 link=static variant=release --layout=system --with-libraries=regex,system,coroutine,context,filesystem,iostreams,date_time
 install:
     - echo "using python : $TRAVIS_PYTHON_VERSION ; " > ~/user-config.jam
