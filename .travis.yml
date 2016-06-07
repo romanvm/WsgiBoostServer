@@ -14,10 +14,9 @@ addons:
             - zlib1g-dev
             - libbz2-dev
 env:
-    - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost_1_61_0 BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
+    - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
 before_install:
-    - wget http://downloads.sourceforge.net/project/boost/boost/1.61.0/boost_1_61_0.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fboost%2Ffiles%2Fboost%2F1.61.0%2F&ts=1465242714&use_mirror=vorboss
-    - tar -xzvf boost_1_61_0.tar.gz
+    - git clone https://github.com/romanvm/boost.git
     - cd $BOOST_ROOT
     - sh bootstrap.sh
     - ./b2 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
