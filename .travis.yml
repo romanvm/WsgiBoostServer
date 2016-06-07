@@ -21,6 +21,8 @@ before_install:
     - ./bootstrap.sh
     - ./b2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 install:
+    - cd /usr/include
+    - ls
     - cd $TRAVIS_BUILD_DIR
     - python travis.py $TRAVIS_PYTHON_VERSION
     - cd $BOOST_LIBRARYDIR
