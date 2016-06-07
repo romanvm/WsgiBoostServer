@@ -6,7 +6,7 @@ addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
-            - fkrull/deadsnakes
+            - deadsnakes
         packages:
             - g++-5
             - zlib1g-dev
