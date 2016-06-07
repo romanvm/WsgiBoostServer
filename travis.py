@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+Writes user-config.jam for Boost.Build
+"""
 
 import os
 import sys
