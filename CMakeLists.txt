@@ -52,6 +52,8 @@ if(WIN32)
     
     set_target_properties(wsgi_boost PROPERTIES SUFFIX ".pyd")
 else()
+    set(Boost_USE_STATIC_LIBS OFF)
+    set(Boost_USE_STATIC_RUNTIME OFF)
     find_package(Boost 1.55.0 COMPONENTS coroutine regex system context filesystem iostreams date_time python REQUIRED)
 
     find_package(ZLIB REQUIRED)    
