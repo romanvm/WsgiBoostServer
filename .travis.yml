@@ -14,18 +14,20 @@ addons:
 env:
     - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
 before_install:
+    - python travis.py
     - git clone https://github.com/romanvm/boost.git
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
     - ./bootstrap.sh
-    - ./b2 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+    - ./b2 toolset=gcc-5 link=static variant=release --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 install:
-    - echo "using python : $TRAVIS_PYTHON_VERSION ; " > ~/user-config.jam
+    - cd $TRAVIS_BUILD_DIR
+    - python travis.py $TRAVIS_PYTHON_VERSION
     - cd $BOOST_LIBRARYDIR
     - rm -f libbost_python.a
     - cd $BOOST_ROOT
     - rm -rf bin.v2
-    - ./b2 link=static variant=release --layout=system --with-python
+    - ./b2 toolset=gcc-5 link=static variant=release --layout=system --with-python
 script:
     - cd $TRAVIS_BUILD_DIR
     - python setup.py build install
