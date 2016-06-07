@@ -1,6 +1,6 @@
 language: python
 python:
-    #- "2.7"
+    - "2.7"
     - "3.5"
 addons:
     apt:
@@ -10,6 +10,7 @@ addons:
             - g++-5
             - zlib1g-dev
             - libbz2-dev
+            - python3.5-dev
 env:
     - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
 before_install:
@@ -20,8 +21,6 @@ before_install:
     - ./bootstrap.sh
     - ./b2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 install:
-    - cd /home/travis/virtualenv/python3.5.0/include
-    - ls
     - cd $TRAVIS_BUILD_DIR
     - python travis.py $TRAVIS_PYTHON_VERSION
     - cd $BOOST_LIBRARYDIR
