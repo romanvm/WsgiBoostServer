@@ -89,7 +89,7 @@ class App(object):
         return b'Input iterator OK'
 
 
-class ValidateWsgiServerTestCase(unittest.TestCase):
+class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
     def test_validate_wsgi_server_compliance(self):
         httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
         app = App()

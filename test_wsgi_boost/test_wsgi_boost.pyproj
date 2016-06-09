@@ -5,7 +5,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{f423181f-c1cb-44a4-b8bb-d6641ecf59ee}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>tests.py</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>..\wsgi_boost\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -22,7 +23,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="german.txt" />
-    <Content Include="tests.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.7" />
@@ -30,7 +30,9 @@
   <ItemGroup>
     <Content Include="index.html" />
     <Content Include="profile_pic.png" />
-    <Content Include="vs_run_tests.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="tests.py" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
