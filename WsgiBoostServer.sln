@@ -8,6 +8,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DD9DA08E-5B2E-49E2-BAEA-E26EA4403394}"
 	ProjectSection(SolutionItems) = preProject
 		.travis.yml = .travis.yml
+		appveyor.py = appveyor.py
+		appveyor.yml = appveyor.yml
 		CMakeLists.txt = CMakeLists.txt
 		License.txt = License.txt
 		Readme.rst = Readme.rst
