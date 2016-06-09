@@ -16,19 +16,16 @@ environment:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7"
 
-    #- PYTHON: "C:\\Python35"
-    #  PYTHON_VERSION: "3.5"
+    - PYTHON: "C:\\Python35"
+      PYTHON_VERSION: "3.5"
 
 install:
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
   - ps: Start-FileDownload "http://zlib.net/zlib128.zip" -FileName zlib.zip
-  - dir
   - 7z x zlib.zip -y
-  - dir
   - cd %ZLIB_DIR%
-  - dir
   - cmake .
   - cd %APPVEYOR_BUILD_FOLDER%
   - "git clone https://github.com/romanvm/boost.git"

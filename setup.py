@@ -61,15 +61,14 @@ if sys.platform == 'win32':
     patch_msvc_compiler()
 
     try:
-        boost_root = os.environ['BOOST_ROOT']
+        include_dirs.append(os.path.expandvars(os.environ['BOOST_ROOT']))
     except KeyError:
         raise BuildError('BOOST_ROOT environment variable is not defined!')
-    include_dirs.append(boost_root)
+
     try:
-        boost_librarydir = os.environ['BOOST_LIBRARYDIR']
+        library_dirs.append(os.path.expandvars(os.environ['BOOST_LIBRARYDIR']))
     except KeyError:
         raise BuildError('BOOST_LIBRARYDIR environment variable is not defined!')
-    library_dirs.append(boost_librarydir)
 
     define_macros.append(('BOOST_PYTHON_STATIC_LIB', None))
     extra_compile_args.append('/EHsk')
@@ -77,11 +76,11 @@ if sys.platform == 'win32':
     extra_link_args.append('/SAFESEH:NO')
 else:
     try:
-        include_dirs.append(os.environ['BOOST_ROOT'])
+        include_dirs.append(os.path.expandvars(os.environ['BOOST_ROOT']))
     except KeyError:
         pass
     try:
-        library_dirs.append(os.environ['BOOST_LIBRARYDIR'])
+        library_dirs.append(os.path.expandvars(os.environ['BOOST_LIBRARYDIR']))
     except KeyError:
         libraries.append(
             'boost_python-py{major}{minor}'.format(
