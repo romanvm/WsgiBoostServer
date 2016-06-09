@@ -14,26 +14,15 @@ addons:
             - python3.5-dev
 env:
     - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
-before_install:
-    - python travis.py
+install:
+    - python travis.py $TRAVIS_PYTHON_VERSION
     - git clone https://github.com/romanvm/boost.git
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
     - ./bootstrap.sh
-    - ./b2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
-install:
-    - cd $TRAVIS_BUILD_DIR
-    - python travis.py $TRAVIS_PYTHON_VERSION
-    - cd $BOOST_LIBRARYDIR
-    - rm -f libbost_python.so
-    - cd $BOOST_ROOT
-    - rm -rf bin.v2
-    - ./b2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-python
-    - pip install requests
+    - ./b2 -j2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
 script:
     - cd $TRAVIS_BUILD_DIR
-    - python setup.py build install
-    - cd test_wsgi_boost
-    - python tests.py
+    - python setup.py build test
 notifications:
     email: false
