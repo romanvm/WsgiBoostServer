@@ -25,7 +25,8 @@ install:
   - cd %APPVEYOR_BUILD_FOLDER%
   - ps: Start-FileDownload "http://zlib.net/zlib128.zip" -FileName zlib.zip
   - dir
-  - 7z e zlib.zip -y
+  - 7z x zlib.zip -y
+  - dir
   - cd %ZLIB_DIR%
   - dir
   - cmake .
