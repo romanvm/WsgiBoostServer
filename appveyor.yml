@@ -24,6 +24,7 @@ install:
   - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
   - appveyor DownloadFile http://zlib.net/zlib128.zip -FileName zlib.zip
+  - dir
   - 7z e zlib.zip -y
   - cd %ZLIB_DIR%
   - cmake .
