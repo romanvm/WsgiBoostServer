@@ -133,7 +133,7 @@ setup(
     platforms=['win32', 'posix'],
     zip_safe=False,
     test_suite = 'nose.collector',
-    tests_require=['nose'],
+    tests_require=['nose', 'requests'],
     ext_modules=[
         Extension(
             name=NAME,
