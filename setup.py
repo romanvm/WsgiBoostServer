@@ -4,9 +4,12 @@ from __future__ import print_function
 import os
 import sys
 import re
-import distutils.msvc9compiler
 from setuptools import setup
 from setuptools.extension import Extension
+try:
+    import distutils.msvc9compiler
+except ImportError:
+    pass
 
 NAME = 'wsgi_boost'
 
