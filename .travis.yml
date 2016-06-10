@@ -15,7 +15,7 @@ addons:
 env:
     - CC=g++-5 CXX=g++-5 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
 install:
-    - python travis.py $TRAVIS_PYTHON_VERSION
+    - python travis.py
     - git clone https://github.com/romanvm/boost.git
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
