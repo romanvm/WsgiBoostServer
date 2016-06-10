@@ -76,9 +76,10 @@ for example Ubuntu 16.04 LTS (Xenial Xerus). The procedure below assumes that yo
 
 First, install prerequisites::
 
-  $ sudo apt-get install build-essential python-dev zlib1g-dev libbz2-dev libboost-all-dev
+  $ sudo apt-get install build-essential python-dev python-pip zlib1g-dev libbz2-dev libboost-all-dev
 
-To build against Python 3 you need to install the respective development library, for example ``python3-dev``.
+To build against Python 3 you need to install the respective libraries, for example ``python3-dev``
+and ``python3-pip``.
 
 Then build::
 
