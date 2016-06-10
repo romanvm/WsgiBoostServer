@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 import os
 import sys
 import re
@@ -48,7 +47,7 @@ def get_long_description():
         return fo.read()
 
 
-sources = [os.path.join(src, file) for file in os.listdir(src) if os.path.splitext(file)[1] == '.cpp']
+sources = [os.path.join(src, file_) for file_ in os.listdir(src) if os.path.splitext(file)[1] == '.cpp']
 include_dirs = [src]
 libraries = []
 library_dirs=[]
