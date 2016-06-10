@@ -3,7 +3,7 @@ WsgiBoostServer
 
 .. image:: https://travis-ci.org/romanvm/WsgiBoostServer.svg?branch=master
     :target: https://travis-ci.org/romanvm/WsgiBoostServer
-.. image:: https://ci.appveyor.com/api/projects/status/5q3hlfplc9xqtm4y/branch/master
+.. image:: https://ci.appveyor.com/api/projects/status/5q3hlfplc9xqtm4y/branch/master?svg=true
     :target: https://ci.appveyor.com/project/romanvm/wsgiboostserver
 
 WsgiBoostServer is a multi-threaded WSGI and HTTP server written as a Python extension module
