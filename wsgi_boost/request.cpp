@@ -105,4 +105,16 @@ namespace wsgi_boost
 	{
 		return m_connection;
 	}
+
+
+	string Request::remote_address()
+	{
+		return m_connection.socket()->remote_endpoint().address().to_string();
+	}
+
+
+	unsigned short Request::remote_port()
+	{
+		return m_connection.socket()->remote_endpoint().port();
+	}
 }

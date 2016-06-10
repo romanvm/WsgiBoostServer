@@ -222,6 +222,8 @@ namespace wsgi_boost
 				m_environ[env_header] = m_environ[env_header] + "," + header.second;
 			}
 		}
+		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
+		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
 		InputWrapper input{ m_request.connection() };

@@ -77,6 +77,12 @@ namespace wsgi_boost
 		// Get Connection object for this request
 		Connection& connection() const;
 
+		// Get remote endpoint address
+		std::string remote_address();
+
+		// Get remote endpoint port
+		unsigned short remote_port();
+
 	private:
 		Connection& m_connection;
 	};
