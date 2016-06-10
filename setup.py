@@ -47,7 +47,7 @@ def get_long_description():
         return fo.read()
 
 
-sources = [os.path.join(src, file_) for file_ in os.listdir(src) if os.path.splitext(file)[1] == '.cpp']
+sources = [os.path.join(src, file_) for file_ in os.listdir(src) if os.path.splitext(file_)[1] == '.cpp']
 include_dirs = [src]
 libraries = []
 library_dirs=[]
