@@ -9,23 +9,26 @@ WsgiBoostServer
 WsgiBoostServer is a multi-threaded WSGI and HTTP server written as a Python extension module
 in C++ using `Boost.Asio`_ and `Boost.Python`_. It can serve both Python WSGI applications
 and static files. Because it is written in C++, WsgiBoostServer is faster than pure Python
-solutions, like `Waitress`_.
+solutions, like `Waitress`_. It can be used for hosting Python micro-services
+and/or static files.
 
 Main Features
 =============
 
 **WSGI Server**:
 
-- PEP-3333-compliant
-- Releases GIL for pure C++ operations, allowing more effective multi-threading
-- Can be used as a regular module in any Python application
+- Compliant with `PEP-3333`_.
+- Releases GIL for pure C++ operations, allowing more effective multi-threading.
+- Can be used as a regular module in any Python application.
 
 **HTTP Server**:
 
-- Works on C++ level, effectively bypassing GIL
+- Works on C++ level, effectively bypassing GIL.
 - Determines MIME for most file types.
-- Uses gzip compression for common textual formats: txt/html/xml/css/js/json
-- Supports ``If-Modified-Since`` header
+- Uses gzip compression for common textual formats: ``txt``/``html``/``xml``/``css``/``js``/``json``.
+- Supports ``If-Modified-Since`` header.
+- Checks if requested files are really located within specified content folders
+  to forbid requesting files by arbitrary paths (for security reasons).
 
 Compatibility
 =============
@@ -105,3 +108,4 @@ TBD (see ``appveyour.yml``)
 .. _Boost.Python: http://www.boost.org/doc/libs/1_61_0/libs/python/doc/html/index.html
 .. _Waitress: https://github.com/Pylons/waitress
 .. _Flask: http://flask.pocoo.org
+.. _PEP-3333: https://www.python.org/dev/peps/pep-3333
