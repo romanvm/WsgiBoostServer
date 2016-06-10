@@ -37,7 +37,7 @@ def patch_msvc_compiler():
 
 
 def get_version():
-    with open(os.path.join(src, 'response.h'), 'r') as fo:
+    with open(os.path.join(src, 'version.h'), 'r') as fo:
         response_h = fo.read()
     return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+)"', response_h).group(1)
 
