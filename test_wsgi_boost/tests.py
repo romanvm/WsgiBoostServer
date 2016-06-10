@@ -90,6 +90,10 @@ class App(object):
 
 
 class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        print()
+
     def test_validate_wsgi_server_compliance(self):
         httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
         app = App()
@@ -123,6 +127,7 @@ class WsgiServerFunctionsTestCase(unittest.TestCase):
         cls._httpd.stop()
         cls._server_thread.join()
         del cls._httpd
+        print()
 
     def test_http_header(self):
         resp = requests.get('http://127.0.0.1:8000/test_http_header', headers={'Foo': 'bar'})
@@ -181,6 +186,7 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         cls._httpd.stop()
         cls._server_thread.join()
         del cls._httpd
+        print()
 
     def test_forbidden_http_methods(self):
         resp = requests.post('http://127.0.0.1:8000/static')
