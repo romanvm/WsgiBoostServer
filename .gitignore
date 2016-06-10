@@ -338,3 +338,7 @@ ENV/
 # --- Custom ignores ---#
 *.exe
 cmake/
+*.sln
+*.pyproj
+*.vcxproj
+*.vcxproj.filters
