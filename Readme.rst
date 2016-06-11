@@ -43,7 +43,9 @@ Compatibility
 Usage
 =====
 
-Simple example using `Flask`_ micro-framework::
+Simple example using `Flask`_ micro-framework:
+
+.. code-block:: python
 
     #!/usr/bin/env python
 
@@ -81,6 +83,8 @@ First, install prerequisites::
 
   $ sudo apt-get install build-essential python-dev python-pip zlib1g-dev libbz2-dev libboost-all-dev
 
+Then download or clone WsgiBoostServer sources to your computer.
+
 To build against Python 3 you need to install the respective libraries, for example ``python3-dev``
 and ``python3-pip``.
 
@@ -88,7 +92,7 @@ Then build::
 
   $ python setup.py build
 
-To install in the current Python environment::
+To install into the current Python environment::
 
   $ python setup.py install
 
@@ -99,10 +103,17 @@ Run tests::
 To build against Python 3 use ``python3`` instead of ``python``
 (on those distributions that still use Python 2 by default).
 
+Alternatively, you can install WsgiBoostServer using ``pip``::
+
+  $ pip install git+https://github.com/romanvm/WsgiBoostServer.git#egg=WsgiBoostServer
+
+``pip`` will download WsgiBoostServer sources, compile the binary module
+and install it into your working Python environment.
+
 Windows
 -------
 
-TBD (see ``appveyour.yml``)
+TBD (see appveyor.yml)
 
 .. _Boost.Asio: http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio.html
 .. _Boost.Python: http://www.boost.org/doc/libs/1_61_0/libs/python/doc/html/index.html
