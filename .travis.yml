@@ -9,7 +9,7 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
             - deadsnakes
-            
+
         packages:
             - g++-5
             - g++-4.9
@@ -23,7 +23,7 @@ env:
 
   matrix:
     - CC_VER=4.9
-    - CC_VER=5.0
+    - CC_VER=5
 
 install:
     - export CC=g++-$CC_VER
