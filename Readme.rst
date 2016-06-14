@@ -38,7 +38,8 @@ Compatibility
 - **Python**: 2.7+ (tested on 2.7 and 3.5).
 - **Boost**: tested with 1.58, 1.60 and 1.61, but probably will work with earlier versions
   that are not too old.
-- **Compilers**: MS Visual Studio 2015 Update 2+ (regardless of Python version), GCC 5.0+.
+- **Compilers**: GCC 5.0+ (requires ``std::get_time`` and ``std::put_time`` support),
+  MS Visual Studio 2015 Update 2+ (regardless of Python version).
 
 Usage
 =====
@@ -61,8 +62,8 @@ Simple example using `Flask`_ micro-framework:
         return 'Hello World!'
 
 
-    # Create a server on the default port 8000 with 4 threads
-    httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
+    # Create a server on the port 8080 with 4 threads
+    httpd = wsgi_boost.WsgiBoostHttp(port=8080, num_threads=4)
     httpd.set_app(app)
     httpd.start()
 
