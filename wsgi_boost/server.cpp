@@ -67,6 +67,10 @@ namespace wsgi_boost
 			{
 				response.send_mesage("411 Length Required");
 			}
+			else
+			{
+				return;
+			}
 			if (request.persistent())
 				process_request(request.connection().socket());
 		});
