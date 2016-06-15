@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <csignal>
+#include <utility>
 
 using namespace std;
 namespace asio = boost::asio;
@@ -42,14 +43,15 @@ namespace wsgi_boost
 
 	void HttpServer::process_request(socket_ptr socket)
 	{
+		strand_ptr strand = make_shared<asio::strand>(asio::strand{ m_io_service });
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
 		// the number of server threads.
 		// Without the coroutine the next request while all threads are busy
 		// hangs in limbo and causes io_service to crash.
-		asio::spawn(m_io_service, [this, socket](asio::yield_context yc)
+		asio::spawn(*strand, [this, socket, strand](asio::yield_context yc)
 		{
-			Connection connection{ socket, m_io_service, yc, header_timeout, content_timeout };
+			Connection connection{ socket, m_io_service, strand, yc, header_timeout, content_timeout };
 			Request request{ connection };
 			Response response{ connection };
 			sys::error_code ec = request.parse_header();

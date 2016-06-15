@@ -18,14 +18,14 @@ namespace wsgi_boost
 	void Connection::set_timeout(unsigned int timeout)
 	{
 		m_timer.expires_from_now(boost::posix_time::seconds(timeout));
-		m_timer.async_wait([this](const sys::error_code& ec)
+		m_timer.async_wait(m_strand->wrap([this](const sys::error_code& ec)
 		{
 			if (ec != asio::error::operation_aborted)
 			{
 				m_socket->shutdown(asio::ip::tcp::socket::shutdown_both);
 				m_socket->close();
 			}
-		});
+		}));
 	}
 
 

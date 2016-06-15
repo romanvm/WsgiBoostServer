@@ -20,6 +20,7 @@ License: MIT, see License.txt
 namespace wsgi_boost
 {
 	typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+	typedef std::shared_ptr<boost::asio::strand> strand_ptr;
 
 	// Represents a http connection to a client
 	class Connection : public std::ostream
@@ -29,6 +30,7 @@ namespace wsgi_boost
 		boost::asio::streambuf m_istreambuf;
 		boost::asio::streambuf m_ostreambuf;
 		boost::asio::deadline_timer m_timer;
+		strand_ptr m_strand;
 		unsigned int m_header_timeout;
 		unsigned int m_content_timeout;
 		long long m_bytes_left = -1;
@@ -43,13 +45,13 @@ namespace wsgi_boost
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
 
-		Connection(socket_ptr socket, boost::asio::io_service& io_service,
+		Connection(socket_ptr socket, boost::asio::io_service& io_service, strand_ptr strand,
 			boost::asio::yield_context yc, unsigned int header_timeout, unsigned int content_timeout) :
 			std::ostream(&m_ostreambuf),
-			m_socket{ socket }, m_yc{ yc }, m_timer{ io_service },
+			m_socket{ socket }, m_timer{ io_service }, m_strand{ strand }, m_yc{ yc },
 			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
-		// Read HTTp header
+		// Read HTTP header
 		boost::system::error_code read_header(std::string& header);
 
 		// Read line including a new line charachter
