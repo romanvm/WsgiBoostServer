@@ -23,7 +23,7 @@ namespace wsgi_boost
 	class Response
 	{
 	private:
-		const std::string m_server_name = "WsgiBoost Server v." WSGI_BOOST_VERSION;
+		const std::string m_server_name = "WsgiBoost v." WSGI_BOOST_VERSION;
 		Connection& m_connection;
 
 	public:
