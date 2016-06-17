@@ -28,6 +28,7 @@ namespace wsgi_boost
 
 	public:
 		std::string http_version = "HTTP/1.1";
+		bool keep_alive;
 
 		Response(const Response&) = delete;
 		Response& operator=(const Response&) = delete;

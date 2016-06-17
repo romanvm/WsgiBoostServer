@@ -72,7 +72,7 @@ namespace wsgi_boost
 		std::string get_header(const std::string& header);
 
 		// Check if the connection is persistent (keep-alive)
-		bool persistent();
+		bool keep_alive();
 
 		// Get Connection object for this request
 		Connection& connection() const;

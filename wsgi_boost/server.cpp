@@ -59,6 +59,7 @@ namespace wsgi_boost
 			{
 				check_static_route(request);
 				response.http_version = request.http_version;
+				response.keep_alive = request.keep_alive();
 				handle_request(request, response);
 			}
 			else if (ec == sys::errc::bad_message)
@@ -73,7 +74,7 @@ namespace wsgi_boost
 			{
 				return;
 			}
-			if (request.persistent())
+			if (request.keep_alive())
 				process_request(request.connection().socket());
 		});
 	}
