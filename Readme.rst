@@ -30,6 +30,13 @@ Main Features
 - Checks if requested files are really located within specified content folders
   to forbid requesting files by arbitrary paths (for security reasons).
 
+Benchmarks
+==========
+
+Performance benchmarks of WsgiBoostServer compared to popular Python WSGI servers
+can be found `here`_. According to those benchmarks WsgiBoostServer has about
+2 times better performance than the best Python-based WSGI server.
+
 Compatibility
 =============
 
@@ -121,3 +128,4 @@ TBD (see appveyor.yml)
 .. _Waitress: https://github.com/Pylons/waitress
 .. _Flask: http://flask.pocoo.org
 .. _PEP-3333: https://www.python.org/dev/peps/pep-3333
+.. _here: https://github.com/romanvm/WsgiBoostServer/blob/master/benchmarks/benchmarks.rst
