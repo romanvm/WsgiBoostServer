@@ -121,7 +121,60 @@ and install it into your working Python environment.
 Windows
 -------
 
-TBD (see appveyor.yml)
+**Tools required**: MS Visual Studio 2015 Update 2+, Cmake
+
+Note that WsgiBoostServer ``setup.py`` script uses MS Visual Studio 2015 regardless
+of Python version used for compilation of the extension. The ``setup.py`` script
+monkey-patches the default ``distutils`` complier on Windows.
+
+Procedure
+~~~~~~~~~
+
+Download ``zlib`` sources from `zlib Home Site`_ and unpack them into the folder of your choice,
+for example ``c:\zlib``.
+
+Open console, go to the ``zlib`` folder and execute there::
+
+  >cmake .
+
+You don't need to compile ``zlib``, Boost.Buld will do that for you.
+
+Now download ``boost`` sources from `Boost Home Site`_  and unpack them into the folder of your choice,
+for example ``c:\boost``.
+
+Open Windows console, go to the ``boost`` folder and execute there::
+
+  >bootstrap
+
+After the bootstrap script finishes building Boost.Build engine, create Boost.Build configuration file
+``user-config.jam`` in your ``%USERPROFILE%`` folder with the following content::
+
+  using python : 3.5 : c:\\Python35-32 ;
+  using msvc : 14.0 ;
+
+The ``using python`` parameter should point to the Python version that will be used for building
+WsgiBoostServer. Change it if necessary.
+
+Now open the console, go to the ``boost`` folder and execute there::
+
+  >b2 link=static runtime-link=static variant=release --stagedir=c:\boost\msvc14x32 -sZLIB_SOURCE=c:\zlib --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+
+Note that ``-sZLIB_SOURCE`` option should point to your actual ``zlib`` folder.
+
+Boost.Build engine will build the necessary libraries to link WsgiBoostServer against and place them into
+``c:\boost\msvc14x32\lib`` folder. This folder is set by the ``--stagedir`` option.
+
+Now you need to set the necessary environment variables. Execute the following commands::
+
+  >setx BOOST_ROOT c:\boost
+  >setx BOOST_LIBRARYDIR c:\boost\msvc14x32\lib
+
+The variables should point to actual folders where Boost header files and libraries are located. Now restart your computer
+or sign out and then sign in again.
+
+Now you can build and install WsgiBoostServer using the ``setup.py`` script or Python ``pip``
+as described in the preceding `Linux`_ section. Note that you must use the same Python version that was used to build
+Boost.Python library.
 
 .. _Boost.Asio: http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio.html
 .. _Boost.Python: http://www.boost.org/doc/libs/1_61_0/libs/python/doc/html/index.html
@@ -129,3 +182,5 @@ TBD (see appveyor.yml)
 .. _Flask: http://flask.pocoo.org
 .. _PEP-3333: https://www.python.org/dev/peps/pep-3333
 .. _here: https://github.com/romanvm/WsgiBoostServer/blob/master/benchmarks/benchmarks.rst
+.. _zlib Home Site: http://www.zlib.net
+.. _Boost Home Site: http://www.boost.org
