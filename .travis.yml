@@ -11,7 +11,6 @@ addons:
             - deadsnakes
 
         packages:
-            - g++-4.8
             - g++-4.9
             - g++-5
             - zlib1g-dev
@@ -22,7 +21,6 @@ env:
     global:
         - BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
     matrix:
-        - CC_VER=4.8
         - CC_VER=4.9
         - CC_VER=5
 
