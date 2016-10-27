@@ -26,20 +26,13 @@ namespace wsgi_boost
 {
 #pragma region functions
 
-	// Wraps a raw PyObject* into a boost::python::object
-	inline boost::python::object get_python_object(PyObject* pyobj)
-	{
-		return boost::python::object(boost::python::handle<>(pyobj));
-	}
-
-
 	// Converts POSIX time to HTTP header format
 	inline std::string time_to_header(time_t posix_time)
 	{
-		std::stringstream ss;
-		ss.imbue(std::locale("C"));
-		ss << std::put_time(std::gmtime(&posix_time), "%a, %d %b %Y %H:%M:%S GMT");
-		return ss.str();
+		char buffer[40];
+		std::locale::global(std::locale("C"));
+		std::strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", std::gmtime(&posix_time));
+		return std::string{ buffer };
 	}
 
 
@@ -47,14 +40,30 @@ namespace wsgi_boost
 	inline time_t header_to_time(const std::string& time_string)
 	{
 		tm t;
+#ifdef _WIN32
 		std::stringstream ss{ time_string };
 		ss.imbue(std::locale("C"));
 		ss >> std::get_time(&t, "%a, %d %b %Y %H:%M:%S GMT");
-#ifdef _WIN32
 		return _mkgmtime(&t);
 #else
+		std::locale::global(std::locale("C"));
+		strptime(time_string.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &t);
 		return timegm(&t);
 #endif
+	}
+
+
+	// Get current GMT time in HTTP header format
+	inline std::string get_current_gmt_time()
+	{
+		return time_to_header(std::time(nullptr));
+	}
+
+
+	// Wraps a raw PyObject* into a boost::python::object
+	inline boost::python::object get_python_object(PyObject* pyobj)
+	{
+		return boost::python::object(boost::python::handle<>(pyobj));
 	}
 
 
@@ -81,13 +90,6 @@ namespace wsgi_boost
 		boost::to_upper(header);
 		header = "HTTP_" + header;
 		return header;
-	}
-
-
-	// Get current GMT time in HTTP header format
-	inline std::string get_current_gmt_time()
-	{
-		return time_to_header(std::time(nullptr));
 	}
 
 #pragma endregion
