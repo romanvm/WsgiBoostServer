@@ -130,8 +130,8 @@ setup(
         ],
     platforms=['win32', 'posix'],
     zip_safe=False,
-    test_suite = 'nose.collector',
-    tests_require=['nose', 'requests'],
+    test_suite = 'test_wsgi_boost',
+    tests_require=['requests'],
     ext_modules=[
         Extension(
             name=NAME,
