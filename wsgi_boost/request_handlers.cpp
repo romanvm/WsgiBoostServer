@@ -100,24 +100,68 @@ namespace wsgi_boost
 		m_response.send_mesage("404 Not Found", "Error 404: Requested content not found!");
 	}
 
+
+	pair<string, string> StaticRequestHandler::parse_range(std::string& requested_range, size_t& start_pos, size_t& end_pos)
+	{
+		string range_start = "0";
+		string range_end = to_string(end_pos);
+		boost::regex range_regex{ "^bytes=(\\d*)-(\\d*)$" };
+		boost::smatch range_match;
+		boost::regex_search(requested_range, range_match, range_regex);
+		if (range_match[1].first != requested_range.end())
+		{
+			range_start = string{ range_match[1].first, range_match[1].second };
+			start_pos = stoull(range_start);
+		}
+		if (range_match[2].first != requested_range.end())
+		{
+			range_end = string{ range_match[2].first, range_match[2].second };
+			end_pos = stoull(range_end);
+		}
+		return pair<string, string>{ range_start, range_end };
+	}
+
+
 	void StaticRequestHandler::send_file(istream& content_stream, headers_type& headers)
 	{
+		headers.emplace_back("Accept-Ranges", "bytes");
 		content_stream.seekg(0, ios::end);
 		size_t length = content_stream.tellg();
-		content_stream.seekg(0, ios::beg);
+		size_t start_pos = 0;
+		size_t end_pos = length - 1;
+		string requested_range = m_request.get_header("Range");
+		if (requested_range != "")
+		{
+			pair<string, string> range = parse_range(requested_range, start_pos, end_pos);
+			if (start_pos < 0 || end_pos < 0 || end_pos < start_pos || start_pos >= length || end_pos >= length)
+			{
+				m_response.send_mesage("416 Requested Range Not Satisfiable");
+				return;
+			}
+			headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
+		}
 		headers.emplace_back("Content-Length", to_string(length));
 		m_response.send_header("200 OK", headers);
+		if (start_pos > 0)
+		{
+			content_stream.seekg(start_pos);
+		}
+		else
+		{
+			content_stream.seekg(0, ios::beg);
+		}
 		if (m_request.method == "GET")
 		{
 			//read and send 128 KB at a time
 			const size_t buffer_size = 131072;
 			vector<char> buffer(buffer_size);
 			size_t read_length;
-			while ((read_length = content_stream.read(&buffer[0], buffer_size).gcount()) > 0)
+			while (start_pos < end_pos && (read_length = content_stream.read(&buffer[0], min(end_pos - start_pos, buffer_size)).gcount()) > 0)
 			{
 				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length));
 				if (ec)
 					return;
+				start_pos += read_length;
 			}
 		}
 	}
