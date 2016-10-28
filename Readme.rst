@@ -23,10 +23,11 @@ Main Features
 
 **HTTP Server**:
 
-- Works on C++ level, effectively bypassing GIL.
+- Works on pure C++ level, effectively bypassing GIL.
 - Determines MIME for most file types.
 - Uses gzip compression for common textual formats: ``txt``/``html``/``xml``/``css``/``js``/``json``.
 - Supports ``If-Modified-Since`` header.
+- Supports ``Range`` header.
 - Checks if requested files are really located within specified content folders
   to forbid requesting files by arbitrary paths (for security reasons).
 
@@ -43,7 +44,7 @@ Compatibility
 - **OS**: Windows, Linux. In theory, WsgiBoostServer can be built and used on any OS that has
   a C++ 11/14-compatible compiler and supports Python ``setuptools``.
 - **Python**: 2.7+ (tested on 2.7 and 3.5).
-- **Boost**: tested with 1.58, 1.60 and 1.61, but probably will work with earlier versions
+- **Boost**: tested with 1.58, 1.60-1.62, but probably will work with earlier versions
   that are not too old.
 - **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2+ (regardless of Python version).
 
@@ -135,7 +136,7 @@ Open console, go to the ``zlib`` folder and execute there::
 
   >cmake .
 
-You don't need to compile ``zlib``, Boost.Buld will do that for you.
+You don't need to compile ``zlib``, ``Boost.Buld`` will do that for you.
 
 Now download ``boost`` sources from `Boost Home Site`_  and unpack them into the folder of your choice,
 for example ``c:\boost``.

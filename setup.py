@@ -3,6 +3,7 @@
 import os
 import sys
 import re
+from codecs import open
 from setuptools import setup
 from setuptools.extension import Extension
 try:
@@ -42,8 +43,8 @@ def get_version():
     return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+)"', response_h).group(1)
 
 
-def get_long_description():
-    with open(os.path.join(cwd, 'Readme.rst'), 'r') as fo:
+def get_file(filename):
+    with open(os.path.join(cwd, filename), 'r', encoding='utf-8') as fo:
         return fo.read()
 
 
@@ -105,7 +106,7 @@ setup(
     name='WsgiBoostServer',
     version=get_version(),
     description='Multithreaded WSGI server based on C++ Boost.Asio',
-    long_description=get_long_description(),
+    long_description=get_file('Readme.rst') + '\n\n' + get_file('Changelog.rst'),
     author='Roman Miroshnychenko',
     author_email='romanvm@yandex.ua',
     url='https://github.com/romanvm/WsgiBoostServer',
