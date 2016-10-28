@@ -45,8 +45,7 @@ Compatibility
 - **Python**: 2.7+ (tested on 2.7 and 3.5).
 - **Boost**: tested with 1.58, 1.60 and 1.61, but probably will work with earlier versions
   that are not too old.
-- **Compilers**: GCC 5.0+ (requires ``std::get_time`` and ``std::put_time`` support),
-  MS Visual Studio 2015 Update 2+ (regardless of Python version).
+- **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2+ (regardless of Python version).
 
 Usage
 =====
@@ -84,7 +83,7 @@ Normally, WsgiBoostServer is compiled using ``setuptools`` setup script.
 Linux
 -----
 
-WsgiBoostServer can be compiled on any Linux distributive that uses GCC 5.0+ as the default system compiler,
+WsgiBoostServer can be compiled on any Linux distributive that uses GCC 4.9+ as the default system compiler,
 for example Ubuntu 16.04 LTS (Xenial Xerus). The procedure below assumes that you are using Ubuntu 16.04.
 
 First, install prerequisites::
@@ -123,9 +122,8 @@ Windows
 
 **Tools required**: MS Visual Studio 2015 Update 2+, Cmake
 
-Note that WsgiBoostServer ``setup.py`` script uses MS Visual Studio 2015 regardless
-of Python version used for compilation of the extension. The ``setup.py`` script
-monkey-patches the default ``distutils`` complier on Windows.
+Note that WsgiBoostServer ``setup.py`` script monkey-patches the default ``distutils`` complier on Windows
+and uses MS Visual Studio 2015 regardless of Python version used to compile the extension module.
 
 Procedure
 ~~~~~~~~~
