@@ -121,6 +121,10 @@ and install it into your working Python environment.
 Windows
 -------
 
+Compiled wheels for Python 2.7 and 3.5 (32 bit) can be downloaded from "**Releases**" tab of this repository.
+If you want to compile WsgiBoostServer for Windows yourself, follow the instruction below.
+You can also check AppVeyor CI build configuration ``appveyor.yml``.
+
 **Tools required**: MS Visual Studio 2015 Update 2+, Cmake
 
 Note that WsgiBoostServer ``setup.py`` script monkey-patches the default ``distutils`` complier on Windows
