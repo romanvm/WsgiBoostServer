@@ -61,16 +61,16 @@ namespace wsgi_boost
 		bool read_bytes(std::string& data, long long length = -1);
 
 		// Set content length to control reading POST data
-		void set_post_content_length(long long cl);
+		void post_content_length(long long cl);
+
+		// Get POST content length
+		long long post_content_length() const;
 
 		// Send all output data to the client
 		boost::system::error_code flush();
 
 		// Get asio socket pointer
 		std::shared_ptr<boost::asio::ip::tcp::socket> socket() const;
-
-		// Get POST content length
-		long long content_length() const;
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input

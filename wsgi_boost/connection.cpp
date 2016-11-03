@@ -58,7 +58,7 @@ namespace wsgi_boost
 		}
 		else if (length >= 0 && length <= residual_bytes)
 		{
-			size = 0;
+			return true;
 		}
 		else
 		{
@@ -128,7 +128,7 @@ namespace wsgi_boost
 	}
 
 
-	void Connection::set_post_content_length(long long cl)
+	void Connection::post_content_length(long long cl)
 	{
 		m_bytes_left = cl;
 		m_content_length = cl;
@@ -151,7 +151,7 @@ namespace wsgi_boost
 		return m_socket;
 	}
 
-	long long Connection::content_length() const
+	long long Connection::post_content_length() const
 	{
 		return m_content_length;
 	}
@@ -217,7 +217,7 @@ namespace wsgi_boost
 
 	long long InputWrapper::len()
 	{
-		return m_connection.content_length();
+		return m_connection.post_content_length();
 	}
 #pragma endregion
 }
