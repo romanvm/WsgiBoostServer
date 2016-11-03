@@ -39,8 +39,6 @@ namespace wsgi_boost
 
 		void set_timeout(unsigned int timeout);
 
-		bool read_into_buffer(long long length = -1);
-
 	public:
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
@@ -53,6 +51,9 @@ namespace wsgi_boost
 
 		// Read HTTP header
 		boost::system::error_code read_header(std::string& header);
+
+		// Read data from a socket into the input buffer
+		bool read_into_buffer(long long length = -1);
 
 		// Read line including a new line charachter
 		std::string read_line();
