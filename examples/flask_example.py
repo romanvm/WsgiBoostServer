@@ -7,12 +7,9 @@ that returns a rendered web-page with static content (Bootstrap CSS and a pictur
 import os
 import sys
 from flask import Flask, render_template, make_response
-
-cwd = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(cwd))
-
 import wsgi_boost
 
+cwd = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
 
 
@@ -20,9 +17,7 @@ app = Flask(__name__)
 @app.route('/')
 @app.route('/<name>')
 def hello_world(name='Roman'):
-    resp = make_response(render_template('template.html', name=name))
-    resp.headers['Content-Type'] = 'text/html'
-    return resp
+    return render_template('template.html', name=name)
 
 
 # Create a server on the default port 8000 with 4 threads
