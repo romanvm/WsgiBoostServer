@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.9.5
+-----
+
+- Fixed a bug when ``Connection::read_bytes`` method did not decrease ``m_bytes_left`` counter.
+- Buffer the first 4KB of data sent in ``POST``/``PUT`` request to a WSGI application.
+
 0.9.4
 -----
 
