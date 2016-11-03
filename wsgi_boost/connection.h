@@ -39,8 +39,6 @@ namespace wsgi_boost
 
 		void set_timeout(unsigned int timeout);
 
-		bool read_into_buffer(long long length = -1);
-
 	public:
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
@@ -54,6 +52,9 @@ namespace wsgi_boost
 		// Read HTTP header
 		boost::system::error_code read_header(std::string& header);
 
+		// Read data from a socket into the input buffer
+		bool read_into_buffer(long long length = -1);
+
 		// Read line including a new line charachter
 		std::string read_line();
 
@@ -61,16 +62,16 @@ namespace wsgi_boost
 		bool read_bytes(std::string& data, long long length = -1);
 
 		// Set content length to control reading POST data
-		void set_post_content_length(long long cl);
+		void post_content_length(long long cl);
+
+		// Get POST content length
+		long long post_content_length() const;
 
 		// Send all output data to the client
 		boost::system::error_code flush();
 
 		// Get asio socket pointer
 		std::shared_ptr<boost::asio::ip::tcp::socket> socket() const;
-
-		// Get POST content length
-		long long content_length() const;
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input

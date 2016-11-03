@@ -99,6 +99,12 @@ namespace wsgi_boost
 			request.url_scheme = url_scheme;
 			request.host_name = host_name;
 			request.local_endpoint_port = m_port;
+			// Try to buffer the first 4KB POST data
+			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096))
+			{
+				cerr << "Unable to buffer POST data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+				return;
+			}
 			GilAcquire acquire_gil;
 			WsgiRequestHandler handler{ request, response, m_app };
 			try

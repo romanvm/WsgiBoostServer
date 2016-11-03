@@ -53,18 +53,18 @@ namespace wsgi_boost
 			try
 			{
 				long long cl = stoll(cl_header);
-				m_connection.set_post_content_length(cl);
+				m_connection.post_content_length(cl);
 			}
 			catch (const exception&)
 			{
-				m_connection.set_post_content_length(-1);
+				m_connection.post_content_length(-1);
 			}
 		}
 		else
 		{
-			m_connection.set_post_content_length(-1);
+			m_connection.post_content_length(-1);
 		}
-		if ((method == "POST" || method == "PUT") && m_connection.content_length() == -1)
+		if ((method == "POST" || method == "PUT") && m_connection.post_content_length() == -1)
 			return sys::error_code(sys::errc::invalid_argument, sys::system_category());
 		return sys::error_code(sys::errc::success, sys::system_category());
 	}

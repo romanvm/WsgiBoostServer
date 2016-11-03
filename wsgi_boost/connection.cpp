@@ -58,7 +58,7 @@ namespace wsgi_boost
 		}
 		else if (length >= 0 && length <= residual_bytes)
 		{
-			size = 0;
+			return true;
 		}
 		else
 		{
@@ -94,6 +94,7 @@ namespace wsgi_boost
 			vector<char> buffer(size);
 			is.read(&buffer[0], size);
 			data = string(buffer.begin(), buffer.end());
+			m_bytes_left -= data.length();
 		}
 		return result;
 	}
@@ -128,10 +129,16 @@ namespace wsgi_boost
 	}
 
 
-	void Connection::set_post_content_length(long long cl)
+	void Connection::post_content_length(long long cl)
 	{
 		m_bytes_left = cl;
 		m_content_length = cl;
+	}
+
+
+	long long Connection::post_content_length() const
+	{
+		return m_content_length;
 	}
 
 
@@ -146,14 +153,10 @@ namespace wsgi_boost
 		return ec;
 	}
 
+
 	std::shared_ptr<boost::asio::ip::tcp::socket> Connection::socket() const
 	{
 		return m_socket;
-	}
-
-	long long Connection::content_length() const
-	{
-		return m_content_length;
 	}
 
 #pragma endregion
@@ -169,6 +172,7 @@ namespace wsgi_boost
 		return "";
 	}
 
+
 	string InputWrapper::readline(long long size)
 	{
 		GilRelease release_gil;
@@ -177,6 +181,7 @@ namespace wsgi_boost
 			line = line.substr(0, size);
 		return line;
 	}
+
 
 	py::list InputWrapper::readlines(long long sizehint)
 	{
@@ -197,10 +202,12 @@ namespace wsgi_boost
 		return listing;
 	}
 
+
 	InputWrapper* InputWrapper::iter()
 	{
 		return this;
 	}
+
 
 	std::string InputWrapper::next()
 	{
@@ -215,9 +222,10 @@ namespace wsgi_boost
 		}
 	}
 
+
 	long long InputWrapper::len()
 	{
-		return m_connection.content_length();
+		return m_connection.post_content_length();
 	}
 #pragma endregion
 }
