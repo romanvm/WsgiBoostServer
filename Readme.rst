@@ -118,6 +118,9 @@ Alternatively, you can install WsgiBoostServer using ``pip``::
 ``pip`` will download WsgiBoostServer sources, compile the binary module
 and install it into your working Python environment.
 
+**Note**: On **Releases** tab of this repository you can find a compiled wheel
+for Python 2.7 on Raspberry Pi 2.
+
 Windows
 -------
 
