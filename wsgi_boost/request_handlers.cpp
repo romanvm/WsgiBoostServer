@@ -89,6 +89,7 @@ namespace wsgi_boost
 						}
 						else
 						{
+							out_headers.emplace_back("Accept-Ranges", "bytes");
 							send_file(ifs, out_headers);
 						}
 						ifs.close();
@@ -101,47 +102,69 @@ namespace wsgi_boost
 	}
 
 
-	pair<string, string> StaticRequestHandler::parse_range(std::string& requested_range, size_t& start_pos, size_t& end_pos)
+	pair<string, string> StaticRequestHandler::parse_range(std::string& requested_range)
 	{
-		string range_start = "0";
-		string range_end = to_string(end_pos);
+		pair<string, string> range;
 		boost::regex range_regex{ "^bytes=(\\d*)-(\\d*)$" };
 		boost::smatch range_match;
 		boost::regex_search(requested_range, range_match, range_regex);
-		if (range_match[1].first != requested_range.end())
+		if (!range_match.empty())
 		{
-			range_start = string{ range_match[1].first, range_match[1].second };
-			start_pos = stoull(range_start);
+			if (range_match[1].first != requested_range.end())
+			{
+				range.first = string{ range_match[1].first, range_match[1].second };
+			}
+			if (range_match[2].first != requested_range.end())
+			{
+				range.second = string{ range_match[2].first, range_match[2].second };
+			}
 		}
-		if (range_match[2].first != requested_range.end())
-		{
-			range_end = string{ range_match[2].first, range_match[2].second };
-			end_pos = stoull(range_end);
-		}
-		return pair<string, string>{ range_start, range_end };
+		return range;
 	}
 
 
 	void StaticRequestHandler::send_file(istream& content_stream, headers_type& headers)
 	{
-		headers.emplace_back("Accept-Ranges", "bytes");
 		content_stream.seekg(0, ios::end);
 		size_t length = content_stream.tellg();
+		headers.emplace_back("Content-Length", to_string(length));
 		size_t start_pos = 0;
 		size_t end_pos = length - 1;
 		string requested_range = m_request.get_header("Range");
-		if (requested_range != "")
+		pair<string, string> range;
+		if (requested_range != "" && ((range = parse_range(requested_range)) != pair<string, string>()))
 		{
-			pair<string, string> range = parse_range(requested_range, start_pos, end_pos);
-			if (start_pos < 0 || end_pos < 0 || end_pos < start_pos || start_pos >= length || end_pos >= length)
+			if (range.first != string())
 			{
-				m_response.send_mesage("416 Requested Range Not Satisfiable");
+				start_pos = stoull(range.first);
+			}
+			else
+			{
+				range.first = to_string(start_pos);
+			}
+			if (range.second != string())
+			{
+				end_pos = stoull(range.second);
+			}
+			else
+			{
+				range.second = to_string(end_pos);
+			}
+			if (start_pos > end_pos || start_pos >= length || end_pos >= length)
+			{
+				m_response.send_mesage("416 Range Not Satisfiable");
 				return;
 			}
-			headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
+			else
+			{
+				headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
+				m_response.send_header("206 Partial Content", headers);
+			}
 		}
-		headers.emplace_back("Content-Length", to_string(length));
-		m_response.send_header("200 OK", headers);
+		else
+		{
+			m_response.send_header("200 OK", headers);
+		}
 		if (start_pos > 0)
 		{
 			content_stream.seekg(start_pos);
@@ -152,16 +175,16 @@ namespace wsgi_boost
 		}
 		if (m_request.method == "GET")
 		{
-			//read and send 128 KB at a time
 			const size_t buffer_size = 131072;
 			vector<char> buffer(buffer_size);
 			size_t read_length;
-			while (start_pos < end_pos && (read_length = content_stream.read(&buffer[0], min(end_pos - start_pos, buffer_size)).gcount()) > 0)
+			size_t bytes_left = end_pos - start_pos + 1;
+			while (bytes_left > 0 && ((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
 			{
 				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length));
 				if (ec)
 					return;
-				start_pos += read_length;
+				bytes_left -= read_length;
 			}
 		}
 	}

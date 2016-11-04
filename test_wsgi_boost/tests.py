@@ -222,8 +222,10 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 304)
 
     def test_range_header(self):
-        resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png', headers={'Range': 'bytes=1024-2048'})
-        self.assertEqual(resp.headers['Content-Range'], 'bytes 1024-2048/22003')
+        resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png', headers={'Range': 'bytes=1024-2047'})
+        self.assertEqual(resp.status_code, 206)
+        self.assertEqual(resp.headers['Content-Range'], 'bytes 1024-2047/22003')
+        self.assertEqual(len(resp.content), 1024)
         resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png', headers={'Range': 'bytes=1024-30000'})
         self.assertEqual(resp.status_code, 416)
 

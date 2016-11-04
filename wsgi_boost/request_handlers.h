@@ -47,7 +47,7 @@ namespace wsgi_boost
 	private:
 		void open_file(const boost::filesystem::path& content_dir_path);
 		void send_file(std::istream& content_stream, headers_type& headers);
-		std::pair<std::string, std::string> parse_range(std::string& requested_range, size_t& start_pos, size_t& end_pos);
+		std::pair<std::string, std::string> parse_range(std::string& requested_range);
 	};
 
 	// Handles WSGI requests
