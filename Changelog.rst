@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.9.6
+-----
+
+- Fixed handling requests with Range headers.
+
 0.9.5
 -----
 
