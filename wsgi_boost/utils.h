@@ -175,22 +175,23 @@ namespace wsgi_boost
 			}
 		}
 
-		bool is_compressable(const std::string& mime) const
+		bool is_compressable(const std::string& ext) const
 		{
-			return std::find(m_compressables.begin(), m_compressables.end(), mime) != m_compressables.end();
+			return std::find(m_compressables.begin(), m_compressables.end(), ext) != m_compressables.end();
 		}
 
 	private:
-		// Common textual formats that can be gzip-ed
-		std::array<std::string, 8> m_compressables{ {
-			"text/plain",
-			"text/html",
-			"text/css",
-			"application/xml",
-			"application/json",
-			"application/xhtml+xml",
-			"application/rss+xml",
-			"application/javascript"
+		// Common formats that can be gzip-ed
+		std::array<std::string, 9> m_compressables{ {
+			".txt",
+			".htm",
+			".html",
+			".xml",
+			".css",
+			".js",
+			".json",
+			".ttf",
+			".svg"
 		} };
 
 		std::string m_default_mime = "application/octet-stream";

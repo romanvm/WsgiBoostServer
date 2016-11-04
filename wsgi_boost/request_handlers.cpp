@@ -75,9 +75,10 @@ namespace wsgi_boost
 							return;
 						}
 						MimeTypes mime_types;
-						string mime = mime_types[path.extension().string()];
+						string ext = path.extension().string();
+						string mime = mime_types[ext];
 						out_headers.emplace_back("Content-Type", mime);
-						if (m_request.use_gzip && mime_types.is_compressable(mime) && m_request.check_header("Accept-Encoding", "gzip"))
+						if (m_request.use_gzip && mime_types.is_compressable(ext) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
