@@ -71,7 +71,7 @@ namespace wsgi_boost
 						if (ims != "" && header_to_time(ims) >= last_modified)
 						{
 							out_headers.emplace_back("Content-Length", "0");
-							m_response.send_header("304 Not Modified", out_headers);
+							m_response.send_header("304 Not Modified", out_headers, true);
 							return;
 						}
 						MimeTypes mime_types;
@@ -159,12 +159,12 @@ namespace wsgi_boost
 			else
 			{
 				headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
-				m_response.send_header("206 Partial Content", headers);
+				m_response.send_header("206 Partial Content", headers, true);
 			}
 		}
 		else
 		{
-			m_response.send_header("200 OK", headers);
+			m_response.send_header("200 OK", headers, true);
 		}
 		if (start_pos > 0)
 		{
@@ -182,7 +182,7 @@ namespace wsgi_boost
 			size_t bytes_left = end_pos - start_pos + 1;
 			while (bytes_left > 0 && ((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
 			{
-				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length));
+				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length), true);
 				if (ec)
 					return;
 				bytes_left -= read_length;

@@ -100,7 +100,7 @@ namespace wsgi_boost
 			request.host_name = host_name;
 			request.local_endpoint_port = m_port;
 			// Try to buffer the first 4KB POST data
-			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096))
+			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096, true))
 			{
 				cerr << "Unable to buffer POST data from " << request.remote_address() << ':' << request.remote_port() << '\n';
 				return;
@@ -172,7 +172,7 @@ namespace wsgi_boost
 				}
 				catch (const exception&)
 				{
-					throw RuntimeError("Unable to resolve IP address " + m_ip_address + " and port " + to_string(m_port) + "!");
+					throw RuntimeError("Unable to resolve IP address and port " + m_ip_address + ":" + to_string(m_port) + "!");
 				}
 			}
 			else

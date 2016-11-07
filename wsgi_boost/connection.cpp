@@ -46,7 +46,7 @@ namespace wsgi_boost
 	}
 
 
-	bool Connection::read_into_buffer(long long length)
+	bool Connection::read_into_buffer(long long length, bool async)
 	{
 		if (m_bytes_left <= 0)
 			return false;
@@ -65,10 +65,19 @@ namespace wsgi_boost
 			size = m_bytes_left - residual_bytes;
 		}
 		sys::error_code ec;
+		size_t bytes_read;
 		set_timeout(m_content_timeout);
-		// For receivind POST content I'm using a syncronous read because a stackful coroutine can be resumed
-		// in a different thread while the GIL is held which results in Python crash.
-		size_t bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
+		if (async)
+		{
+			// Initial POST buffering is done without GIL so switching threads does not matter
+			bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
+		}
+		else
+		{
+			// For receivind POST content I'm using a syncronous read because a stackful coroutine can be resumed
+			// in a different thread while the GIL is held which results in Python crash.
+			bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
+		}
 		m_timer.cancel();
 		if (!ec || (ec && bytes_read > 0))			
 			return true;
@@ -142,13 +151,22 @@ namespace wsgi_boost
 	}
 
 
-	sys::error_code Connection::flush()
+	sys::error_code Connection::flush(bool async)
 	{
 		sys::error_code ec;
 		set_timeout(m_content_timeout);
-		// For sending HTTP response I'm using a syncronous write because a stackful coroutine can be resumed
-		// in a different thread while the GIL is held which results in Python crash.
-		asio::write(*m_socket, m_ostreambuf, ec);
+		if (async)
+		{
+			// For sending static HTTP responses I'm using async write because static request handlers
+			// operate without the GIL so switching threads does not matter.
+			asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
+		}
+		else
+		{
+			// For sending WSGI HTTP responses I'm using a syncronous write because a stackful coroutine can be resumed
+			// in a different thread while the GIL is held which results in Python crash.
+			asio::write(*m_socket, m_ostreambuf, ec);
+		}
 		m_timer.cancel();
 		return ec;
 	}

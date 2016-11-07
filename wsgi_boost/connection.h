@@ -53,7 +53,7 @@ namespace wsgi_boost
 		boost::system::error_code read_header(std::string& header);
 
 		// Read data from a socket into the input buffer
-		bool read_into_buffer(long long length = -1);
+		bool read_into_buffer(long long length = -1, bool async = false);
 
 		// Read line including a new line charachter
 		std::string read_line();
@@ -68,7 +68,7 @@ namespace wsgi_boost
 		long long post_content_length() const;
 
 		// Send all output data to the client
-		boost::system::error_code flush();
+		boost::system::error_code flush(bool async = false);
 
 		// Get asio socket pointer
 		std::shared_ptr<boost::asio::ip::tcp::socket> socket() const;
