@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.9.7
+-----
+
+- Now asynchronous network operations are used outside Python GIL,
+  e.g. for sending static content.
+
 0.9.6
 -----
 
