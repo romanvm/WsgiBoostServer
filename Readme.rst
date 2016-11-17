@@ -46,7 +46,7 @@ Compatibility
 - **Python**: 2.7+ (tested on 2.7 and 3.5).
 - **Boost**: tested with 1.58, 1.60-1.62, but probably will work with earlier versions
   that are not too old.
-- **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2+ (regardless of Python version).
+- **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2 and above (regardless of Python version).
 
 Usage
 =====
@@ -58,7 +58,7 @@ Simple example using `Flask`_ micro-framework:
     #!/usr/bin/env python
 
     from flask import Flask
-    import wsgi_boost
+    from wsgi_boost import WsgiBoostHttp
 
     app = Flask(__name__)
 
@@ -70,8 +70,10 @@ Simple example using `Flask`_ micro-framework:
 
 
     # Create a server on the port 8080 with 4 threads
-    httpd = wsgi_boost.WsgiBoostHttp(port=8080, num_threads=4)
+    httpd = WsgiBoostHttp(port=8080, num_threads=4)
     httpd.set_app(app)
+    # Serve static files from a folder
+    httpd.add_static_route('^/static', '/my/static/files')
     httpd.start()
 
 Also see ``examples`` folder.
