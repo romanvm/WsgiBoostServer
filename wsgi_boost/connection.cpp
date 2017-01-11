@@ -69,12 +69,14 @@ namespace wsgi_boost
 		set_timeout(m_content_timeout);
 		if (async)
 		{
-			// Initial POST buffering is done without GIL so switching threads does not matter
+			// Initial POST buffering is done without GIL so switching threads does not matter.
+			// In single-threaded mode read operations are also does not asyncronously.
 			bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
 		}
 		else
 		{
-			// For receivind POST content I'm using a syncronous read because a stackful coroutine can be resumed
+			// With multiple threads for receivind POST content I'm using a syncronous read
+			// because a stackful coroutine can be resumed
 			// in a different thread while the GIL is held which results in Python crash.
 			bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
 		}
@@ -85,9 +87,9 @@ namespace wsgi_boost
 	}
 
 
-	bool Connection::read_bytes(string& data, long long length)
+	bool Connection::read_bytes(string& data, long long length, bool async)
 	{
-		bool result = read_into_buffer(length);
+		bool result = read_into_buffer(length, async);
 		if (result)
 		{
 			istream is{ &m_istreambuf };
@@ -109,7 +111,7 @@ namespace wsgi_boost
 	}
 
 
-	string Connection::read_line()
+	string Connection::read_line(bool async)
 	{
 		istream is{ &m_istreambuf };
 		string line = string();
@@ -125,7 +127,7 @@ namespace wsgi_boost
 				--m_bytes_left;
 				break;
 			}
-			if (read_into_buffer(min((long long)128, m_bytes_left)))
+			if (read_into_buffer(min((long long)128, m_bytes_left), async))
 			{
 				is.clear();
 			}
@@ -159,11 +161,13 @@ namespace wsgi_boost
 		{
 			// For sending static HTTP responses I'm using async write because static request handlers
 			// operate without the GIL so switching threads does not matter.
+			// With a singlie thread data is also sent to a client asyncronously.
 			asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
 		}
 		else
 		{
-			// For sending WSGI HTTP responses I'm using a syncronous write because a stackful coroutine can be resumed
+			// With multiple threads for sending WSGI HTTP responses I'm using a syncronous write
+			// because a stackful coroutine can be resumed
 			// in a different thread while the GIL is held which results in Python crash.
 			asio::write(*m_socket, m_ostreambuf, ec);
 		}
@@ -185,7 +189,7 @@ namespace wsgi_boost
 	{
 		GilRelease release_gil;
 		string data;
-		if (m_connection.read_bytes(data, size))
+		if (m_connection.read_bytes(data, size, m_async))
 			return data;
 		return "";
 	}
@@ -194,7 +198,7 @@ namespace wsgi_boost
 	string InputWrapper::readline(long long size)
 	{
 		GilRelease release_gil;
-		string line = m_connection.read_line();
+		string line = m_connection.read_line(m_async);
 		if (size > 0 && line.length() > size)
 			line = line.substr(0, size);
 		return line;

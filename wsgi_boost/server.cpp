@@ -106,7 +106,7 @@ namespace wsgi_boost
 				return;
 			}
 			GilAcquire acquire_gil;
-			WsgiRequestHandler handler{ request, response, m_app };
+			WsgiRequestHandler handler{ request, response, m_app , (m_num_threads == 1)};
 			try
 			{
 				handler.handle();

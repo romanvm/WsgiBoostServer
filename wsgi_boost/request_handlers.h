@@ -61,12 +61,13 @@ namespace wsgi_boost
 		boost::python::dict m_environ;
 		boost::python::object m_write;
 		boost::python::object m_start_response;
+		bool m_async;
 
 		void prepare_environ();
 		void send_iterable(Iterator& iterable);
 
 	public:
-		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app);
+		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app, bool async);
 
 		// Handle request
 		void handle();
