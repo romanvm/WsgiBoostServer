@@ -2,7 +2,7 @@ language: python
 
 python:
     - "2.7"
-    - "3.6"
+    - "3.5"
 
 addons:
     apt:
@@ -16,7 +16,7 @@ addons:
             - g++-6
             - zlib1g-dev
             - libbz2-dev
-            - python3.6-dev
+            - python3.5-dev
 
 env:
     global:
