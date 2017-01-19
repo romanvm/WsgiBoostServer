@@ -88,6 +88,10 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			"Get os set url scheme -- http or https (Default: ``'http'``)"
 			)
 
+		.def_readwrite("static_cache_control", &HttpServer::static_cache_control,
+			"The value of ``Cache-Control`` HTTP header for static content (default: ``'max-age=86400'``)"
+			)
+
 		.def("start", &HttpServer::start,
 			"Start processing HTTP requests\n\n"
 			

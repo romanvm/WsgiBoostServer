@@ -56,10 +56,10 @@ namespace wsgi_boost
 		bool read_into_buffer(long long length = -1, bool async = false);
 
 		// Read line including a new line charachter
-		std::string read_line();
+		std::string read_line(bool async = false);
 
 		// Read a specified number of bytes or all data left
-		bool read_bytes(std::string& data, long long length = -1);
+		bool read_bytes(std::string& data, long long length = -1, bool async = false);
 
 		// Set content length to control reading POST data
 		void post_content_length(long long cl);
@@ -79,9 +79,10 @@ namespace wsgi_boost
 	{
 	private:
 		Connection& m_connection;
+		bool m_async;
 
 	public:
-		explicit InputWrapper(Connection& conn) : m_connection{ conn } {}
+		explicit InputWrapper(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
 
 		// Read data from input content
 		std::string read(long long size = -1);

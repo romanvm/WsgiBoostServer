@@ -39,7 +39,9 @@ namespace wsgi_boost
 	class StaticRequestHandler : public BaseRequestHandler
 	{
 	public:
-		StaticRequestHandler(Request& request, Response& response) : BaseRequestHandler(request, response) {}
+		StaticRequestHandler(Request& request, Response& response, std::string& cache_control) :
+			m_cache_control { cache_control },
+			BaseRequestHandler(request, response) {}
 
 		// Handle request
 		void handle();
@@ -48,6 +50,7 @@ namespace wsgi_boost
 		void open_file(const boost::filesystem::path& content_dir_path);
 		void send_file(std::istream& content_stream, headers_type& headers);
 		std::pair<std::string, std::string> parse_range(std::string& requested_range);
+		std::string& m_cache_control;
 	};
 
 	// Handles WSGI requests
@@ -61,12 +64,13 @@ namespace wsgi_boost
 		boost::python::dict m_environ;
 		boost::python::object m_write;
 		boost::python::object m_start_response;
+		bool m_async;
 
 		void prepare_environ();
 		void send_iterable(Iterator& iterable);
 
 	public:
-		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app);
+		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app, bool async);
 
 		// Handle request
 		void handle();

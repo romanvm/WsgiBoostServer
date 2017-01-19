@@ -42,6 +42,7 @@ namespace wsgi_boost
 		std::string url_scheme = "http";
 		std::string host_name;
 		bool use_gzip = true;
+		std::string static_cache_control = "max-age=86400";
 
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;

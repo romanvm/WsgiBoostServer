@@ -64,7 +64,7 @@ namespace wsgi_boost
 					if (ifs)
 					{
 						headers_type out_headers;
-						out_headers.emplace_back("Cache-Control", "max-age=3600");
+						out_headers.emplace_back("Cache-Control", m_cache_control);
 						time_t last_modified = fs::last_write_time(path);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
 						string ims = m_request.get_header("If-Modified-Since");
@@ -194,8 +194,8 @@ namespace wsgi_boost
 
 #pragma region WsgiRequestHandler
 
-	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app) :
-		BaseRequestHandler(request, response), m_app{ app }
+	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app, bool async) :
+		BaseRequestHandler(request, response), m_app{ app }, m_async{ async }
 	{
 		function<void(py::object)> wr{
 			[this](py::object data)
@@ -294,7 +294,7 @@ namespace wsgi_boost
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
-		InputWrapper input{ m_request.connection() };
+		InputWrapper input{ m_request.connection(), m_async };
 		m_environ["wsgi.input"] = input; 
 		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
 		m_environ["wsgi.multithread"] = true;
@@ -324,7 +324,7 @@ namespace wsgi_boost
 						break;
 					m_headers_sent = true;
 				}
-				ec = m_response.send_data(chunk);
+				ec = m_response.send_data(chunk, m_async);
 				if (ec)
 					break;
 			}
