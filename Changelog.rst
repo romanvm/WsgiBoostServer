@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.9.8
+-----
+
+- Now the WSGI server is fully asynchronous in a single-thread mode.
+- Added ``static_cache_control`` property for setting the value of ``Cache-Control`` HTTP header
+  for static content.
+
 0.9.7
 -----
 

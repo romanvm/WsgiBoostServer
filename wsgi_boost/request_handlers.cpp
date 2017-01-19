@@ -64,7 +64,7 @@ namespace wsgi_boost
 					if (ifs)
 					{
 						headers_type out_headers;
-						out_headers.emplace_back("Cache-Control", "max-age=3600");
+						out_headers.emplace_back("Cache-Control", m_cache_control);
 						time_t last_modified = fs::last_write_time(path);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
 						string ims = m_request.get_header("If-Modified-Since");
