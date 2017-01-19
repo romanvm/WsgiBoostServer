@@ -10,20 +10,20 @@ environment:
     MSVC_DEFAULT_OPTIONS: ON
     BOOST_ROOT: "%APPVEYOR_BUILD_FOLDER%\\boost"
     BOOST_LIBRARYDIR: "%BOOST_ROOT%\\stage\\lib"
-    ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.8"
+    ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.11"
 
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7"
 
-    - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5"
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6"
       
 install:
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
-  - ps: Start-FileDownload "http://zlib.net/zlib128.zip" -FileName zlib.zip
+  - ps: Start-FileDownload "http://zlib.net/zlib1211.zip" -FileName zlib.zip
   - 7z x zlib.zip -y
   - cd %ZLIB_DIR%
   - cmake .

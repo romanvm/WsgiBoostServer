@@ -34,7 +34,7 @@ install:
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
     - ./bootstrap.sh
-    - ./b2 -j2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+    - ./b2 -j2 toolset=gcc-$CC_VER link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
 
 script:
     - cd $TRAVIS_BUILD_DIR
