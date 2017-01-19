@@ -2,7 +2,7 @@ language: python
 
 python:
     - "2.7"
-    - "3.5"
+    - "3.6"
 
 addons:
     apt:
@@ -16,7 +16,7 @@ addons:
             - g++-6
             - zlib1g-dev
             - libbz2-dev
-            - python3.5-dev
+            - python3.6-dev
 
 env:
     global:
@@ -34,7 +34,7 @@ install:
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
     - ./bootstrap.sh
-    - ./b2 -j2 toolset=gcc-5 link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+    - ./b2 -j2 toolset=gcc-$CC_VER link=shared variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
 
 script:
     - cd $TRAVIS_BUILD_DIR
