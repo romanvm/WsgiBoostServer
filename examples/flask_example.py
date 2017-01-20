@@ -6,7 +6,7 @@ that returns a rendered web-page with static content (Bootstrap CSS and a pictur
 
 import os
 import sys
-from flask import Flask, render_template, make_response
+from flask import Flask, render_template
 import wsgi_boost
 
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +20,11 @@ def hello_world(name='Roman'):
     return render_template('template.html', name=name)
 
 
-# Create a server on the default port 8000 with 4 threads
-httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
-# Serve static files by "static/*" path from "static" subfolder.
-# Also see template.html.
-httpd.add_static_route('^/static', os.path.join(cwd, 'static'))
-httpd.set_app(app)
-httpd.start()
+if __name__ == '__main__':
+    # Create a server on the default port 8000 with 4 threads
+    httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
+    # Serve static files by "static/*" path from "static" subfolder.
+    # Also see template.html.
+    httpd.add_static_route('^/static', os.path.join(cwd, 'static'))
+    httpd.set_app(app)
+    httpd.start()
