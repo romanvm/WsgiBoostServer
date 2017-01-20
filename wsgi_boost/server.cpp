@@ -148,7 +148,7 @@ namespace wsgi_boost
 	void HttpServer::set_app(py::object app)
 	{
 		if (is_running())
-			throw RuntimeError("Attempt to set a WSGI app while the server is running!");
+			throw RuntimeError("Cannot set a WSGI app while the server is running!");
 		m_app = app;
 	}
 
