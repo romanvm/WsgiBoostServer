@@ -12,15 +12,16 @@ sys.path.insert(0, os.path.dirname(cwd))
 import wsgi_boost
 
 
-# Very simple WSGI application
 def hello_app(environ, start_response):
+    """Very simple WSGI application"""
     content = b'Hello World!'
     response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))]
     start_response('200 OK', response_headers)
     return [content]
 
 
-# Create a server on the default port 8000 with 4 threads
-httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
-httpd.set_app(hello_app)
-httpd.start()
+if __name__ == '__main__':
+    # Create a server on the default port 8000 with 4 threads
+    httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
+    httpd.set_app(hello_app)
+    httpd.start()
