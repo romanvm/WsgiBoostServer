@@ -120,13 +120,13 @@ Alternatively, you can install WsgiBoostServer using ``pip``::
 ``pip`` will download WsgiBoostServer sources, compile the binary module
 and install it into your working Python environment.
 
-**Note**: On **Releases** tab of this repository you can find a compiled wheel
-for Python 2.7 on Raspberry Pi 2.
+**Note**: On **Releases** tab of this repository you can find compiled wheels
+for Python 2.7 and 3.4 on Raspberry Pi 2.
 
 Windows
 -------
 
-Compiled wheels for Python 2.7 and 3.5 (32 bit) can be downloaded from "**Releases**" tab of this repository.
+Compiled wheels for Python 2.7 and 3.6 (32 bit) can be downloaded from "**Releases**" tab of this repository.
 If you want to compile WsgiBoostServer for Windows yourself, follow the instruction below.
 You can also check AppVeyor CI build configuration ``appveyor.yml``.
 
