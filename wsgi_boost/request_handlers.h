@@ -47,10 +47,10 @@ namespace wsgi_boost
 		void handle();
 
 	private:
+		std::string& m_cache_control;
+
 		void open_file(const boost::filesystem::path& content_dir_path);
 		void send_file(std::istream& content_stream, headers_type& headers);
-		std::pair<std::string, std::string> parse_range(std::string& requested_range);
-		std::string& m_cache_control;
 	};
 
 	// Handles WSGI requests

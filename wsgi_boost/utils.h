@@ -8,6 +8,7 @@ License: MIT, see License.txt
 
 #include <boost/algorithm/string.hpp>
 #include <boost/python.hpp>
+#include <boost/regex.hpp>
 
 #include <string>
 #include <sstream>
@@ -90,6 +91,27 @@ namespace wsgi_boost
 		boost::to_upper(header);
 		header = "HTTP_" + header;
 		return header;
+	}
+
+	// Parse Range header
+	inline pair<std::string, std::string> parse_range(std::string& requested_range)
+	{
+		pair<std::string, std::string> range;
+		boost::regex range_regex{ "^bytes=(\\d*)-(\\d*)$" };
+		boost::smatch range_match;
+		boost::regex_search(requested_range, range_match, range_regex);
+		if (!range_match.empty())
+		{
+			if (range_match[1].first != requested_range.end())
+			{
+				range.first = string{ range_match[1].first, range_match[1].second };
+			}
+			if (range_match[2].first != requested_range.end())
+			{
+				range.second = string{ range_match[2].first, range_match[2].second };
+			}
+		}
+		return range;
 	}
 
 #pragma endregion
