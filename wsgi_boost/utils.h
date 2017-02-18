@@ -93,10 +93,11 @@ namespace wsgi_boost
 		return header;
 	}
 
+
 	// Parse Range header
-	inline pair<std::string, std::string> parse_range(std::string& requested_range)
+	inline std::pair<std::string, std::string> parse_range(std::string& requested_range)
 	{
-		pair<std::string, std::string> range;
+		std::pair<std::string, std::string> range;
 		boost::regex range_regex{ "^bytes=(\\d*)-(\\d*)$" };
 		boost::smatch range_match;
 		boost::regex_search(requested_range, range_match, range_regex);
@@ -104,14 +105,22 @@ namespace wsgi_boost
 		{
 			if (range_match[1].first != requested_range.end())
 			{
-				range.first = string{ range_match[1].first, range_match[1].second };
+				range.first = std::string{ range_match[1].first, range_match[1].second };
 			}
 			if (range_match[2].first != requested_range.end())
 			{
-				range.second = string{ range_match[2].first, range_match[2].second };
+				range.second = std::string{ range_match[2].first, range_match[2].second };
 			}
 		}
 		return range;
+	}
+	
+	// Get hexadecimal representation of string length
+	inline std::string hex_len(const std::string& str)
+	{
+		std::stringstream ss;
+		ss << std::hex << str.length();
+		return ss.str();
 	}
 
 #pragma endregion

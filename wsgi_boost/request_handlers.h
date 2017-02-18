@@ -65,6 +65,7 @@ namespace wsgi_boost
 		boost::python::object m_write;
 		boost::python::object m_start_response;
 		bool m_async;
+		bool m_send_chunked = false;
 
 		void prepare_environ();
 		void send_iterable(Iterator& iterable);

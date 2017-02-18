@@ -19,6 +19,7 @@ using namespace std;
 namespace py = boost::python;
 namespace fs = boost::filesystem;
 namespace sys = boost::system;
+namespace alg = boost::algorithm;
 
 
 namespace wsgi_boost
@@ -201,10 +202,32 @@ namespace wsgi_boost
 				}
 				this->m_status = py::extract<string>(status);
 				m_out_headers.clear();
+				bool has_cont_len = false;
+				bool has_trans_enc = false;
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
 					py::object header = headers[i];
-					m_out_headers.emplace_back(py::extract<string>(header[0]), py::extract<string>(header[1]));
+					string header_name = py::extract<string>(header[0]);
+					string header_value = py::extract<string>(header[1]);
+					// If a WSGI app does not provide Content-Length header (e.g. Django)
+					// we use Transfer-Encoding: chunked
+					if (alg::iequals(header_name, "Content-Length"))
+						has_cont_len = true;
+					if (alg::iequals(header_name, "Transfer-Encoding"))
+					{
+						if (header_value.find("chunked") == string::npos)
+						{
+							header_value += ",chunked";
+							this->m_send_chunked = true;
+						}						
+						has_trans_enc = true;
+					}
+					m_out_headers.emplace_back(header_name, header_value);
+				}
+				if (!(has_cont_len || has_trans_enc))
+				{
+					this->m_send_chunked = true;
+					m_out_headers.emplace_back("Transfer-Encoding", "chunked");
 				}
 				return m_write;
 			}
@@ -303,15 +326,25 @@ namespace wsgi_boost
 						break;
 					m_headers_sent = true;
 				}
+				if (m_send_chunked)
+					ec = m_response.send_data(hex_len(chunk) + "\r\n");
+					if (ec)
+						break;
 				ec = m_response.send_data(chunk, m_async);
 				if (ec)
 					break;
+				if (m_send_chunked)
+					ec = m_response.send_data("\r\n");
+					if (ec)
+						break;
 			}
 			catch (const py::error_already_set&)
 			{
 				if (PyErr_ExceptionMatches(PyExc_StopIteration))
 				{
 					PyErr_Clear();
+					if (m_send_chunked)
+						m_response.send_data("0\r\n\r\n");
 					break;
 				}
 				throw;
