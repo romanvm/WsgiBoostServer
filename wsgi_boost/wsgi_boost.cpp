@@ -31,7 +31,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 	py::class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
 
-		"WsgiBoostHttp(ip_address='', port=8000, num_threads=1)\n\n"
+		"WsgiBoostHttp(ip_address='', port=8000, threads=1)\n\n"
 
 		"PEP-3333-compliant multi-threaded WSGI server\n\n"
 
@@ -42,8 +42,8 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		":type ip_address: str\n"
 		":param port: server's port\n"
 		":type port: int\n"
-		":param num_threads: the number of threads for the server to run\n"
-		":type num_threads: int\n\n"
+		":param threads: the number of threads for the server to run\n"
+		":type threads: int\n\n"
 
 		"Usage::\n\n"
 
@@ -56,16 +56,16 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"		start_response(status, response_headers)\n"
 		"		return[content]\n\n"
 
-		"	httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)\n"
+		"	httpd = wsgi_boost.WsgiBoostHttp(threads=4)\n"
 		"	httpd.set_app(hello_app)\n"
 		"	httpd.start()\n"
 		,
 
-		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("num_threads") = 1)))
+		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 1)))
 
 		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 
-		.def_readwrite("use_gzip", &HttpServer::use_gzip, "Use gzip compression for static content, default: ``False``")
+		.def_readwrite("use_gzip", &HttpServer::use_gzip, "Use gzip compression for static content, default: ``True``")
 
 		.def_readwrite("host_hame", &HttpServer::host_name, "Get or set the host name, default: automatically determined")
 
@@ -123,7 +123,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			"Set a WSGI application to be served\n\n"
 
 			":param app: a WSGI application to be served as an executable object\n"
-			":raises: RuntimeError on attempt to set a WSGI application while the server is running"
+			":raises RuntimeError: on attempt to set a WSGI application while the server is running"
 		)
 		;
 

@@ -14,8 +14,8 @@ namespace py = boost::python;
 
 namespace wsgi_boost
 {
-	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int num_threads) :
-		m_ip_address{ ip_address }, m_port{ port }, m_num_threads{ num_threads }, m_acceptor(m_io_service), m_signals{ m_io_service }
+	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int threads) :
+		m_ip_address{ ip_address }, m_port{ port }, m_num_threads{ threads }, m_acceptor(m_io_service), m_signals{ m_io_service }
 	{
 		m_is_running.store(false);
 		m_signals.add(SIGINT);
