@@ -27,6 +27,7 @@ class App(object):
     def __call__(self, environ, start_response):
         self.environ = environ
         self.start_response = start_response
+        headers = [('Content-type', 'text/plain')]
         content = b'App OK'
         if self.environ['PATH_INFO'] == '/test_http_header':
             content = self.test_http_header()
@@ -44,7 +45,11 @@ class App(object):
             content = self.test_input_iterator()
         elif self.environ['PATH_INFO'] == '/test_write':
             content = b'Write OK'
-        write = start_response('200 OK', [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))])
+        elif self.environ['PATH_INFO'] == '/test_transfer_chunked':
+            content = b'Transfer chunked OK'
+        if content != b'Transfer chunked OK':
+            headers.append(('Content-Length', str(len(content))))
+        write = start_response('200 OK', headers)
         if content == b'Write OK':
             write(content)
             content = b''
@@ -95,7 +100,7 @@ class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
         print()
 
     def test_validate_wsgi_server_compliance(self):
-        httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
+        httpd = wsgi_boost.WsgiBoostHttp(threads=1)
         app = App()
         httpd.set_app(validator(app))
         server_thread = threading.Thread(target=httpd.start)
@@ -104,7 +109,7 @@ class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
         time.sleep(0.5)
         resp = requests.get('http://127.0.0.1:8000/')
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('App OK' in resp.text)
+        self.assertEqual(resp.text, 'App OK')
         httpd.stop()
         server_thread.join()
 
@@ -112,7 +117,7 @@ class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
 class WsgiServerFunctionsTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
+        cls._httpd = wsgi_boost.WsgiBoostHttp(threads=1)
         app = App()
         cls._httpd.set_app(app)
         cls._server_thread = threading.Thread(target=cls._httpd.start)
@@ -132,48 +137,54 @@ class WsgiServerFunctionsTestCase(unittest.TestCase):
     def test_http_header(self):
         resp = requests.get('http://127.0.0.1:8000/test_http_header', headers={'Foo': 'bar'})
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('HTTP header OK' in resp.text)
+        self.assertEqual(resp.text, 'HTTP header OK')
 
     def test_query_string(self):
         resp = requests.get('http://127.0.0.1:8000/test_query_string', params={'foo': 'bar'})
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Query string OK' in resp.text)
+        self.assertEqual(resp.text, 'Query string OK')
 
     def test_write_function(self):
         resp = requests.get('http://127.0.0.1:8000/test_write')
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Write OK' in resp.text)
+        self.assertEqual(resp.text, 'Write OK')
 
     def test_input_read(self):
         resp = requests.post('http://127.0.0.1:8000/test_input_read', data=self._data)
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Input read OK' in resp.text)
+        self.assertEqual(resp.text, 'Input read OK')
 
     def test_input_read_limited(self):
         resp = requests.post('http://127.0.0.1:8000/test_input_read_limited', data=self._data)
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Input read limited OK' in resp.text)
+        self.assertEqual(resp.text, 'Input read limited OK')
 
     def test_input_readline(self):
         resp = requests.post('http://127.0.0.1:8000/test_input_readline', data=self._data)
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Input readline OK' in resp.text)
+        self.assertEqual(resp.text, 'Input readline OK')
 
     def test_input_readlines(self):
         resp = requests.post('http://127.0.0.1:8000/test_input_readlines', data=self._data)
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Input readlines OK' in resp.text)
+        self.assertEqual(resp.text, 'Input readlines OK')
 
     def test_input_iterator(self):
         resp = requests.post('http://127.0.0.1:8000/test_input_iterator', data=self._data)
         self.assertEqual(resp.status_code, 200)
-        self.assertTrue('Input iterator OK' in resp.text)
+        self.assertEqual(resp.text, 'Input iterator OK')
+
+    def test_transfer_chunked(self):
+        resp = requests.get('http://127.0.0.1:8000/test_transfer_chunked')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers['Transfer-Encoding'], 'chunked')
+        self.assertEqual(resp.text, 'Transfer chunked OK')
 
 
 class ServingStaticFilesTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._httpd = wsgi_boost.WsgiBoostHttp(num_threads=1)
+        cls._httpd = wsgi_boost.WsgiBoostHttp(threads=1)
         cls._httpd.add_static_route('^/static', cwd)
         cls._httpd.add_static_route('^/invalid_dir', '/foo/bar/baz/')
         cls._server_thread = threading.Thread(target=cls._httpd.start)
