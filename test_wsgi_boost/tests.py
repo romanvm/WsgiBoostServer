@@ -87,9 +87,7 @@ class App(object):
         return b'Input readlines OK'
 
     def test_input_iterator(self):
-        lines = []
-        for line in self.environ['wsgi.input']:
-            lines.append(line)
+        lines = [l  for l in self.environ['wsgi.input']]
         assert len(lines) == 61
         return b'Input iterator OK'
 
