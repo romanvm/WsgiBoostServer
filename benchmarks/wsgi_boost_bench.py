@@ -14,6 +14,6 @@ def hello_app(environ, start_response):
 
 
 if __name__ == '__main__':
-    httpd = wsgi_boost.WsgiBoostHttp(num_threads=10)
+    httpd = wsgi_boost.WsgiBoostHttp(threads=10)
     httpd.set_app(hello_app)
     httpd.start()
