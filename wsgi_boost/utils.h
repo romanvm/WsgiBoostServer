@@ -6,6 +6,8 @@ Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
 
+#include "constants.h"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/python.hpp>
 #include <boost/regex.hpp>
@@ -116,11 +118,17 @@ namespace wsgi_boost
 	}
 	
 	// Get hexadecimal representation of string length
-	inline std::string hex(const size_t& len)
+	inline std::string hex(size_t len)
 	{
-		std::ostringstream oss;
-		oss << std::hex << len;
-		return oss.str();
+		if (len == 0)
+			return "0";
+		std::string hex_len;
+		while (len > 0)
+		{
+			hex_len = std::string(1, hex_chars[len % 16]) + hex_len;
+			len /= 16;
+		}
+		return hex_len;
 	}
 
 #pragma endregion
