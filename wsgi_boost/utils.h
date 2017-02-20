@@ -116,11 +116,11 @@ namespace wsgi_boost
 	}
 	
 	// Get hexadecimal representation of string length
-	inline std::string hex_len(const std::string& str)
+	inline std::string hex(const size_t& len)
 	{
-		std::stringstream ss;
-		ss << std::hex << str.length();
-		return ss.str();
+		std::ostringstream oss;
+		oss << std::hex << len;
+		return oss.str();
 	}
 
 #pragma endregion

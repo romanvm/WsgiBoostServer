@@ -327,16 +327,10 @@ namespace wsgi_boost
 					m_headers_sent = true;
 				}
 				if (m_send_chunked)
-					ec = m_response.send_data(hex_len(chunk) + "\r\n");
-					if (ec)
-						break;
+					chunk = hex(chunk.length()) + "\r\n" + chunk + "\r\n";
 				ec = m_response.send_data(chunk, m_async);
 				if (ec)
 					break;
-				if (m_send_chunked)
-					ec = m_response.send_data("\r\n");
-					if (ec)
-						break;
 			}
 			catch (const py::error_already_set&)
 			{
