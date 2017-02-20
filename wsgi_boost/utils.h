@@ -206,8 +206,9 @@ namespace wsgi_boost
 			}
 		}
 
-		bool is_compressable(const std::string& ext) const
+		bool is_compressable(std::string ext) const
 		{
+			boost::to_lower(ext);
 			return std::find(m_compressables.begin(), m_compressables.end(), ext) != m_compressables.end();
 		}
 
