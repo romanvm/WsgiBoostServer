@@ -131,6 +131,14 @@ namespace wsgi_boost
 		return hex_len;
 	}
 
+
+	// Check if a file can be compressed by gzip
+	inline bool is_compressable(std::string ext)
+	{
+		boost::to_lower(ext);
+		return std::find(compressables.begin(), compressables.end(), ext) != compressables.end();
+	}
+
 #pragma endregion
 
 #pragma region classes
