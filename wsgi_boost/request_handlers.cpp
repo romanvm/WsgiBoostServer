@@ -75,9 +75,8 @@ namespace wsgi_boost
 							m_response.send_header("304 Not Modified", out_headers, true);
 							return;
 						}
-						MimeTypes mime_types;
 						string ext = path.extension().string();
-						string mime = mime_types[ext];
+						string mime = get_mime(ext);
 						out_headers.emplace_back("Content-Type", mime);
 						if (m_request.use_gzip && is_compressable(ext) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
