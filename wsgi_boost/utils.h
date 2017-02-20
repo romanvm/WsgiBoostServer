@@ -16,8 +16,6 @@ License: MIT, see License.txt
 #include <sstream>
 #include <ctime>
 #include <iomanip>
-#include <unordered_map>
-#include <array>
 #include <cctype>
 #include <mutex>
 #include <queue>
