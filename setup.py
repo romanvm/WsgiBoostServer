@@ -25,7 +25,7 @@ class BuildError(Exception):
 
 def patch_msvc_compiler():
     """
-    Monkey-patch distutils to use MS Visual C++ 2015 compiler
+    Monkey-patch distutils to use MS Visual C++ 2015+ compiler
     """
     for vc_version in SUPPORTED_MSVC_COMPILERS:
         vcvarsall = distutils.msvc9compiler.find_vcvarsall(vc_version)
@@ -113,7 +113,7 @@ setup(
     license='MIT',
     keywords='boost asio wsgi server http',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
