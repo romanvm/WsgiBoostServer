@@ -3,7 +3,8 @@ Changelog
 1.0.0
 -----
 
-- Use ``Transfer-Encoding: chunked`` if a WSGI app does not provide ``Content-Length`` header.
+- Renamed ``num_threads`` constructor parameter to ``threads`` (**breaking change!**).
+- Now ``Transfer-Encoding: chunked`` is used if a WSGI app does not provide ``Content-Length`` header.
 
 0.9.8
 -----
