@@ -268,7 +268,7 @@ namespace wsgi_boost
 		m_environ["SERVER_NAME"] = m_request.host_name;
 		m_environ["SERVER_PORT"] = to_string(m_request.local_endpoint_port);
 		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
-		for (auto& header : m_request.headers)
+		for (const auto& header : m_request.headers)
 		{
 			std::string env_header = transform_header(header.first);
 			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
