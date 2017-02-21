@@ -202,7 +202,7 @@ namespace wsgi_boost
 				this->m_status = py::extract<string>(status);
 				m_out_headers.clear();
 				bool has_cont_len = false;
-				bool has_trans_enc = false;
+				bool has_chunked = false;
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
 					py::object header = headers[i];
@@ -212,18 +212,11 @@ namespace wsgi_boost
 					// we use Transfer-Encoding: chunked
 					if (alg::iequals(header_name, "Content-Length"))
 						has_cont_len = true;
-					if (alg::iequals(header_name, "Transfer-Encoding"))
-					{
-						if (header_value.find("chunked") == string::npos)
-						{
-							header_value += ",chunked";
-							this->m_send_chunked = true;
-						}						
-						has_trans_enc = true;
-					}
+					if (alg::iequals(header_name, "Transfer-Encoding") && header_value.find("chunked") == string::npos)			
+						has_chunked = true;
 					m_out_headers.emplace_back(header_name, header_value);
 				}
-				if (!(has_cont_len || has_trans_enc))
+				if (!(has_cont_len || has_chunked))
 				{
 					this->m_send_chunked = true;
 					m_out_headers.emplace_back("Transfer-Encoding", "chunked");
