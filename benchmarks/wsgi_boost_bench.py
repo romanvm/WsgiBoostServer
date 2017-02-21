@@ -3,17 +3,10 @@
 WsgiBoostServer benchmark
 """
 
-import wsgi_boost
-
-
-def hello_app(environ, start_response):
-    content = b'Hello World!'
-    response_headers = [('Content-type', 'text/plain'), ('Content-Length', str(len(content)))]
-    start_response('200 OK', response_headers)
-    return [content]
-
+from wsgi_boost import WsgiBoostHttp
+from test_app import app
 
 if __name__ == '__main__':
-    httpd = wsgi_boost.WsgiBoostHttp(threads=10)
-    httpd.set_app(hello_app)
+    httpd = WsgiBoostHttp(threads=8)
+    httpd.set_app(app)
     httpd.start()
