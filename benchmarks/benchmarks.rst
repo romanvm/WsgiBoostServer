@@ -35,9 +35,56 @@ That is, Apache Benchmark was making 10,000 requests with 10 requests in paralle
 
 Benchmark Results
 =================
+WsgiBoostServer (1 thread)
+--------------------------
+
+With 1 thread WsgiBoostServer works in fully asynchronous mode using
+`Boost.Asio stackful coroutines`_, so even with a single thread
+it is still very fast.
+
+::
+
+  Server Software:        WsgiBoost
+  Server Hostname:        127.0.0.1
+  Server Port:            8000
+
+  Document Path:          /api
+  Document Length:        973 bytes
+
+  Concurrency Level:      10
+  Time taken for tests:   3.293 seconds
+  Complete requests:      10000
+  Failed requests:        0
+  Total transferred:      11280000 bytes
+  HTML transferred:       9730000 bytes
+  Requests per second:    3036.74 [#/sec] (mean)
+  Time per request:       3.293 [ms] (mean)
+  Time per request:       0.329 [ms] (mean, across all concurrent requests)
+  Transfer rate:          3345.16 [Kbytes/sec] received
+
+  Connection Times (ms)
+                min  mean[+/-sd] median   max
+  Connect:        0    0   0.3      0       1
+  Processing:     2    3   0.7      3      17
+  Waiting:        1    3   0.7      3      16
+  Total:          2    3   0.7      3      17
+
+  Percentage of the requests served within a certain time (ms)
+    50%      3
+    66%      3
+    75%      3
+    80%      4
+    90%      4
+    95%      4
+    98%      5
+    99%      5
+   100%     17 (longest request)
 
 WsgiBoostServer (8 threads)
 ---------------------------
+
+With multiple threads WsgiBoostServer sends data from a WSGI application
+in synchronous mode because of Python `Global Interpreter Lock`_ limitations.
 
 ::
 
@@ -163,10 +210,15 @@ Conclusion
 ==========
 
 If we look at "Requests per second" values from the preceding data,
-we can see that WsgiBoostServer has more than 2 times better performance
-than Waitress which is one of the fastest pure-Python WSGI servers.
+we can see that WsgiBoostServer in multi-threaded mode
+has more than 2 times better performance than Waitress
+which is one of the fastest pure-Python WSGI servers.
 Also it is about 20% faster than a Note.js server serving a similar
 REST application.
+
+In a single-threaded mode WsgiBoostServer is still very fast
+because of using Boost.Asio asynchronous facilities,
+with performance values close to that of Node.js.
 
 However, with "heavier" WSGI frameworks, like Flask or Django, performance
 may be significantly lower even with the same JSON data,
@@ -182,3 +234,5 @@ All applications used in benchmarks can be found in ``benchmarks`` folder.
 .. _Waitress: https://github.com/Pylons/waitress
 .. _Bottle: https://bottlepy.org
 .. _Express: http://expressjs.com
+.. _Boost.Asio stackful coroutines: http://www.boost.org/doc/libs/1_63_0/doc/html/boost_asio.html#boost_asio.overview.core.spawn
+.. _Global Interpreter Lock: https://wiki.python.org/moin/GlobalInterpreterLock
