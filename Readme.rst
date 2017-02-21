@@ -6,9 +6,10 @@ WsgiBoostServer
 .. image:: https://ci.appveyor.com/api/projects/status/5q3hlfplc9xqtm4y/branch/master?svg=true
     :target: https://ci.appveyor.com/project/romanvm/wsgiboostserver
 
-WsgiBoostServer is a multi-threaded WSGI and HTTP server written as a Python extension module
-in C++ using `Boost.Asio`_ and `Boost.Python`_. It can serve both Python WSGI applications
-and static files. Because it is written in C++, WsgiBoostServer is faster than pure Python
+WsgiBoostServer is an asynchronous multi-threaded WSGI and HTTP server written
+as a Python extension module in C++ using `Boost.Asio`_ and `Boost.Python`_.
+It can serve both Python WSGI applications and static files.
+Because it is written in C++, WsgiBoostServer is faster than pure Python
 solutions, like `Waitress`_. It can be used for hosting Python micro-services
 and/or static files.
 
@@ -19,6 +20,10 @@ Main Features
 
 - Compliant with `PEP-3333`_.
 - Releases GIL for pure C++ operations, allowing more effective multi-threading.
+- Fully asynchronous in a single-threaded mode, so even with a single tread
+  it is still very fast.
+- Uses ``Transfer-Encoding: chunked`` if a WSGI application does not provide
+  ``Content-Length`` header (like Django by default).
 - Can be used as a regular module in any Python application.
 
 **HTTP Server**:
