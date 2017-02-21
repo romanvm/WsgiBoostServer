@@ -23,22 +23,7 @@ namespace wsgi_boost
 	}
 
 
-	class RuntimeError : public std::exception
-	{
-	private:
-		std::string m_message;
-
-	public:
-		RuntimeError(std::string message = "") : m_message{ message } {}
-
-		const char* what() const noexcept
-		{
-			return m_message.c_str();
-		}
-	};
-
-
-	inline void runtime_error_translator(const RuntimeError& ex)
+	inline void runtime_error_translator(const std::runtime_error& ex)
 	{
 		PyErr_SetString(PyExc_RuntimeError, ex.what());
 	}

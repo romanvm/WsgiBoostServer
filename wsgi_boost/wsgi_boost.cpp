@@ -16,7 +16,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	PyEval_InitThreads(); // Initialize GIL
 
 	py::register_exception_translator<StopIteration>(&stop_iteration_translator);
-	py::register_exception_translator<RuntimeError>(&runtime_error_translator);
+	py::register_exception_translator<std::runtime_error>(&runtime_error_translator);
 	
 	py::scope module;
 	module.attr("__doc__") = "This module provides WSGI/HTTP server class";

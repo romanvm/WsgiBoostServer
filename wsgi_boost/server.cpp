@@ -22,7 +22,7 @@ namespace wsgi_boost
 		m_signals.add(SIGTERM);
 #if defined(SIGQUIT)
 		m_signals.add(SIGQUIT);
-#endif // defined(SIGQUIT)
+#endif
 	}
 
 
@@ -47,7 +47,7 @@ namespace wsgi_boost
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
 		// the number of server threads.
-		// Without the coroutine the next request while all threads are busy
+		// Without the coroutine when all threads are busy the next request
 		// hangs in limbo and causes io_service to crash.
 		asio::spawn(*strand, [this, socket, strand](asio::yield_context yc)
 		{
@@ -148,7 +148,7 @@ namespace wsgi_boost
 	void HttpServer::set_app(py::object app)
 	{
 		if (is_running())
-			throw RuntimeError("Cannot set a WSGI app while the server is running!");
+			throw runtime_error("Cannot set a WSGI app while the server is running!");
 		m_app = app;
 	}
 
@@ -172,7 +172,7 @@ namespace wsgi_boost
 				}
 				catch (const exception&)
 				{
-					throw RuntimeError("Unable to resolve IP address and port " + m_ip_address + ":" + to_string(m_port) + "!");
+					throw runtime_error("Unable to resolve IP address and port " + m_ip_address + ":" + to_string(m_port) + "!");
 				}
 			}
 			else
