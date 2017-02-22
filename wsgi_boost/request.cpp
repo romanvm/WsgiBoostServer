@@ -70,32 +70,20 @@ namespace wsgi_boost
 	}
 
 
-	bool Request::check_header(const string& header, string value)
+	bool Request::check_header(const string& header, const string& value) const
 	{
 		auto it = headers.find(header);
-		if (it != headers.end())
-		{
-			string actual_value = it->second;
-			alg::to_lower(value);
-			alg::to_lower(actual_value);
-			return actual_value.find(value) != string::npos;
-		}
-		else
-		{
-			return false;
-		}
+		return (it != headers.end()) && boost::algorithm::icontains(it->second, value);
 	}
 
 
-	string Request::get_header(const string& header)
+	string Request::get_header(const string& header) const
 	{
 		auto it = headers.find(header);
-		if (it != headers.end())
-			return it->second;
-		return string();
+		return it != headers.end() ? it->second : string();
 	}
 
-	bool Request::keep_alive()
+	bool Request::keep_alive() const
 	{
 		return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
 	}
@@ -107,13 +95,13 @@ namespace wsgi_boost
 	}
 
 
-	string Request::remote_address()
+	string Request::remote_address() const
 	{
 		return m_connection.socket()->remote_endpoint().address().to_string();
 	}
 
 
-	unsigned short Request::remote_port()
+	unsigned short Request::remote_port() const
 	{
 		return m_connection.socket()->remote_endpoint().port();
 	}

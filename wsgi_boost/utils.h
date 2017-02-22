@@ -81,7 +81,7 @@ namespace wsgi_boost
 
 
 	// Transform a HTTP header to WSGI environ format HTTP_
-	inline std::string transform_header(std::string header)
+	inline void transform_header(std::string& header)
 	{
 		for (auto& ch : header)
 		{
@@ -90,7 +90,6 @@ namespace wsgi_boost
 		}
 		boost::to_upper(header);
 		header = "HTTP_" + header;
-		return header;
 	}
 
 

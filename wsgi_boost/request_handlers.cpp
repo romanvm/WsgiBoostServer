@@ -145,16 +145,12 @@ namespace wsgi_boost
 		{
 			m_response.send_header("200 OK", headers, true);
 		}
-		if (start_pos > 0)
-		{
-			content_stream.seekg(start_pos);
-		}
-		else
-		{
-			content_stream.seekg(0, ios::beg);
-		}
 		if (m_request.method == "GET")
 		{
+			if (start_pos > 0)
+				content_stream.seekg(start_pos);
+			else
+				content_stream.seekg(0, ios::beg);
 			const size_t buffer_size = 131072;
 			vector<char> buffer(buffer_size);
 			size_t read_length;
@@ -212,7 +208,7 @@ namespace wsgi_boost
 					// we use Transfer-Encoding: chunked
 					if (alg::iequals(header_name, "Content-Length"))
 						has_cont_len = true;
-					if (alg::iequals(header_name, "Transfer-Encoding") && header_value.find("chunked") != string::npos)	
+					if (alg::iequals(header_name, "Transfer-Encoding") && alg::icontains(header_value, "chunked"))	
 						has_chunked = true;
 					m_out_headers.emplace_back(header_name, header_value);
 				}
@@ -270,19 +266,14 @@ namespace wsgi_boost
 		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
 		for (const auto& header : m_request.headers)
 		{
-			std::string env_header = transform_header(header.first);
-			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
-			{
+			if (alg::iequals(header.first, "Content-Length") || alg::iequals(header.first, "Content-Type"))
 				continue;
-			}
-			if (!py::extract<bool>(m_environ.attr("__contains__")(env_header)))
-			{
+			string env_header = header.first;
+			transform_header(env_header);
+			if (!m_environ.has_key(env_header))
 				m_environ[env_header] = header.second;
-			}
 			else
-			{
 				m_environ[env_header] = m_environ[env_header] + "," + header.second;
-			}
 		}
 		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
@@ -319,7 +310,13 @@ namespace wsgi_boost
 					m_headers_sent = true;
 				}
 				if (m_send_chunked)
-					chunk = hex(chunk.length()) + "\r\n" + chunk + "\r\n";
+				{
+					size_t length = chunk.length();
+					// Do not sent 0-length chunks
+					if (length == 0)
+						continue;
+					chunk = hex(length) + "\r\n" + chunk + "\r\n";
+				}
 				ec = m_response.send_data(chunk, m_async);
 				if (ec)
 					break;
