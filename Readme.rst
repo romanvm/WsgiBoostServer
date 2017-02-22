@@ -7,7 +7,7 @@ WsgiBoostServer
     :target: https://ci.appveyor.com/project/romanvm/wsgiboostserver
 
 WsgiBoostServer is an asynchronous multi-threaded WSGI and HTTP server written
-as a Python extension module in C++ using `Boost.Asio`_ and `Boost.Python`_.
+as a Python extension module in C++ using `Boost.Asio`_ and `Boost.Python`_ libraries.
 It can serve both Python WSGI applications and static files.
 Because it is written in C++, WsgiBoostServer is faster than pure Python
 solutions, like `Waitress`_. It can be used for hosting Python micro-services
@@ -20,7 +20,7 @@ Main Features
 
 - Compliant with `PEP-3333`_.
 - Releases GIL for pure C++ operations, allowing more effective multi-threading.
-- Fully asynchronous in a single-threaded mode, so even with a single tread
+- Fully asynchronous in the single-threaded mode, so even with a single tread
   it is still very fast.
 - Uses ``Transfer-Encoding: chunked`` if a WSGI application does not provide
   ``Content-Length`` header (like Django by default).
@@ -39,52 +39,53 @@ Main Features
 Benchmarks
 ==========
 
-Performance benchmarks of WsgiBoostServer compared to popular Python WSGI servers
-can be found `here`_. According to those benchmarks WsgiBoostServer has about
-2 times better performance than the best Python-based WSGI server.
+Performance benchmarks of WsgiBoostServer compared to pure-Python
+`Waitress`_ WSGI server and Node.js can be found `here`_.
+According to those benchmarks WsgiBoostServer is about 2 times faster than
+Waitress and about 20% faster (with multiple threads) than Node.js.
 
 Compatibility
 =============
 
 - **OS**: Windows, Linux. In theory, WsgiBoostServer can be built and used on any OS that has
   a C++ 11/14-compatible compiler and supports Python ``setuptools``.
-- **Python**: 2.7+ (tested on 2.7 and 3.5).
-- **Boost**: tested with 1.58, 1.60-1.62, but probably will work with earlier versions
+- **Python**: 2.7 and above (tested with 2.7, 3.5 and 3.6).
+- **Boost**: tested with 1.58, 1.60-1.63, but probably will work with earlier versions
   that are not too old.
 - **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2+ (regardless of Python version).
 
 Usage
 =====
 
-Simple example using `Flask`_ micro-framework:
+Simple example with `Flask`_ micro-framework:
 
 .. code-block:: python
 
-    #!/usr/bin/env python
+  #!/usr/bin/env python
 
-    from flask import Flask
-    import wsgi_boost
+  from flask import Flask
+  import wsgi_boost
 
-    app = Flask(__name__)
-
-
-    # Simple Flask application
-    @app.route('/')
-    def hello_world():
-        return 'Hello World!'
+  app = Flask(__name__)
 
 
-    # Create a server on the port 8080 with 4 threads
-    httpd = wsgi_boost.WsgiBoostHttp(port=8080, num_threads=4)
-    httpd.set_app(app)
-    httpd.start()
+  # Simple Flask application
+  @app.route('/')
+  def hello_world():
+      return 'Hello World!'
 
-Also see ``examples`` folder.
+
+  # Create a server on the port 8080 with 4 threads
+  httpd = wsgi_boost.WsgiBoostHttp(port=8080, threads=4)
+  httpd.set_app(app)
+  httpd.start()
+
+More advanced examples with Flask and Django frameworks can be found ``examples`` folder.
 
 Compilation
 ===========
 
-Normally, WsgiBoostServer is compiled using ``setuptools`` setup script.
+Normally, WsgiBoostServer is compiled using ``setup.py`` script.
 
 Linux
 -----
@@ -124,7 +125,7 @@ Alternatively, you can install WsgiBoostServer using ``pip``::
 and install it into your working Python environment.
 
 **Note**: On **Releases** tab of this repository you can find a compiled wheel
-for Python 2.7 on Raspberry Pi 2.
+for Python 2.7 and 3.4 on Raspberry Pi 2.
 
 Windows
 -------
