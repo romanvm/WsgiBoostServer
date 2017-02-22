@@ -76,7 +76,7 @@ namespace wsgi_boost
 				return;
 			}
 			if (request.keep_alive())
-				process_request(request.connection().socket());
+				process_request(socket);
 		});
 	}
 
