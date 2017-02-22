@@ -61,13 +61,6 @@ namespace wsgi_boost
 	}
 
 
-	// Wraps a raw PyObject* into a boost::python::object
-	inline boost::python::object get_python_object(PyObject* pyobj)
-	{
-		return boost::python::object(boost::python::handle<>(pyobj));
-	}
-
-
 	// Splits a full path into a path proper and a query string
 	inline std::pair<std::string, std::string> split_path(const std::string& path)
 	{
