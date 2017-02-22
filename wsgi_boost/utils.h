@@ -123,20 +123,18 @@ namespace wsgi_boost
 
 
 	// Check if a file can be compressed by gzip
-	inline bool is_compressable(std::string ext)
+	inline bool is_compressable(const std::string& ext)
 	{
-		boost::to_lower(ext);
-		return std::find(compressables.begin(), compressables.end(), ext) != compressables.end();
+		return std::find(compressables.begin(), compressables.end(), boost::to_lower_copy(ext)) != compressables.end();
 	}
 
 
 	// Determine mime type by file extension
-	inline std::string get_mime(std::string ext)
+	inline std::string get_mime(const std::string& ext)
 	{
-		boost::to_lower(ext);
 		try
 		{
-			return mime_types.at(ext);
+			return mime_types.at(boost::to_lower_copy(ext));
 		}
 		catch (const std::out_of_range&)
 		{
@@ -151,9 +149,6 @@ namespace wsgi_boost
 	// RAII implementation for auto-closing an iteraterable object passed from a WSGI application
 	class Iterable
 	{
-	private:
-		boost::python::object m_iterable;
-
 	public:
 		explicit Iterable(boost::python::object it) : m_iterable{ it } {}
 
@@ -169,6 +164,9 @@ namespace wsgi_boost
 		{
 			return m_iterable.attr(at.c_str());
 		}
+
+	private:
+		boost::python::object m_iterable;
 	};
 
 
