@@ -31,7 +31,8 @@ namespace wsgi_boost
 		const auto content_dir_path = fs::path{ m_request.content_dir };
 		if (!fs::exists(content_dir_path))
 		{
-			m_response.send_mesage("500 Internal Server Error", "Error 500: Internal server error! Invalid content directory.");
+			m_response.send_mesage("500 Internal Server Error",
+				"Error 500: Internal server error! Invalid content directory.");
 			return;
 		}
 		if (m_request.method != "GET" && m_request.method != "HEAD")
@@ -155,7 +156,8 @@ namespace wsgi_boost
 			vector<char> buffer(buffer_size);
 			size_t read_length;
 			size_t bytes_left = end_pos - start_pos + 1;
-			while (bytes_left > 0 && ((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
+			while (bytes_left > 0 &&
+				((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
 			{
 				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length), true);
 				if (ec)
@@ -190,12 +192,13 @@ namespace wsgi_boost
 		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
 			{
-				if (!exc_info.is_none())
+				if (!exc_info.is_none() && this->m_headers_sent)
 				{
-					py::object format_exc = py::import("traceback").attr("format_exc")();
-					string exc_msg = py::extract<string>(format_exc);
-					cerr << exc_msg << '\n';
-					exc_info = py::object();
+					py::object type = exc_info[0];
+					py::object value = exc_info[1];
+					py::object traceback = exc_info[2];
+					PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
+					throw FatalWsgiAppError();
 				}
 				this->m_status = py::extract<string>(status);
 				m_out_headers.clear();
@@ -232,7 +235,8 @@ namespace wsgi_boost
 	{
 		if (m_app.is_none())
 		{
-			m_response.send_mesage("500 Internal Server Error", "Error 500: Internal server error! WSGI application is not set.");
+			m_response.send_mesage("500 Internal Server Error",
+				"Error 500: Internal server error! WSGI application is not set.");
 			return;
 		}
 		prepare_environ();
@@ -331,6 +335,8 @@ namespace wsgi_boost
 						m_response.send_data("0\r\n\r\n");
 					break;
 				}
+				if (m_headers_sent)
+					throw FatalWsgiAppError();
 				throw;
 			}
 		}

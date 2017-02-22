@@ -112,6 +112,11 @@ namespace wsgi_boost
 			{
 				handler.handle();
 			}
+			catch (const FatalWsgiAppError&)
+			{
+				cerr << "Fatal WSGI application error!\n";
+				PyErr_Print();
+			}
 			catch (const py::error_already_set&)
 			{
 				PyErr_Print();

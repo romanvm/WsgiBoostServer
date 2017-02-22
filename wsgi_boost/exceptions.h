@@ -14,6 +14,8 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
+	struct FatalWsgiAppError : public std::exception {};
+
 	struct StopIteration : public std::exception {};
 
 
