@@ -172,6 +172,7 @@ namespace wsgi_boost
 	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app, bool async) :
 		BaseRequestHandler(request, response), m_app{ app }, m_async{ async }
 	{
+		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
 		function<void(py::object)> wr{
 			[this](py::object data)
 			{
@@ -185,6 +186,7 @@ namespace wsgi_boost
 			}
 		};
 		m_write = py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
+		// Create start_response() callable: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
 		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
 			{
@@ -221,7 +223,7 @@ namespace wsgi_boost
 			}
 		};
 		m_start_response = py::make_function(sr, py::default_call_policies(),
-			(py::arg("status"), "headers", py::arg("exc_info") = py::object()),
+			(py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::object()),
 			boost::mpl::vector<py::object, py::str, py::list, py::object>());
 	}
 
@@ -312,7 +314,7 @@ namespace wsgi_boost
 				if (m_send_chunked)
 				{
 					size_t length = chunk.length();
-					// Do not sent 0-length chunks
+					// Skip 0-length chunks, if any
 					if (length == 0)
 						continue;
 					chunk = hex(length) + "\r\n" + chunk + "\r\n";
