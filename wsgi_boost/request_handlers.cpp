@@ -212,7 +212,7 @@ namespace wsgi_boost
 					// we use Transfer-Encoding: chunked
 					if (alg::iequals(header_name, "Content-Length"))
 						has_cont_len = true;
-					if (alg::iequals(header_name, "Transfer-Encoding") && header_value.find("chunked") == string::npos)			
+					if (alg::iequals(header_name, "Transfer-Encoding") && header_value.find("chunked") != string::npos)	
 						has_chunked = true;
 					m_out_headers.emplace_back(header_name, header_value);
 				}
