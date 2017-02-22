@@ -42,7 +42,7 @@ namespace wsgi_boost
 	{
 		tm t;
 #ifdef _WIN32
-		std::stringstream ss{ time_string };
+		std::istringstream ss{ time_string };
 		ss.imbue(std::locale("C"));
 		ss >> std::get_time(&t, "%a, %d %b %Y %H:%M:%S GMT");
 		return _mkgmtime(&t);
