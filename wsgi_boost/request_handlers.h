@@ -68,7 +68,7 @@ namespace wsgi_boost
 		bool m_send_chunked = false;
 
 		void prepare_environ();
-		void send_iterable(Iterator& iterable);
+		void send_iterable(Iterable& iterable);
 
 	public:
 		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app, bool async);

@@ -240,7 +240,7 @@ namespace wsgi_boost
 		{
 			m_response.send_mesage("100 Continue");
 		}
-		Iterator iterable{ m_app(m_environ, m_start_response) };
+		Iterable iterable{ m_app(m_environ, m_start_response) };
 		send_iterable(iterable);
 	}
 
@@ -289,7 +289,7 @@ namespace wsgi_boost
 		m_environ["wsgi.file_wrapper"] = py::import("wsgiref.util").attr("FileWrapper");
 	}
 
-	void WsgiRequestHandler::send_iterable(Iterator& iterable)
+	void WsgiRequestHandler::send_iterable(Iterable& iterable)
 	{
 		py::object iterator = iterable.attr("__iter__")();
 		while (true)

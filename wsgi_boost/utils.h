@@ -148,26 +148,26 @@ namespace wsgi_boost
 
 #pragma region classes
 
-	// RAII implementation for auto-closing an iterator object passed from a WSGI application
-	class Iterator
+	// RAII implementation for auto-closing an iteraterable object passed from a WSGI application
+	class Iterable
 	{
 	private:
-		boost::python::object m_iterator;
+		boost::python::object m_iterable;
 
 	public:
-		explicit Iterator(boost::python::object it) : m_iterator{ it } {}
+		explicit Iterable(boost::python::object it) : m_iterable{ it } {}
 
-		~Iterator()
+		~Iterable()
 		{
-			if (PyObject_HasAttrString(m_iterator.ptr(), "close"))
+			if (PyObject_HasAttrString(m_iterable.ptr(), "close"))
 			{
-				m_iterator.attr("close")();
+				m_iterable.attr("close")();
 			}
 		}
 
 		boost::python::object attr(const std::string& at) const
 		{
-			return m_iterator.attr(at.c_str());
+			return m_iterable.attr(at.c_str());
 		}
 	};
 
