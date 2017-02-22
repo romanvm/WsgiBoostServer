@@ -240,8 +240,7 @@ namespace wsgi_boost
 		{
 			m_response.send_mesage("100 Continue");
 		}
-		py::object args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
-		Iterator iterable{ get_python_object(PyEval_CallObject(m_app.ptr(), args.ptr())) };
+		Iterator iterable{ m_app(m_environ, m_start_response) };
 		send_iterable(iterable);
 	}
 
