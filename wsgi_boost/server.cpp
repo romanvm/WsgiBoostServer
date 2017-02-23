@@ -111,13 +111,6 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
-		if (m_app.is_none() && m_static_routes.empty())
-		{
-			response.send_html("501 Not implemented",
-				"Error 501", "Service is not implemented!",
-				"If you see this message, WsgiBoostServer is working but has no WSGI application or static routes configured.");
-			return;
-		}
 		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
