@@ -45,9 +45,11 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		":param threads: the number of threads for the server to run\n"
 		":type threads: int\n\n"
 
-		"Usage::\n\n"
+		"Usage:\n\n"
 
-		"	import wsgi_boost\n\n"
+		".. code-block:: python\n\n"
+
+		"	from wsgi_boost import WsgiBoostHttp\n\n"
 
 		"	def hello_app(environ, start_response):\n"
 		"		content = 'Hello World!'\n"
@@ -56,7 +58,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"		start_response(status, response_headers)\n"
 		"		return[content]\n\n"
 
-		"	httpd = wsgi_boost.WsgiBoostHttp(threads=4)\n"
+		"	httpd = WsgiBoostHttp(threads=4)\n"
 		"	httpd.set_app(hello_app)\n"
 		"	httpd.start()\n"
 		,
@@ -73,7 +75,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			"Get or set timeout for receiving HTTP request headers\n\n"
 
 			"This is the max. interval for reciving request headers before closing connection.\n"
-			"Defaul: 5s"
+			"Default: 5s"
 			)
 
 		.def_readwrite("content_timeout", &HttpServer::content_timeout,
@@ -81,11 +83,11 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 			"This is the max. interval for receiving POST/PUT content\n"
 			"or sending response before closing connection.\n"
-			"Defaul: 300s"
+			"Default: 300s"
 			)
 
 		.def_readwrite("url_scheme", &HttpServer::url_scheme,
-			"Get os set url scheme -- http or https (Default: ``'http'``)"
+			"Get or set url scheme -- http or https (default: ``'http'``)"
 			)
 
 		.def_readwrite("static_cache_control", &HttpServer::static_cache_control,
