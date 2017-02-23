@@ -24,6 +24,7 @@ namespace wsgi_boost
 			m_connection << header.first << ": " << header.second << "\r\n";
 		}
 		m_connection << "\r\n";
+		m_header_sent = true;
 		return m_connection.flush(async);
 	}
 

@@ -34,6 +34,8 @@ namespace wsgi_boost
 		void process_request(socket_ptr socket);
 		void check_static_route(Request& request);
 		void handle_request(Request& request, Response& response);
+		void process_error(Response& response, const std::exception& ex, const std::string& error_msg,
+			const bool is_python_error = false) const;
 
 	public:
 		unsigned int header_timeout = 5;

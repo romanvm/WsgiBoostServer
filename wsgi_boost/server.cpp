@@ -75,7 +75,7 @@ namespace wsgi_boost
 			{
 				return;
 			}
-			if (request.keep_alive())
+			if (response.keep_alive)
 				process_request(socket);
 		});
 	}
@@ -93,6 +93,21 @@ namespace wsgi_boost
 		}
 	}
 
+
+	void HttpServer::process_error(Response& response, const exception& ex,
+		const string& error_msg, bool is_python_error) const
+	{
+		cerr << error_msg << ": " << ex.what() << '\n';
+		if (is_python_error)
+			PyErr_Print();
+		if (!response.header_sent())
+			response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!\r\n" + error_msg);
+		else
+			// Do not reuse a socket on a fatal error
+			response.keep_alive = false;
+	}
+
+
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
 		if (request.content_dir == string())
@@ -103,7 +118,8 @@ namespace wsgi_boost
 			// Try to buffer the first 4KB POST data
 			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096, true))
 			{
-				cerr << "Unable to buffer POST data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+				cerr << "Unable to buffer POST/PUT data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+				response.keep_alive = false;
 				return;
 			}
 			GilAcquire acquire_gil;
@@ -112,20 +128,13 @@ namespace wsgi_boost
 			{
 				handler.handle();
 			}
-			catch (const FatalWsgiAppError&)
-			{
-				cerr << "Fatal WSGI application error!\n";
-				PyErr_Print();
-			}
 			catch (const py::error_already_set&)
 			{
-				PyErr_Print();
-				response.send_mesage("500 Internal Server Error", "Error 500: WSGI application error!");
+				process_error(response, runtime_error(""), "Python error while processing a WSGI request", true);
 			}
 			catch (const exception& ex)
 			{
-				cerr << ex.what() << '\n';
-				response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!");
+				process_error(response, ex, "General error while processing a WSGI request");
 			}
 		}
 		else
@@ -138,8 +147,7 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-				cerr << ex.what() << '\n';
-				response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!");
+				process_error(response, ex, "Error while processing a static request");
 			}
 		}
 	}

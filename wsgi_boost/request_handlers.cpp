@@ -181,10 +181,15 @@ namespace wsgi_boost
 				sys::error_code ec = m_response.send_header(m_status, m_out_headers);
 				if (ec)
 					return;
-				m_headers_sent = true;
 				string cpp_data = py::extract<string>(data);
-				GilRelease release_gil;
-				m_response.send_data(cpp_data);
+				size_t data_len = cpp_data.length();
+				if (data_len > 0)
+				{
+					GilRelease release_gil;
+					if (this->m_send_chunked)
+						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+					m_response.send_data(cpp_data, this->m_async);
+				}
 			}
 		};
 		m_write = py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
@@ -192,18 +197,17 @@ namespace wsgi_boost
 		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
 			{
-				if (!exc_info.is_none() && this->m_headers_sent)
+				if (!exc_info.is_none() && this->m_response.header_sent())
 				{
 					py::object type = exc_info[0];
 					py::object value = exc_info[1];
 					py::object traceback = exc_info[2];
 					PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
-					throw FatalWsgiAppError();
+					throw py::error_already_set();
 				}
 				this->m_status = py::extract<string>(status);
 				m_out_headers.clear();
 				bool has_cont_len = false;
-				bool has_chunked = false;
 				for (size_t i = 0; i < py::len(headers); ++i)
 				{
 					py::object header = headers[i];
@@ -213,11 +217,9 @@ namespace wsgi_boost
 					// we use Transfer-Encoding: chunked
 					if (alg::iequals(header_name, "Content-Length"))
 						has_cont_len = true;
-					if (alg::iequals(header_name, "Transfer-Encoding") && alg::icontains(header_value, "chunked"))	
-						has_chunked = true;
 					m_out_headers.emplace_back(header_name, header_value);
 				}
-				if (!(has_cont_len || has_chunked))
+				if (!has_cont_len)
 				{
 					this->m_send_chunked = true;
 					m_out_headers.emplace_back("Transfer-Encoding", "chunked");
@@ -241,9 +243,7 @@ namespace wsgi_boost
 		}
 		prepare_environ();
 		if (m_request.check_header("Expect", "100-continue"))
-		{
 			m_response.send_mesage("100 Continue");
-		}
 		Iterable iterable{ m_app(m_environ, m_start_response) };
 		send_iterable(iterable);
 	}
@@ -307,12 +307,11 @@ namespace wsgi_boost
 #endif
 				GilRelease release_gil;
 				sys::error_code ec;
-				if (!m_headers_sent)
+				if (!m_response.header_sent())
 				{
 					ec = m_response.send_header(m_status, m_out_headers);
 					if (ec)
 						break;
-					m_headers_sent = true;
 				}
 				if (m_send_chunked)
 				{
@@ -335,8 +334,6 @@ namespace wsgi_boost
 						m_response.send_data("0\r\n\r\n");
 					break;
 				}
-				if (m_headers_sent)
-					throw FatalWsgiAppError();
 				throw;
 			}
 		}

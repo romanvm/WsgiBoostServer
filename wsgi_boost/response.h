@@ -25,6 +25,7 @@ namespace wsgi_boost
 	private:
 		const std::string m_server_name = "WsgiBoost v." WSGI_BOOST_VERSION;
 		Connection& m_connection;
+		bool m_header_sent = false;
 
 	public:
 		std::string http_version = "HTTP/1.1";
@@ -40,5 +41,7 @@ namespace wsgi_boost
 		boost::system::error_code send_data(const std::string& data, bool async = false);
 
 		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string());
+
+		bool header_sent() { return m_header_sent;  }
 	};
 }

@@ -59,7 +59,6 @@ namespace wsgi_boost
 	private:
 		std::string m_status;
 		headers_type m_out_headers;
-		bool m_headers_sent = false;
 		boost::python::object& m_app;
 		boost::python::dict m_environ;
 		boost::python::object m_write;
