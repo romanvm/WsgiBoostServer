@@ -204,7 +204,7 @@ class ServingStaticFilesTestCase(unittest.TestCase):
     def test_invalid_content_directory(self):
         resp = requests.get('http://127.0.0.1:8000/invalid_dir')
         self.assertEqual(resp.status_code, 500)
-        self.assertTrue('Invalid content directory' in resp.text)
+        self.assertTrue('Invalid static content directory is configured' in resp.text)
 
     def test_accessing_static_file(self):
         resp = requests.get('http://127.0.0.1:8000/static/index.html')

@@ -1,5 +1,7 @@
 #include "response.h"
 
+#include <boost/format.hpp>
+
 using namespace std;
 namespace sys = boost::system;
 
@@ -47,6 +49,21 @@ namespace wsgi_boost
 		sys::error_code ec = send_header(status, headers);
 		if (!ec)
 			ec = send_data(message);
+		return ec;
+	}
+
+
+	sys::error_code Response::send_html(const string& status, const string& header1, const string& header2, const string& message)
+	{
+		boost::format tpl{ html_template };
+		tpl % header1 % header2 % message;
+		string html = tpl.str();
+		headers_type headers;
+		headers.emplace_back("Content-Type", "text/html");
+		headers.emplace_back("Content-Length", to_string(html.length()));
+		sys::error_code ec = send_header(status, headers);
+		if (!ec)
+			ec = send_data(html);
 		return ec;
 	}
 }

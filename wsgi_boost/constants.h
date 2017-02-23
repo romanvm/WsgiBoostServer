@@ -6,9 +6,27 @@ Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
 
+#include "version.h"
+
 #include <unordered_map>
 #include <array>
 #include <string>
+
+
+const std::string html_template =
+	"<!DOCTYPE html>"
+	"<html>"
+	"<head>"
+		"<title>%1%</title>"
+	"</head>"
+	"<body>"
+		"<h1>%1%: %2%</h1>"
+		"<p>%3%</p>"
+		"<hr>"
+		"<p><small><em>Sent by <a href='https://github.com/romanvm/WsgiBoostServer'>WsgiBoostServer</a> v."
+			WSGI_BOOST_VERSION ".</em></small></p>"
+	"</body>"
+	"</html>";
 
 const std::array<char, 16> hex_chars{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 

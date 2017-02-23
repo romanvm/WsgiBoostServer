@@ -31,8 +31,9 @@ namespace wsgi_boost
 		const auto content_dir_path = fs::path{ m_request.content_dir };
 		if (!fs::exists(content_dir_path))
 		{
-			m_response.send_mesage("500 Internal Server Error",
-				"Error 500: Internal server error! Invalid content directory.");
+			m_response.send_html("500 Internal Server Error",
+				"Error 500", "Internal server error!",
+				"Invalid static content directory is configured.");
 			return;
 		}
 		if (m_request.method != "GET" && m_request.method != "HEAD")
@@ -100,7 +101,9 @@ namespace wsgi_boost
 				}
 			}
 		}
-		m_response.send_mesage("404 Not Found", "Error 404: Requested content not found!");
+		m_response.send_html("404 Not Found",
+			"Error 404", "Content not found!",
+			"The requested path <code>" + m_request.path + "</code> was not found on this server.");
 	}
 
 
@@ -237,8 +240,9 @@ namespace wsgi_boost
 	{
 		if (m_app.is_none())
 		{
-			m_response.send_mesage("500 Internal Server Error",
-				"Error 500: Internal server error! WSGI application is not set.");
+			m_response.send_html("500 Internal Server Error",
+				"Error 500",  "Internal server error!",
+				"A WSGI application is not set.");
 			return;
 		}
 		prepare_environ();

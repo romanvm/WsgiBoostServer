@@ -1,5 +1,6 @@
 #include "server.h"
 
+
 #include <boost/asio/spawn.hpp>
 
 #include <memory>
@@ -101,7 +102,7 @@ namespace wsgi_boost
 		if (is_python_error)
 			PyErr_Print();
 		if (!response.header_sent())
-			response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!\r\n" + error_msg);
+			response.send_html("500 Internal Server Error", "Error 500", "Internal server error!", error_msg);
 		else
 			// Do not reuse a socket on a fatal error
 			response.keep_alive = false;
@@ -110,6 +111,13 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
+		if (m_app.is_none() && m_static_routes.empty())
+		{
+			response.send_html("501 Not implemented",
+				"Error 501", "Service is not implemented!",
+				"If you see this message, WsgiBoostServer is working but has no WSGI application or static routes configured.");
+			return;
+		}
 		if (request.content_dir == string())
 		{
 			request.url_scheme = url_scheme;
@@ -130,11 +138,11 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
-				process_error(response, runtime_error(""), "Python error while processing a WSGI request", true);
+				process_error(response, runtime_error(""), "Python error while processing a WSGI request.", true);
 			}
 			catch (const exception& ex)
 			{
-				process_error(response, ex, "General error while processing a WSGI request");
+				process_error(response, ex, "General error while processing a WSGI request.");
 			}
 		}
 		else
@@ -147,7 +155,7 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-				process_error(response, ex, "Error while processing a static request");
+				process_error(response, ex, "Error while processing a static request.");
 			}
 		}
 	}
