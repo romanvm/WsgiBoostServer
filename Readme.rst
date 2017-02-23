@@ -64,7 +64,7 @@ Simple example with `Flask`_ micro-framework:
   #!/usr/bin/env python
 
   from flask import Flask
-  import wsgi_boost
+  from wsgi_boost import WsgiBoostHttp
 
   app = Flask(__name__)
 
@@ -76,7 +76,7 @@ Simple example with `Flask`_ micro-framework:
 
 
   # Create a server on the port 8080 with 4 threads
-  httpd = wsgi_boost.WsgiBoostHttp(port=8080, threads=4)
+  httpd = WsgiBoostHttp(port=8080, threads=4)
   httpd.set_app(app)
   httpd.start()
 
@@ -130,7 +130,7 @@ for Python 2.7 and 3.4 on Raspberry Pi 2.
 Windows
 -------
 
-Compiled wheels for Python 2.7 and 3.5 (32 bit) can be downloaded from "**Releases**" tab of this repository.
+Compiled wheels for Python 2.7 and 3.6 (32 bit) can be downloaded from "**Releases**" tab of this repository.
 If you want to compile WsgiBoostServer for Windows yourself, follow the instruction below.
 You can also check AppVeyor CI build configuration ``appveyor.yml``.
 
@@ -161,7 +161,7 @@ Open Windows console, go to the ``boost`` folder and execute there::
 After the bootstrap script finishes building Boost.Build engine, create Boost.Build configuration file
 ``user-config.jam`` in your ``%USERPROFILE%`` folder with the following content::
 
-  using python : 3.5 : c:\\Python35-32 ;
+  using python : 3.6 : c:\\Python36-32 ;
   using msvc : 14.0 ;
 
 The ``using python`` parameter should point to the Python version that will be used for building
