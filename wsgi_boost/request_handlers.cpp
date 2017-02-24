@@ -177,79 +177,72 @@ namespace wsgi_boost
 	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app, bool async) :
 		BaseRequestHandler(request, response), m_app{ app }, m_async{ async }
 	{
-		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
+		create_write();
+		create_start_response();	
+	}
+
+
+	void WsgiRequestHandler::create_write()
+	{
 		function<void(py::object)> wr{
 			[this](py::object data)
+		{
+			sys::error_code ec = m_response.send_header(m_status, m_out_headers);
+			if (ec)
+				return;
+			string cpp_data = py::extract<string>(data);
+			size_t data_len = cpp_data.length();
+			if (data_len > 0)
 			{
-				sys::error_code ec = m_response.send_header(m_status, m_out_headers);
-				if (ec)
-					return;
-				string cpp_data = py::extract<string>(data);
-				size_t data_len = cpp_data.length();
-				if (data_len > 0)
-				{
-					GilRelease release_gil;
-					if (this->m_send_chunked)
-						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
-					m_response.send_data(cpp_data, this->m_async);
-				}
+				GilRelease release_gil;
+				if (this->m_send_chunked)
+					cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+				m_response.send_data(cpp_data, this->m_async);
 			}
+		}
 		};
 		m_write = py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
-		// Create start_response() callable: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
+	}
+
+
+	void WsgiRequestHandler::create_start_response()
+	{
 		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
+		{
+			if (!exc_info.is_none() && this->m_response.header_sent())
 			{
-				if (!exc_info.is_none() && this->m_response.header_sent())
-				{
-					py::object type = exc_info[0];
-					py::object value = exc_info[1];
-					py::object traceback = exc_info[2];
-					PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
-					throw py::error_already_set();
-				}
-				this->m_status = py::extract<string>(status);
-				m_out_headers.clear();
-				bool has_cont_len = false;
-				for (size_t i = 0; i < py::len(headers); ++i)
-				{
-					py::object header = headers[i];
-					string header_name = py::extract<string>(header[0]);
-					string header_value = py::extract<string>(header[1]);
-					// If a WSGI app does not provide Content-Length header (e.g. Django)
-					// we use Transfer-Encoding: chunked
-					if (alg::iequals(header_name, "Content-Length"))
-						has_cont_len = true;
-					m_out_headers.emplace_back(header_name, header_value);
-				}
-				if (!has_cont_len)
-				{
-					this->m_send_chunked = true;
-					m_out_headers.emplace_back("Transfer-Encoding", "chunked");
-				}
-				return m_write;
+				py::object type = exc_info[0];
+				py::object value = exc_info[1];
+				py::object traceback = exc_info[2];
+				PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
+				throw py::error_already_set();
 			}
+			this->m_status = py::extract<string>(status);
+			m_out_headers.clear();
+			bool has_cont_len = false;
+			for (size_t i = 0; i < py::len(headers); ++i)
+			{
+				py::object header = headers[i];
+				string header_name = py::extract<string>(header[0]);
+				string header_value = py::extract<string>(header[1]);
+				// If a WSGI app does not provide Content-Length header (e.g. Django)
+				// we use Transfer-Encoding: chunked
+				if (alg::iequals(header_name, "Content-Length"))
+					has_cont_len = true;
+				m_out_headers.emplace_back(header_name, header_value);
+			}
+			if (!has_cont_len)
+			{
+				this->m_send_chunked = true;
+				m_out_headers.emplace_back("Transfer-Encoding", "chunked");
+			}
+			return m_write;
+		}
 		};
 		m_start_response = py::make_function(sr, py::default_call_policies(),
 			(py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::object()),
 			boost::mpl::vector<py::object, py::str, py::list, py::object>());
-	}
-
-
-	void WsgiRequestHandler::handle()
-	{
-		if (m_app.is_none())
-		{
-			m_response.send_html("500 Internal Server Error",
-				"Error 500",  "Internal Server Error",
-				"A WSGI application is not set.");
-			return;
-		}
-		prepare_environ();
-		if (m_request.check_header("Expect", "100-continue"))
-			m_response.send_mesage("100 Continue");
-		Iterable iterable{ m_app(m_environ, m_start_response) };
-		send_iterable(iterable);
 	}
 
 
@@ -289,13 +282,31 @@ namespace wsgi_boost
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
 		InputWrapper input{ m_request.connection(), m_async };
-		m_environ["wsgi.input"] = input; 
+		m_environ["wsgi.input"] = input;
 		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
 		m_environ["wsgi.file_wrapper"] = py::import("wsgiref.util").attr("FileWrapper");
 	}
+
+
+	void WsgiRequestHandler::handle()
+	{
+		if (m_app.is_none())
+		{
+			m_response.send_html("500 Internal Server Error",
+				"Error 500",  "Internal Server Error",
+				"A WSGI application is not set.");
+			return;
+		}
+		prepare_environ();
+		if (m_request.check_header("Expect", "100-continue"))
+			m_response.send_mesage("100 Continue");
+		Iterable iterable{ m_app(m_environ, m_start_response) };
+		send_iterable(iterable);
+	}
+
 
 	void WsgiRequestHandler::send_iterable(Iterable& iterable)
 	{
