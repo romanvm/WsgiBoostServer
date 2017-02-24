@@ -8,7 +8,6 @@ License: MIT, see License.txt
 
 #include "request.h"
 #include "response.h"
-#include "utils.h"
 
 #include <boost/filesystem.hpp>
 

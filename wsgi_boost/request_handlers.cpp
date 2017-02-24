@@ -220,19 +220,18 @@ namespace wsgi_boost
 			this->m_status = py::extract<string>(status);
 			m_out_headers.clear();
 			bool has_cont_len = false;
-			for (size_t i = 0; i < py::len(headers); ++i)
+			for (py::ssize_t i = 0; i < py::len(headers); ++i)
 			{
-				py::object header = headers[i];
-				string header_name = py::extract<string>(header[0]);
-				string header_value = py::extract<string>(header[1]);
-				// If a WSGI app does not provide Content-Length header (e.g. Django)
-				// we use Transfer-Encoding: chunked
+				string header_name = py::extract<string>(headers[i][0]);
+				string header_value = py::extract<string>(headers[i][1]);
 				if (alg::iequals(header_name, "Content-Length"))
 					has_cont_len = true;
 				m_out_headers.emplace_back(header_name, header_value);
 			}
 			if (!has_cont_len)
 			{
+				// If a WSGI app does not provide Content-Length header (e.g. Django)
+				// we use Transfer-Encoding: chunked
 				this->m_send_chunked = true;
 				m_out_headers.emplace_back("Transfer-Encoding", "chunked");
 			}
@@ -280,8 +279,7 @@ namespace wsgi_boost
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
-		InputWrapper input{ m_request.connection(), m_async };
-		m_environ["wsgi.input"] = input;
+		m_environ["wsgi.input"] = InputWrapper{ m_request.connection(), m_async };
 		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
