@@ -40,7 +40,7 @@ def patch_msvc_compiler():
 def get_version():
     with open(os.path.join(src, 'version.h'), 'r') as fo:
         response_h = fo.read()
-    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+)"', response_h).group(1)
+    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+[a-z]*)"', response_h, re.I).group(1)
 
 
 def get_file(filename):
