@@ -20,7 +20,7 @@ const std::string html_template =
 		"<title>%1%</title>"
 	"</head>"
 	"<body>"
-		"<h1>%1%: %2%</h1>"
+		"<h1>%2%</h1>"
 		"<p>%3%</p>"
 		"<hr>"
 		"<p><small><em>Sent by <a href='https://github.com/romanvm/WsgiBoostServer'>WsgiBoostServer</a> v."

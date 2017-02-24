@@ -53,10 +53,10 @@ namespace wsgi_boost
 	}
 
 
-	sys::error_code Response::send_html(const string& status, const string& header1, const string& header2, const string& message)
+	sys::error_code Response::send_html(const string& status, const string& title, const string& header, const string& text)
 	{
 		boost::format tpl{ html_template };
-		tpl % header1 % header2 % message;
+		tpl % status % header % text;
 		string html = tpl.str();
 		headers_type headers;
 		headers.emplace_back("Content-Type", "text/html");

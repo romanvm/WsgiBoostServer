@@ -102,7 +102,7 @@ namespace wsgi_boost
 		if (is_python_error)
 			PyErr_Print();
 		if (!response.header_sent())
-			response.send_html("500 Internal Server Error", "Error 500", "Internal server error!", error_msg);
+			response.send_html("500 Internal Server Error", "Error 500", "Internal Server Error", error_msg);
 		else
 			// Do not reuse a socket on a fatal error
 			response.keep_alive = false;
