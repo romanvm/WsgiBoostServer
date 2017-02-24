@@ -22,9 +22,10 @@ def hello_world(name='Roman'):
 
 if __name__ == '__main__':
     # Create a server on the default port 8000 with 4 threads
-    httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
+    httpd = wsgi_boost.WsgiBoostHttp(threads=4)
     # Serve static files by "static/*" path from "static" subfolder.
     # Also see template.html.
     httpd.add_static_route('^/static', os.path.join(cwd, 'static'))
+    # Set Flask WSGI application to be served
     httpd.set_app(app)
     httpd.start()

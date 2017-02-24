@@ -22,6 +22,6 @@ def hello_app(environ, start_response):
 
 if __name__ == '__main__':
     # Create a server on the default port 8000 with 4 threads
-    httpd = wsgi_boost.WsgiBoostHttp(num_threads=4)
+    httpd = wsgi_boost.WsgiBoostHttp(threads=4)
     httpd.set_app(hello_app)
     httpd.start()

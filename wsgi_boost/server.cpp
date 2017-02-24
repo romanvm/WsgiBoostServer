@@ -1,5 +1,6 @@
 #include "server.h"
 
+
 #include <boost/asio/spawn.hpp>
 
 #include <memory>
@@ -14,15 +15,16 @@ namespace py = boost::python;
 
 namespace wsgi_boost
 {
-	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int num_threads) :
-		m_ip_address{ ip_address }, m_port{ port }, m_num_threads{ num_threads }, m_acceptor(m_io_service), m_signals{ m_io_service }
+	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int threads) :
+		m_ip_address{ ip_address }, m_port{ port }, m_num_threads{ threads },
+		m_acceptor{ m_io_service }, m_signals{ m_io_service }
 	{
 		m_is_running.store(false);
 		m_signals.add(SIGINT);
 		m_signals.add(SIGTERM);
 #if defined(SIGQUIT)
 		m_signals.add(SIGQUIT);
-#endif // defined(SIGQUIT)
+#endif
 	}
 
 
@@ -47,7 +49,7 @@ namespace wsgi_boost
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
 		// the number of server threads.
-		// Without the coroutine the next request while all threads are busy
+		// Without the coroutine when all threads are busy the next request
 		// hangs in limbo and causes io_service to crash.
 		asio::spawn(*strand, [this, socket, strand](asio::yield_context yc)
 		{
@@ -74,8 +76,8 @@ namespace wsgi_boost
 			{
 				return;
 			}
-			if (request.keep_alive())
-				process_request(request.connection().socket());
+			if (response.keep_alive)
+				process_request(socket);
 		});
 	}
 
@@ -92,6 +94,21 @@ namespace wsgi_boost
 		}
 	}
 
+
+	void HttpServer::process_error(Response& response, const exception& ex,
+		const string& error_msg, bool is_python_error) const
+	{
+		cerr << error_msg << ": " << ex.what() << '\n';
+		if (is_python_error)
+			PyErr_Print();
+		if (!response.header_sent())
+			response.send_html("500 Internal Server Error", "Error 500", "Internal Server Error", error_msg);
+		else
+			// Do not reuse a socket on a fatal error
+			response.keep_alive = false;
+	}
+
+
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
 		if (request.content_dir == string())
@@ -102,7 +119,8 @@ namespace wsgi_boost
 			// Try to buffer the first 4KB POST data
 			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096, true))
 			{
-				cerr << "Unable to buffer POST data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+				cerr << "Unable to buffer POST/PUT data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+				response.keep_alive = false;
 				return;
 			}
 			GilAcquire acquire_gil;
@@ -113,13 +131,11 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
-				PyErr_Print();
-				response.send_mesage("500 Internal Server Error", "Error 500: WSGI application error!");
+				process_error(response, runtime_error(""), "Python error while processing a WSGI request.", true);
 			}
 			catch (const exception& ex)
 			{
-				cerr << ex.what() << '\n';
-				response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!");
+				process_error(response, ex, "General error while processing a WSGI request.");
 			}
 		}
 		else
@@ -132,8 +148,7 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-				cerr << ex.what() << '\n';
-				response.send_mesage("500 Internal Server Error", "Error 500: Internal server error!");
+				process_error(response, ex, "Error while processing a static request.");
 			}
 		}
 	}
@@ -148,7 +163,7 @@ namespace wsgi_boost
 	void HttpServer::set_app(py::object app)
 	{
 		if (is_running())
-			throw RuntimeError("Cannot set a WSGI app while the server is running!");
+			throw runtime_error("Cannot set a WSGI app while the server is running!");
 		m_app = app;
 	}
 
@@ -172,7 +187,7 @@ namespace wsgi_boost
 				}
 				catch (const exception&)
 				{
-					throw RuntimeError("Unable to resolve IP address and port " + m_ip_address + ":" + to_string(m_port) + "!");
+					throw runtime_error("Unable to resolve IP address and port " + m_ip_address + ":" + to_string(m_port) + "!");
 				}
 			}
 			else

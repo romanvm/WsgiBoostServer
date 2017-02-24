@@ -19,6 +19,7 @@ using namespace std;
 namespace py = boost::python;
 namespace fs = boost::filesystem;
 namespace sys = boost::system;
+namespace alg = boost::algorithm;
 
 
 namespace wsgi_boost
@@ -30,7 +31,9 @@ namespace wsgi_boost
 		const auto content_dir_path = fs::path{ m_request.content_dir };
 		if (!fs::exists(content_dir_path))
 		{
-			m_response.send_mesage("500 Internal Server Error", "Error 500: Internal server error! Invalid content directory.");
+			m_response.send_html("500 Internal Server Error",
+				"Error 500", "Internal Server Error",
+				"Invalid static content directory is configured.");
 			return;
 		}
 		if (m_request.method != "GET" && m_request.method != "HEAD")
@@ -74,11 +77,9 @@ namespace wsgi_boost
 							m_response.send_header("304 Not Modified", out_headers, true);
 							return;
 						}
-						MimeTypes mime_types;
 						string ext = path.extension().string();
-						string mime = mime_types[ext];
-						out_headers.emplace_back("Content-Type", mime);
-						if (m_request.use_gzip && mime_types.is_compressable(ext) && m_request.check_header("Accept-Encoding", "gzip"))
+						out_headers.emplace_back("Content-Type", get_mime(ext));
+						if (m_request.use_gzip && is_compressable(ext) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
@@ -99,28 +100,9 @@ namespace wsgi_boost
 				}
 			}
 		}
-		m_response.send_mesage("404 Not Found", "Error 404: Requested content not found!");
-	}
-
-
-	pair<string, string> StaticRequestHandler::parse_range(std::string& requested_range)
-	{
-		pair<string, string> range;
-		boost::regex range_regex{ "^bytes=(\\d*)-(\\d*)$" };
-		boost::smatch range_match;
-		boost::regex_search(requested_range, range_match, range_regex);
-		if (!range_match.empty())
-		{
-			if (range_match[1].first != requested_range.end())
-			{
-				range.first = string{ range_match[1].first, range_match[1].second };
-			}
-			if (range_match[2].first != requested_range.end())
-			{
-				range.second = string{ range_match[2].first, range_match[2].second };
-			}
-		}
-		return range;
+		m_response.send_html("404 Not Found",
+			"Error 404", "Not Found",
+			"The requested path <code>" + m_request.path + "</code> was not found on this server.");
 	}
 
 
@@ -166,21 +148,18 @@ namespace wsgi_boost
 		{
 			m_response.send_header("200 OK", headers, true);
 		}
-		if (start_pos > 0)
-		{
-			content_stream.seekg(start_pos);
-		}
-		else
-		{
-			content_stream.seekg(0, ios::beg);
-		}
 		if (m_request.method == "GET")
 		{
+			if (start_pos > 0)
+				content_stream.seekg(start_pos);
+			else
+				content_stream.seekg(0, ios::beg);
 			const size_t buffer_size = 131072;
 			vector<char> buffer(buffer_size);
 			size_t read_length;
 			size_t bytes_left = end_pos - start_pos + 1;
-			while (bytes_left > 0 && ((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
+			while (bytes_left > 0 &&
+				((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
 			{
 				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length), true);
 				if (ec)
@@ -197,60 +176,71 @@ namespace wsgi_boost
 	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app, bool async) :
 		BaseRequestHandler(request, response), m_app{ app }, m_async{ async }
 	{
-		function<void(py::object)> wr{
-			[this](py::object data)
-			{
-				sys::error_code ec = m_response.send_header(m_status, m_out_headers);
-				if (ec)
-					return;
-				m_headers_sent = true;
-				string cpp_data = py::extract<string>(data);
-				GilRelease release_gil;
-				m_response.send_data(cpp_data);
-			}
-		};
-		m_write = py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
-		function<py::object(py::str, py::list, py::object)> sr{
-			[this](py::str status, py::list headers, py::object exc_info = py::object())
-			{
-				if (!exc_info.is_none())
-				{
-					py::object format_exc = py::import("traceback").attr("format_exc")();
-					string exc_msg = py::extract<string>(format_exc);
-					cerr << exc_msg << '\n';
-					exc_info = py::object();
-				}
-				this->m_status = py::extract<string>(status);
-				m_out_headers.clear();
-				for (size_t i = 0; i < py::len(headers); ++i)
-				{
-					py::object header = headers[i];
-					m_out_headers.emplace_back(py::extract<string>(header[0]), py::extract<string>(header[1]));
-				}
-				return m_write;
-			}
-		};
-		m_start_response = py::make_function(sr, py::default_call_policies(),
-			(py::arg("status"), "headers", py::arg("exc_info") = py::object()),
-			boost::mpl::vector<py::object, py::str, py::list, py::object>());
+		m_write = create_write();
+		m_start_response = create_start_response();	
 	}
 
 
-	void WsgiRequestHandler::handle()
+	py::object WsgiRequestHandler::create_write()
 	{
-		if (m_app.is_none())
+		function<void(py::object)> wr{
+			[this](py::object data)
 		{
-			m_response.send_mesage("500 Internal Server Error", "Error 500: Internal server error! WSGI application is not set.");
-			return;
+			sys::error_code ec = m_response.send_header(m_status, m_out_headers);
+			if (ec)
+				return;
+			string cpp_data = py::extract<string>(data);
+			size_t data_len = cpp_data.length();
+			if (data_len > 0)
+			{
+				GilRelease release_gil;
+				if (this->m_send_chunked)
+					cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+				m_response.send_data(cpp_data, this->m_async);
+			}
 		}
-		prepare_environ();
-		if (m_request.check_header("Expect", "100-continue"))
+		};
+		return py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
+	}
+
+
+	py::object WsgiRequestHandler::create_start_response()
+	{
+		function<py::object(py::str, py::list, py::object)> sr{
+			[this](py::str status, py::list headers, py::object exc_info = py::object())
 		{
-			m_response.send_mesage("100 Continue");
+			if (!exc_info.is_none() && this->m_response.header_sent())
+			{
+				py::object type = exc_info[0];
+				py::object value = exc_info[1];
+				py::object traceback = exc_info[2];
+				PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
+				throw py::error_already_set();
+			}
+			this->m_status = py::extract<string>(status);
+			m_out_headers.clear();
+			bool has_cont_len = false;
+			for (py::ssize_t i = 0; i < py::len(headers); ++i)
+			{
+				string header_name = py::extract<string>(headers[i][0]);
+				string header_value = py::extract<string>(headers[i][1]);
+				if (alg::iequals(header_name, "Content-Length"))
+					has_cont_len = true;
+				m_out_headers.emplace_back(header_name, header_value);
+			}
+			if (!has_cont_len)
+			{
+				// If a WSGI app does not provide Content-Length header (e.g. Django)
+				// we use Transfer-Encoding: chunked
+				this->m_send_chunked = true;
+				m_out_headers.emplace_back("Transfer-Encoding", "chunked");
+			}
+			return m_write;
 		}
-		py::object args = get_python_object(Py_BuildValue("(O,O)", m_environ.ptr(), m_start_response.ptr()));
-		Iterator iterable{ get_python_object(PyEval_CallObject(m_app.ptr(), args.ptr())) };
-		send_iterable(iterable);
+		};
+		return py::make_function(sr, py::default_call_policies(),
+			(py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::object()),
+			boost::mpl::vector<py::object, py::str, py::list, py::object>());
 	}
 
 
@@ -274,28 +264,22 @@ namespace wsgi_boost
 		m_environ["SERVER_NAME"] = m_request.host_name;
 		m_environ["SERVER_PORT"] = to_string(m_request.local_endpoint_port);
 		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
-		for (auto& header : m_request.headers)
+		for (const auto& header : m_request.headers)
 		{
-			std::string env_header = transform_header(header.first);
-			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
-			{
+			if (alg::iequals(header.first, "Content-Length") || alg::iequals(header.first, "Content-Type"))
 				continue;
-			}
-			if (!py::extract<bool>(m_environ.attr("__contains__")(env_header)))
-			{
+			string env_header = header.first;
+			transform_header(env_header);
+			if (!m_environ.has_key(env_header))
 				m_environ[env_header] = header.second;
-			}
 			else
-			{
 				m_environ[env_header] = m_environ[env_header] + "," + header.second;
-			}
 		}
 		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
-		InputWrapper input{ m_request.connection(), m_async };
-		m_environ["wsgi.input"] = input; 
+		m_environ["wsgi.input"] = InputWrapper{ m_request.connection(), m_async };
 		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
@@ -303,7 +287,25 @@ namespace wsgi_boost
 		m_environ["wsgi.file_wrapper"] = py::import("wsgiref.util").attr("FileWrapper");
 	}
 
-	void WsgiRequestHandler::send_iterable(Iterator& iterable)
+
+	void WsgiRequestHandler::handle()
+	{
+		if (m_app.is_none())
+		{
+			m_response.send_html("500 Internal Server Error",
+				"Error 500",  "Internal Server Error",
+				"A WSGI application is not set.");
+			return;
+		}
+		prepare_environ();
+		if (m_request.check_header("Expect", "100-continue") && !m_response.send_mesage("100 Continue"))
+			return;
+		Iterable iterable{ m_app(m_environ, m_start_response) };
+		send_iterable(iterable);
+	}
+
+
+	void WsgiRequestHandler::send_iterable(Iterable& iterable)
 	{
 		py::object iterator = iterable.attr("__iter__")();
 		while (true)
@@ -317,12 +319,19 @@ namespace wsgi_boost
 #endif
 				GilRelease release_gil;
 				sys::error_code ec;
-				if (!m_headers_sent)
+				if (!m_response.header_sent())
 				{
 					ec = m_response.send_header(m_status, m_out_headers);
 					if (ec)
 						break;
-					m_headers_sent = true;
+				}
+				if (m_send_chunked)
+				{
+					size_t length = chunk.length();
+					// Skip 0-length chunks, if any
+					if (length == 0)
+						continue;
+					chunk = hex(length) + "\r\n" + chunk + "\r\n";
 				}
 				ec = m_response.send_data(chunk, m_async);
 				if (ec)
@@ -333,6 +342,8 @@ namespace wsgi_boost
 				if (PyErr_ExceptionMatches(PyExc_StopIteration))
 				{
 					PyErr_Clear();
+					if (m_send_chunked)
+						m_response.send_data("0\r\n\r\n");
 					break;
 				}
 				throw;

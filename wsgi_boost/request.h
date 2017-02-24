@@ -66,22 +66,22 @@ namespace wsgi_boost
 		boost::system::error_code parse_header();
 
 		// Check if a header contains a specific value
-		bool check_header(const std::string& header, std::string value);
+		bool check_header(const std::string& header, const std::string& value) const;
 
 		// Get header value or "" if the header is missing
-		std::string get_header(const std::string& header);
+		std::string get_header(const std::string& header) const;
 
 		// Check if the connection is persistent (keep-alive)
-		bool keep_alive();
+		bool keep_alive() const;
 
 		// Get Connection object for this request
 		Connection& connection() const;
 
 		// Get remote endpoint address
-		std::string remote_address();
+		std::string remote_address() const;
 
 		// Get remote endpoint port
-		unsigned short remote_port();
+		unsigned short remote_port() const;
 
 	private:
 		Connection& m_connection;

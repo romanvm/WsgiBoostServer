@@ -34,6 +34,8 @@ namespace wsgi_boost
 		void process_request(socket_ptr socket);
 		void check_static_route(Request& request);
 		void handle_request(Request& request, Response& response);
+		void process_error(Response& response, const std::exception& ex, const std::string& error_msg,
+			const bool is_python_error = false) const;
 
 	public:
 		unsigned int header_timeout = 5;
@@ -47,7 +49,7 @@ namespace wsgi_boost
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;
 
-		HttpServer(std::string ip_address = "", unsigned short port = 8000, unsigned int num_threads = 1);
+		HttpServer(std::string ip_address = "", unsigned short port = 8000, unsigned int threads = 1);
 
 		// Add a path to static content
 		void add_static_route(std::string path, std::string content_dir);

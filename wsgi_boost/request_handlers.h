@@ -8,7 +8,6 @@ License: MIT, see License.txt
 
 #include "request.h"
 #include "response.h"
-#include "utils.h"
 
 #include <boost/filesystem.hpp>
 
@@ -47,10 +46,10 @@ namespace wsgi_boost
 		void handle();
 
 	private:
+		std::string& m_cache_control;
+
 		void open_file(const boost::filesystem::path& content_dir_path);
 		void send_file(std::istream& content_stream, headers_type& headers);
-		std::pair<std::string, std::string> parse_range(std::string& requested_range);
-		std::string& m_cache_control;
 	};
 
 	// Handles WSGI requests
@@ -59,15 +58,19 @@ namespace wsgi_boost
 	private:
 		std::string m_status;
 		headers_type m_out_headers;
-		bool m_headers_sent = false;
 		boost::python::object& m_app;
 		boost::python::dict m_environ;
 		boost::python::object m_write;
 		boost::python::object m_start_response;
 		bool m_async;
+		bool m_send_chunked = false;
 
+		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
+		boost::python::object create_write();
+		// Create start_response() callable: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
+		boost::python::object create_start_response();
 		void prepare_environ();
-		void send_iterable(Iterator& iterable);
+		void send_iterable(Iterable& iterable);
 
 	public:
 		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app, bool async);

@@ -25,7 +25,7 @@ class BuildError(Exception):
 
 def patch_msvc_compiler():
     """
-    Monkey-patch distutils to use MS Visual C++ 2015 compiler
+    Monkey-patch distutils to use MS Visual C++ 2015+ compiler
     """
     for vc_version in SUPPORTED_MSVC_COMPILERS:
         vcvarsall = distutils.msvc9compiler.find_vcvarsall(vc_version)
@@ -40,7 +40,7 @@ def patch_msvc_compiler():
 def get_version():
     with open(os.path.join(src, 'version.h'), 'r') as fo:
         response_h = fo.read()
-    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+)"', response_h).group(1)
+    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+[a-z]*)"', response_h, re.I).group(1)
 
 
 def get_file(filename):
@@ -105,7 +105,7 @@ else:
 setup(
     name='WsgiBoostServer',
     version=get_version(),
-    description='Multithreaded WSGI server based on C++ Boost.Asio',
+    description='Multithreaded HTTP/WSGI server based on C++ Boost.Asio',
     long_description=get_file('Readme.rst') + '\n\n' + get_file('Changelog.rst'),
     author='Roman Miroshnychenko',
     author_email='romanvm@yandex.ua',
@@ -113,7 +113,7 @@ setup(
     license='MIT',
     keywords='boost asio wsgi server http',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
