@@ -67,9 +67,9 @@ namespace wsgi_boost
 		bool m_send_chunked = false;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
-		void create_write();
+		boost::python::object create_write();
 		// Create start_response() callable: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
-		void create_start_response();
+		boost::python::object create_start_response();
 		void prepare_environ();
 		void send_iterable(Iterable& iterable);
 

@@ -78,8 +78,7 @@ namespace wsgi_boost
 							return;
 						}
 						string ext = path.extension().string();
-						string mime = get_mime(ext);
-						out_headers.emplace_back("Content-Type", mime);
+						out_headers.emplace_back("Content-Type", get_mime(ext));
 						if (m_request.use_gzip && is_compressable(ext) && m_request.check_header("Accept-Encoding", "gzip"))
 						{
 							boost::iostreams::filtering_istream gzstream;
@@ -177,12 +176,12 @@ namespace wsgi_boost
 	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app, bool async) :
 		BaseRequestHandler(request, response), m_app{ app }, m_async{ async }
 	{
-		create_write();
-		create_start_response();	
+		m_write = create_write();
+		m_start_response = create_start_response();	
 	}
 
 
-	void WsgiRequestHandler::create_write()
+	py::object WsgiRequestHandler::create_write()
 	{
 		function<void(py::object)> wr{
 			[this](py::object data)
@@ -201,11 +200,11 @@ namespace wsgi_boost
 			}
 		}
 		};
-		m_write = py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
+		return py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
 	}
 
 
-	void WsgiRequestHandler::create_start_response()
+	py::object WsgiRequestHandler::create_start_response()
 	{
 		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
@@ -240,7 +239,7 @@ namespace wsgi_boost
 			return m_write;
 		}
 		};
-		m_start_response = py::make_function(sr, py::default_call_policies(),
+		return py::make_function(sr, py::default_call_policies(),
 			(py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::object()),
 			boost::mpl::vector<py::object, py::str, py::list, py::object>());
 	}
