@@ -301,8 +301,8 @@ namespace wsgi_boost
 			return;
 		}
 		prepare_environ();
-		if (m_request.check_header("Expect", "100-continue"))
-			m_response.send_mesage("100 Continue");
+		if (m_request.check_header("Expect", "100-continue") && !m_response.send_mesage("100 Continue"))
+			return;
 		Iterable iterable{ m_app(m_environ, m_start_response) };
 		send_iterable(iterable);
 	}
