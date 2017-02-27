@@ -14,17 +14,11 @@ namespace wsgi_boost
 		headers.emplace_back("Server", m_server_name);
 		headers.emplace_back("Date", get_current_gmt_time());
 		if (keep_alive)
-		{
 			headers.emplace_back("Connection", "keep-alive");
-		}
 		else
-		{
 			headers.emplace_back("Connection", "close");
-		}
 		for (const auto& header : headers)
-		{
 			m_connection << header.first << ": " << header.second << "\r\n";
-		}
 		m_connection << "\r\n";
 		m_header_sent = true;
 		return m_connection.flush(async);
