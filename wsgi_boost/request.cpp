@@ -82,7 +82,7 @@ namespace wsgi_boost
 
 	bool Request::keep_alive() const
 	{
-		return check_header("Connection", "keep-alive") || http_version == "HTTP/1.1";
+		return http_version == "HTTP/1.1" && !check_header("Connection", "close");
 	}
 
 
