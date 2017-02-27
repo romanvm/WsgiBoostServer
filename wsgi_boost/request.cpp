@@ -49,10 +49,9 @@ namespace wsgi_boost
 		}
 		if (method == "POST" || method == "PUT" || method == "PATCH")
 		{
-			string cl_header = get_header("Content-Length");
 			try
 			{
-				long long cl = stoll(cl_header);
+				long long cl = stoll(get_header("Content-Length"));
 				m_connection.post_content_length(cl);
 			}
 			catch (const logic_error&)
