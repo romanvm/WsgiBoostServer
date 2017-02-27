@@ -49,7 +49,7 @@ namespace wsgi_boost
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;
 
-		HttpServer(std::string ip_address = "", unsigned short port = 8000, unsigned int threads = 1);
+		HttpServer(std::string ip_address = "", unsigned short port = 8000, unsigned int threads = 0);
 
 		// Add a path to static content
 		void add_static_route(std::string path, std::string content_dir);

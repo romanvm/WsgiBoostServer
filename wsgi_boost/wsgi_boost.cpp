@@ -31,18 +31,19 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 	py::class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
 
-		"WsgiBoostHttp(ip_address='', port=8000, threads=1)\n\n"
+		"WsgiBoostHttp(ip_address='', port=8000, threads=0)\n\n"
 
 		"PEP-3333-compliant multi-threaded WSGI server\n\n"
 
 		"The server can serve both Python WSGI applications and static files.\n"
 		"For static files gzip compression and 'If-Modified-Since' headers are supported.\n\n"
 
-		":param ip_adderess: server's IP address\n"
+		":param ip_adderess: Server's IP address.\n"
 		":type ip_address: str\n"
-		":param port: server's port\n"
+		":param port: Server's port.\n"
 		":type port: int\n"
-		":param threads: the number of threads for the server to run\n"
+		":param threads: The number of threads for the server to run.\n"
+		"    Default: 0 (the number of threads is selected automatically depending on system parameters)."
 		":type threads: int\n\n"
 
 		"Usage:\n\n"
@@ -63,7 +64,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"	httpd.start()\n"
 		,
 
-		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 1)))
+		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)))
 
 		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 

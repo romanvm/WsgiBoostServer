@@ -16,9 +16,21 @@ namespace py = boost::python;
 namespace wsgi_boost
 {
 	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int threads) :
-		m_ip_address{ ip_address }, m_port{ port }, m_num_threads{ threads },
+		m_ip_address{ ip_address }, m_port{ port },
 		m_acceptor{ m_io_service }, m_signals{ m_io_service }
 	{
+		if (threads > 0)
+		{
+			m_num_threads = threads;
+		}
+		else
+		{
+			unsigned int threads_hint = thread::hardware_concurrency();
+			if (threads_hint > 0)
+				m_num_threads = threads_hint;
+			else
+				m_num_threads = 1;
+		}
 		m_is_running.store(false);
 		m_signals.add(SIGINT);
 		m_signals.add(SIGTERM);
@@ -173,7 +185,7 @@ namespace wsgi_boost
 		if (!is_running())
 		{
 			GilRelease release_gil;
-			cout << "WsgiBoostHttp server starting.\n";
+			cout << "WsgiBoostHttp server starting with " << m_num_threads << " thread(s).\n";
 			cout << "Press Ctrl+C to stop it.\n";
 			if (m_io_service.stopped())
 				m_io_service.reset();
