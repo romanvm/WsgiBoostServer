@@ -53,7 +53,7 @@ include_dirs = [src]
 libraries = []
 library_dirs=[]
 
-define_macros = []
+define_macros = [('BOOST_COROUTINES_NO_DEPRECATION_WARNING', None)]
 extra_compile_args = []
 extra_link_args = []
 
