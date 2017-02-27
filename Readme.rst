@@ -31,7 +31,7 @@ Main Features
 - Works on pure C++ level, effectively bypassing GIL.
 - Determines MIME for most file types.
 - Uses gzip compression for common textual formats: ``txt``/``html``/``xml``/``css``/``js``/``json``.
-- Supports ``If-Modified-Since`` header.
+- Supports ``If-Modified-Since`` and ``If-None-Match`` headers.
 - Supports ``Range`` header.
 - Checks if requested files are really located within specified content folders
   to forbid requesting files by arbitrary paths (for security reasons).

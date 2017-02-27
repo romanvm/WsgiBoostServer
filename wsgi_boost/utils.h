@@ -107,16 +107,16 @@ namespace wsgi_boost
 		return range;
 	}
 	
-	// Get hexadecimal representation of string length
-	inline std::string hex(size_t len)
+	// Get hexadecimal representation of an unisigned int number
+	inline std::string hex(size_t u_int)
 	{
-		if (len == 0)
+		if (u_int == 0)
 			return "0";
 		std::string hex_len;
-		while (len > 0)
+		while (u_int > 0)
 		{
-			hex_len = std::string(1, hex_chars[len % 16]) + hex_len;
-			len /= 16;
+			hex_len = std::string(1, hex_chars[u_int % 16]) + hex_len;
+			u_int /= 16;
 		}
 		return hex_len;
 	}

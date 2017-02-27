@@ -221,10 +221,15 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png')
         self.assertEqual(png_size, int(resp.headers['Content-Length']))
 
-    def test_if_modified_since(self):
-        os.utime(os.path.join(cwd, 'index.html'), (1419175200, 1419175200))
+    def test_not_modified_response(self):
+        posix_time = 1419175200
+        etag = '"' + hex(posix_time)[2:] + '"'
+        os.utime(os.path.join(cwd, 'index.html'), (posix_time, posix_time))
         resp = requests.get('http://127.0.0.1:8000/static/index.html', headers={'If-Modified-Since': 'Sun, 21 Dec 2014 15:19:00 GMT'})
         self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get("ETag"), etag)
+        resp = requests.get('http://127.0.0.1:8000/static/index.html', headers={'If-None-Match': etag})
+        self.assertEqual(resp.status_code, 304)
         resp = requests.get('http://127.0.0.1:8000/static/index.html', headers={'If-Modified-Since': 'Sun, 21 Dec 2014 15:20:00 GMT'})
         self.assertEqual(resp.status_code, 304)
         resp = requests.get('http://127.0.0.1:8000/static/index.html', headers={'If-Modified-Since': 'Mon, 21 Dec 2014 15:21:00 GMT'})

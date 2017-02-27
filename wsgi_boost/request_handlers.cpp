@@ -70,8 +70,11 @@ namespace wsgi_boost
 						out_headers.emplace_back("Cache-Control", m_cache_control);
 						time_t last_modified = fs::last_write_time(path);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
+						// Use hex representation of the last modified POSIX timestamp as ETag
+						string etag = "\"" + hex(static_cast<size_t>(last_modified)) + "\"";
+						out_headers.emplace_back("ETag", etag);
 						string ims = m_request.get_header("If-Modified-Since");
-						if (ims != "" && header_to_time(ims) >= last_modified)
+						if (m_request.get_header("If-None-Match") == etag || (ims != "" && header_to_time(ims) >= last_modified))
 						{
 							out_headers.emplace_back("Content-Length", "0");
 							m_response.send_header("304 Not Modified", out_headers, true);
