@@ -79,6 +79,7 @@ namespace wsgi_boost
 						{
 							out_headers.emplace_back("Content-Length", "0");
 							m_response.send_header("304 Not Modified", out_headers, true);
+							ifs.close();
 							return;
 						}
 						string ext = path.extension().string();
