@@ -14,6 +14,7 @@ License: MIT, see License.txt
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 namespace py = boost::python;
@@ -303,7 +304,7 @@ namespace wsgi_boost
 		prepare_environ();
 		if (m_request.check_header("Expect", "100-continue") && !m_response.send_mesage("100 Continue"))
 			return;
-		Iterable iterable{ m_app(m_environ, m_start_response) };
+		Iterable iterable{ move(m_app(m_environ, m_start_response)) };
 		send_iterable(iterable);
 	}
 
