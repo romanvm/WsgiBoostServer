@@ -84,7 +84,7 @@ namespace wsgi_boost
 						}
 						string ext = path.extension().string();
 						out_headers.emplace_back("Content-Type", get_mime(ext));
-						if (m_request.use_gzip && is_compressable(ext) && m_request.check_header("Accept-Encoding", "gzip"))
+						if (m_request.use_gzip && m_request.check_header("Accept-Encoding", "gzip") && is_compressable(ext))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
