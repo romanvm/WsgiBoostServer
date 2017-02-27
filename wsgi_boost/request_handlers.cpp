@@ -303,7 +303,7 @@ namespace wsgi_boost
 			return;
 		}
 		prepare_environ();
-		if ((m_request.method == "POST" || m_request.method == "PUT") &&
+		if ((m_request.method == "POST" || m_request.method == "PUT" || m_request.method == "PATCH") &&
 			m_request.check_header("Expect", "100-continue") && m_response.send_mesage("100 Continue"))
 			return;
 		Iterable iterable{ move(m_app(m_environ, m_start_response)) };
