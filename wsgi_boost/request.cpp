@@ -47,25 +47,23 @@ namespace wsgi_boost
 				}
 			}
 		}
-		string cl_header = get_header("Content-Length");
-		if (cl_header != "")
+		if (method == "POST" || method == "PUT" || method == "PATCH")
 		{
+			string cl_header = get_header("Content-Length");
 			try
 			{
 				long long cl = stoll(cl_header);
 				m_connection.post_content_length(cl);
 			}
-			catch (const exception&)
+			catch (const logic_error&)
 			{
-				m_connection.post_content_length(-1);
+				return sys::error_code(sys::errc::invalid_argument, sys::system_category());
 			}
 		}
 		else
 		{
 			m_connection.post_content_length(-1);
 		}
-		if ((method == "POST" || method == "PUT") && m_connection.post_content_length() == -1)
-			return sys::error_code(sys::errc::invalid_argument, sys::system_category());
 		return sys::error_code(sys::errc::success, sys::system_category());
 	}
 
