@@ -131,7 +131,7 @@ namespace wsgi_boost
 			// Try to buffer the first 4KB POST data
 			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096, true))
 			{
-				cerr << "Unable to buffer POST/PUT data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+				cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
 				response.keep_alive = false;
 				return;
 			}
