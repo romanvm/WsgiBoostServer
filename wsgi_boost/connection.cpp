@@ -176,7 +176,7 @@ namespace wsgi_boost
 	}
 
 
-	std::shared_ptr<boost::asio::ip::tcp::socket> Connection::socket() const
+	socket_ptr Connection::socket() const
 	{
 		return m_socket;
 	}

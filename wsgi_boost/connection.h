@@ -71,7 +71,7 @@ namespace wsgi_boost
 		boost::system::error_code flush(bool async = false);
 
 		// Get asio socket pointer
-		std::shared_ptr<boost::asio::ip::tcp::socket> socket() const;
+		socket_ptr socket() const;
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input
@@ -82,7 +82,7 @@ namespace wsgi_boost
 		bool m_async;
 
 	public:
-		explicit InputWrapper(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
+		InputWrapper(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
 
 		// Read data from input content
 		std::string read(long long size = -1);
