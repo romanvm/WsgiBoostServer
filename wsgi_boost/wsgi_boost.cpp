@@ -92,7 +92,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			)
 
 		.def_readwrite("static_cache_control", &HttpServer::static_cache_control,
-			"The value of ``Cache-Control`` HTTP header for static content (default: ``'max-age=86400'``)"
+			"The value of ``Cache-Control`` HTTP header for static content (default: ``'public, max-age=3600'``)"
 			)
 
 		.def("start", &HttpServer::start,
