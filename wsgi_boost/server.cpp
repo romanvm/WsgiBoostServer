@@ -129,11 +129,17 @@ namespace wsgi_boost
 			request.host_name = host_name;
 			request.local_endpoint_port = m_port;
 			// Try to buffer the first 4KB POST data
-			if (request.connection().post_content_length() > 0 && !request.connection().read_into_buffer(4096, true))
+			if (request.connection().post_content_length() > 0)
 			{
-				cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
-				response.keep_alive = false;
-				return;
+				sys::error_code ec;
+				if (request.check_header("Expect", "100-continue"))
+					ec = response.send_mesage("100 Continue", "", true);
+				if (ec || !request.connection().read_into_buffer(4096, true))
+				{
+					cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+					response.keep_alive = false;
+					return;
+				}
 			}
 			GilAcquire acquire_gil;
 			WsgiRequestHandler handler{ request, response, m_app , (m_num_threads == 1)};
