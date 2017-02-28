@@ -349,7 +349,7 @@ namespace wsgi_boost
 				{
 					PyErr_Clear();
 					if (m_send_chunked)
-						m_response.send_data("0\r\n\r\n");
+						m_response.send_data("0\r\n\r\n", m_async);
 					break;
 				}
 				throw;
