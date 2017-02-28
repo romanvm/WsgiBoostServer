@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.shortcuts import render
 
 
-def index(request):
+def index(request, name='Roman'):
     """A simple view that returns a rendered template"""
-    return render(request, 'template.html', {'name': 'Roman'})
+    return render(request, 'template.html', {'name': name})
 
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^(?P<name>[\w]+)/$', index, name='name'),
     url(r'^$', index, name='index')
 ]

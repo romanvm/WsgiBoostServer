@@ -10,11 +10,11 @@ from wsgi_boost import WsgiBoostHttp
 
 cwd = os.path.dirname(os.path.abspath(__file__))
 # Add the root Django project folder (where manage.py is located) to sys.path
-sys.path.insert(0, os.path.join(cwd, 'django_example'))
+sys.path.insert(0, os.path.join(cwd, 'django_project'))
 
 # Import a WSGI application from a Django project package
 # (where settings.py is located) 
-from django_example.wsgi import application
+from example_project.wsgi import application
 
 if __name__ == '__main__':
     # Create a server on the default port 8000 with 4 threads

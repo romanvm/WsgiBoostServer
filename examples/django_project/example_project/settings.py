@@ -49,12 +49,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'django_example.urls'
+ROOT_URLCONF = 'example_project.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(os.path.dirname(BASE_DIR), 'templates')],  # Custom template folder
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Custom template folder
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,7 +67,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'django_example.wsgi.application'
+WSGI_APPLICATION = 'example_project.wsgi.application'
 
 
 # Database
