@@ -78,11 +78,11 @@ namespace wsgi_boost
 			}
 			else if (ec == sys::errc::bad_message)
 			{
-				response.send_mesage("400 Bad Request");
+				response.send_mesage("400 Bad Request", "", true);
 			}
 			else if (ec == sys::errc::invalid_argument)
 			{
-				response.send_mesage("411 Length Required");
+				response.send_mesage("411 Length Required", "", true);
 			}
 			else
 			{

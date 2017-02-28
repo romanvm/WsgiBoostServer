@@ -32,7 +32,7 @@ namespace wsgi_boost
 	}
 
 
-	sys::error_code Response::send_mesage(const string& status, const string& message)
+	sys::error_code Response::send_mesage(const string& status, const string& message, bool async)
 	{
 		headers_type headers;
 		headers.emplace_back("Content-Length", to_string(message.length()));
@@ -40,14 +40,15 @@ namespace wsgi_boost
 		{
 			headers.emplace_back("Content-Type", "text/plain");
 		}
-		sys::error_code ec = send_header(status, headers);
+		sys::error_code ec = send_header(status, headers, async);
 		if (!ec)
-			ec = send_data(message);
+			ec = send_data(message, async);
 		return ec;
 	}
 
 
-	sys::error_code Response::send_html(const string& status, const string& title, const string& header, const string& text)
+	sys::error_code Response::send_html(const string& status, const string& title,
+		const string& header, const string& text, bool async)
 	{
 		boost::format tpl{ html_template };
 		tpl % title % header % text;
@@ -55,9 +56,9 @@ namespace wsgi_boost
 		headers_type headers;
 		headers.emplace_back("Content-Type", "text/html");
 		headers.emplace_back("Content-Length", to_string(html.length()));
-		sys::error_code ec = send_header(status, headers);
+		sys::error_code ec = send_header(status, headers, async);
 		if (!ec)
-			ec = send_data(html);
+			ec = send_data(html, async);
 		return ec;
 	}
 }

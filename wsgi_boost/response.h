@@ -43,11 +43,12 @@ namespace wsgi_boost
 		boost::system::error_code send_data(const std::string& data, bool async = false);
 
 		// Send a plain text HTTP message to a client
-		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string());
+		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string(),
+			bool async = false);
 
 		// Send a html HTTP message to a client
 		boost::system::error_code send_html(const std::string& status, const std::string& title,
-			const std::string& header, const std::string& text);
+			const std::string& header, const std::string& text, bool async = false);
 
 		// Check if HTTP header has been sent
 		bool header_sent() { return m_header_sent;  }

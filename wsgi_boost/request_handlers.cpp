@@ -33,13 +33,14 @@ namespace wsgi_boost
 		if (!fs::exists(content_dir_path))
 		{
 			m_response.send_html("500 Internal Server Error",
-				"Error 500", "Internal Server Error",
-				"Invalid static content directory is configured.");
+				"Error 500",
+				"Internal Server Error",
+				"Invalid static content directory is configured.", true);
 			return;
 		}
 		if (m_request.method != "GET" && m_request.method != "HEAD")
 		{
-			m_response.send_mesage("405 Method Not Allowed");
+			m_response.send_mesage("405 Method Not Allowed", "", true);
 			return;
 		}
 		open_file(content_dir_path);
@@ -107,7 +108,7 @@ namespace wsgi_boost
 		}
 		m_response.send_html("404 Not Found",
 			"Error 404", "Not Found",
-			"The requested path <code>" + m_request.path + "</code> was not found on this server.");
+			"The requested path <code>" + m_request.path + "</code> was not found on this server.", true);
 	}
 
 
@@ -140,7 +141,7 @@ namespace wsgi_boost
 			}
 			if (start_pos > end_pos || start_pos >= length || end_pos >= length)
 			{
-				m_response.send_mesage("416 Range Not Satisfiable");
+				m_response.send_mesage("416 Range Not Satisfiable", "", true);
 				return;
 			}
 			else
