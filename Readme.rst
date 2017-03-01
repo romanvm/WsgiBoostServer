@@ -76,7 +76,10 @@ Simple example with `Flask`_ micro-framework:
 
   # Create a server on the port 8080 with 4 threads
   httpd = WsgiBoostHttp(port=8080, threads=4)
+  # Set the WSGI app to serve
   httpd.set_app(app)
+  # Serve static files from a directory
+  httpd.add_static_route('^/files', '/var/www/files')
   httpd.start()
 
 More advanced examples with Flask and Django frameworks can be found ``examples`` folder.
