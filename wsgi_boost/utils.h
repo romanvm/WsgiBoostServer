@@ -112,13 +112,13 @@ namespace wsgi_boost
 	{
 		if (u_int == 0)
 			return "0";
-		std::string hex_len;
+		std::string hex_repr;
 		while (u_int > 0)
 		{
-			hex_len = std::string(1, hex_chars[u_int % 16]) + hex_len;
+			hex_repr = std::string(1, hex_chars[u_int % 16]) + hex_repr;
 			u_int /= 16;
 		}
-		return hex_len;
+		return hex_repr;
 	}
 
 
