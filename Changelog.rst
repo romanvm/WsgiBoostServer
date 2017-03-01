@@ -8,7 +8,7 @@ Changelog
 - Now ``Transfer-Encoding: chunked`` is used if a WSGI application
   does not provide ``Content-Length`` header.
 - Error messages in HTML.
-- Code optimization.
+- Code optimization and bugfixes.
 
 0.9.8
 -----

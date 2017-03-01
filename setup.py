@@ -105,7 +105,7 @@ else:
 setup(
     name='WsgiBoostServer',
     version=get_version(),
-    description='Multithreaded HTTP/WSGI server based on C++ Boost.Asio',
+    description='Asynchronous multithreaded HTTP/WSGI server based on C++ Boost.Asio',
     long_description=get_file('Readme.rst') + '\n\n' + get_file('Changelog.rst'),
     author='Roman Miroshnychenko',
     author_email='romanvm@yandex.ua',

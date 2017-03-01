@@ -50,8 +50,7 @@ Compatibility
 - **OS**: Windows, Linux. In theory, WsgiBoostServer can be built and used on any OS that has
   a C++ 11/14-compatible compiler and supports Python ``setuptools``.
 - **Python**: 2.7 and above (tested with 2.7, 3.5 and 3.6).
-- **Boost**: tested with 1.58, 1.60-1.63, but probably will work with earlier versions
-  that are not too old.
+- **Boost**: tested with 1.55 and above.
 - **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2 and above (regardless of Python version).
 
 Usage
@@ -124,7 +123,7 @@ Alternatively, you can install WsgiBoostServer using ``pip``::
 ``pip`` will download WsgiBoostServer sources, compile the binary module
 and install it into your working Python environment.
 
-**Note**: On **Releases** tab of this repository you can find compiled wheels
+**Note**: On **Releases** tab of this repository you can find statically compiled wheels
 for Python 2.7 and 3.4 on Raspberry Pi 2.
 
 Windows
