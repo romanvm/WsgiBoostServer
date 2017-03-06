@@ -287,7 +287,7 @@ namespace wsgi_boost
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
 		m_environ["wsgi.input"] = InputWrapper{ m_request.connection(), m_async };
 		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
-		m_environ["wsgi.multithread"] = true;
+		m_environ["wsgi.multithread"] = !m_async;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
 		m_environ["wsgi.file_wrapper"] = py::import("wsgiref.util").attr("FileWrapper");
