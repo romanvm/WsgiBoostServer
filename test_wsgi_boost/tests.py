@@ -94,22 +94,26 @@ class App(object):
 
 class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
     @classmethod
+    def setUpClass(cls):
+        cls._httpd = wsgi_boost.WsgiBoostHttp(threads=1)
+        app = App()
+        cls._httpd.set_app(validator(app))
+        cls._server_thread = threading.Thread(target=cls._httpd.start)
+        cls._server_thread.daemon = True
+        cls._server_thread.start()
+        time.sleep(0.5)
+
+    @classmethod
     def tearDownClass(cls):
+        cls._httpd.stop()
+        cls._server_thread.join()
+        del cls._httpd
         print()
 
-    def test_validate_wsgi_server_compliance(self):
-        httpd = wsgi_boost.WsgiBoostHttp(threads=1)
-        app = App()
-        httpd.set_app(validator(app))
-        server_thread = threading.Thread(target=httpd.start)
-        server_thread.daemon = True
-        server_thread.start()
-        time.sleep(0.5)
+    def test_validate_wsgi_server_compliance(self):        
         resp = requests.get('http://127.0.0.1:8000/')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.text, 'App OK')
-        httpd.stop()
-        server_thread.join()
 
 
 class WsgiServerFunctionsTestCase(unittest.TestCase):
@@ -236,9 +240,10 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 304)
 
     def test_range_header(self):
-        resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png', headers={'Range': 'bytes=1024-2047'})
+        resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png', headers={'Range': 'bytes=1024-2048'})
         self.assertEqual(resp.status_code, 206)
-        self.assertEqual(resp.headers['Content-Range'], 'bytes 1024-2047/22003')
+        self.assertEqual(resp.headers['Content-Range'], 'bytes 1024-2048/22003')
+        self.assertEqual(resp.headers['Content-Length'], '1024')
         self.assertEqual(len(resp.content), 1024)
         resp = requests.get('http://127.0.0.1:8000/static/profile_pic.png', headers={'Range': 'bytes=1024-30000'})
         self.assertEqual(resp.status_code, 416)
