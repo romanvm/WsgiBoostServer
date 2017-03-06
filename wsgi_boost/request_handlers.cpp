@@ -116,7 +116,6 @@ namespace wsgi_boost
 	{
 		content_stream.seekg(0, ios::end);
 		size_t length = content_stream.tellg();
-		headers.emplace_back("Content-Length", to_string(length));
 		size_t start_pos = 0;
 		size_t end_pos = length - 1;
 		string requested_range = m_request.get_header("Range");
@@ -146,12 +145,14 @@ namespace wsgi_boost
 			}
 			else
 			{
+				headers.emplace_back("Content-Length", to_string(end_pos - start_pos));
 				headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
 				m_response.send_header("206 Partial Content", headers, true);
 			}
 		}
 		else
 		{
+			headers.emplace_back("Content-Length", to_string(length));
 			m_response.send_header("200 OK", headers, true);
 		}
 		if (m_request.method == "GET")
