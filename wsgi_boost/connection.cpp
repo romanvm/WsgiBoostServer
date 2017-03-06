@@ -53,17 +53,11 @@ namespace wsgi_boost
 		size_t residual_bytes = m_istreambuf.size();
 		size_t size;
 		if (length >= 0 && length > residual_bytes)
-		{
 			size = min(m_bytes_left, length - (long long)residual_bytes);
-		}
 		else if (length >= 0 && length <= residual_bytes)
-		{
 			return true;
-		}
 		else
-		{
 			size = m_bytes_left - residual_bytes;
-		}
 		sys::error_code ec;
 		size_t bytes_read;
 		set_timeout(m_content_timeout);
@@ -95,13 +89,9 @@ namespace wsgi_boost
 			istream is{ &m_istreambuf };
 			long long size;
 			if (length > 0)
-			{
 				size = min(length, m_bytes_left);
-			}
 			else
-			{
 				size = m_bytes_left;
-			}
 			vector<char> buffer(size);
 			is.read(&buffer[0], size);
 			data = string(buffer.begin(), buffer.end());
@@ -128,13 +118,9 @@ namespace wsgi_boost
 				break;
 			}
 			if (read_into_buffer(min(128LL, m_bytes_left), async))
-			{
 				is.clear();
-			}
 			else
-			{
 				break;
-			}
 		}
 		return line;
 	}

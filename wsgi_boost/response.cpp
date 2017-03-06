@@ -37,9 +37,7 @@ namespace wsgi_boost
 		headers_type headers;
 		headers.emplace_back("Content-Length", to_string(message.length()));
 		if (message.length() > 0)
-		{
 			headers.emplace_back("Content-Type", "text/plain");
-		}
 		sys::error_code ec = send_header(status, headers, async);
 		if (!ec)
 			ec = send_data(message, async);
