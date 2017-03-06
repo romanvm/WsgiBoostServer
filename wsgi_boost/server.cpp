@@ -150,11 +150,11 @@ namespace wsgi_boost
 			}
 			catch (const py::error_already_set&)
 			{
-				process_error(response, runtime_error(""), "Python error while processing a WSGI request.", true);
+				process_error(response, runtime_error(""), "Python error while processing a WSGI request", true);
 			}
 			catch (const exception& ex)
 			{
-				process_error(response, ex, "General error while processing a WSGI request.");
+				process_error(response, ex, "General error while processing a WSGI request");
 			}
 		}
 		else
@@ -167,7 +167,7 @@ namespace wsgi_boost
 			}
 			catch (const exception& ex)
 			{
-				process_error(response, ex, "Error while processing a static request.");
+				process_error(response, ex, "Error while processing a static request");
 			}
 		}
 	}
