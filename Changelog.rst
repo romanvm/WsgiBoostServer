@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.0.1
+-----
+
+- Fixed ``boost::asio::strand`` usage.
+
 1.0.0
 -----
 
