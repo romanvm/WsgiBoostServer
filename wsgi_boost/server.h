@@ -31,7 +31,7 @@ namespace wsgi_boost
 		std::atomic_bool m_is_running;
 
 		void accept();
-		void process_request(socket_ptr socket);
+		void process_request(socket_ptr socket, strand_ptr strand);
 		void check_static_route(Request& request);
 		void handle_request(Request& request, Response& response);
 		void process_error(Response& response, const std::exception& ex, const std::string& error_msg,

@@ -49,15 +49,15 @@ namespace wsgi_boost
 			if (!ec)
 			{
 				socket->set_option(asio::ip::tcp::no_delay(true));
-				process_request(socket);
+				strand_ptr strand = make_shared<asio::strand>(asio::strand{ m_io_service });
+				process_request(socket, strand);
 			}
 		});
 	}
 
 
-	void HttpServer::process_request(socket_ptr socket)
+	void HttpServer::process_request(socket_ptr socket, strand_ptr strand)
 	{
-		strand_ptr strand = make_shared<asio::strand>(asio::strand{ m_io_service });
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
 		// the number of server threads.
@@ -89,7 +89,7 @@ namespace wsgi_boost
 				return;
 			}
 			if (response.keep_alive)
-				process_request(socket);
+				process_request(socket, strand);
 		});
 	}
 
