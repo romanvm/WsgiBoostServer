@@ -123,21 +123,13 @@ namespace wsgi_boost
 		if (requested_range != "" && ((range = parse_range(requested_range)) != pair<string, string>()))
 		{
 			if (range.first != string())
-			{
 				start_pos = stoull(range.first);
-			}
 			else
-			{
 				range.first = to_string(start_pos);
-			}
 			if (range.second != string())
-			{
 				end_pos = stoull(range.second);
-			}
 			else
-			{
 				range.second = to_string(end_pos);
-			}
 			if (start_pos > end_pos || start_pos >= length || end_pos >= length)
 			{
 				m_response.send_mesage("416 Range Not Satisfiable", "", true);

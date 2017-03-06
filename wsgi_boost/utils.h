@@ -96,13 +96,9 @@ namespace wsgi_boost
 		if (!range_match.empty())
 		{
 			if (range_match[1].first != requested_range.end())
-			{
 				range.first = std::string{ range_match[1].first, range_match[1].second };
-			}
 			if (range_match[2].first != requested_range.end())
-			{
 				range.second = std::string{ range_match[2].first, range_match[2].second };
-			}
 		}
 		return range;
 	}
