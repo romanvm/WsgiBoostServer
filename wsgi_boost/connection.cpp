@@ -133,12 +133,6 @@ namespace wsgi_boost
 	}
 
 
-	long long Connection::post_content_length() const
-	{
-		return m_content_length;
-	}
-
-
 	sys::error_code Connection::flush(bool async)
 	{
 		sys::error_code ec;
@@ -159,12 +153,6 @@ namespace wsgi_boost
 		}
 		m_timer.cancel();
 		return ec;
-	}
-
-
-	socket_ptr Connection::socket() const
-	{
-		return m_socket;
 	}
 
 #pragma endregion
@@ -211,12 +199,6 @@ namespace wsgi_boost
 	}
 
 
-	InputWrapper* InputWrapper::iter()
-	{
-		return this;
-	}
-
-
 	std::string InputWrapper::next()
 	{
 		string line = readline();
@@ -230,10 +212,5 @@ namespace wsgi_boost
 		}
 	}
 
-
-	long long InputWrapper::len()
-	{
-		return m_connection.post_content_length();
-	}
 #pragma endregion
 }

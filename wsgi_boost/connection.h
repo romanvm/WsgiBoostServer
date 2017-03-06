@@ -65,13 +65,13 @@ namespace wsgi_boost
 		void post_content_length(long long cl);
 
 		// Get POST content length
-		long long post_content_length() const;
+		long long post_content_length() const { return m_content_length; }
 
 		// Send all output data to the client
 		boost::system::error_code flush(bool async = false);
 
 		// Get asio socket pointer
-		socket_ptr socket() const;
+		socket_ptr socket() const { return m_socket; }
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input
@@ -94,12 +94,12 @@ namespace wsgi_boost
 		boost::python::list readlines(long long sizehint = -1);
 
 		// Return Python iterator
-		InputWrapper* iter();
+		InputWrapper* iter() { return this; }
 
 		// Iterate the iterator
 		std::string next();
 
 		// Return the length of input content
-		long long len();
+		long long len() { return m_connection.post_content_length(); }
 	};
 }
