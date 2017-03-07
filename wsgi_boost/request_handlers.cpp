@@ -255,19 +255,13 @@ namespace wsgi_boost
 		pair<string, string> path_and_query = split_path(m_request.path);
 		m_environ["PATH_INFO"] = path_and_query.first;
 		m_environ["QUERY_STRING"] = path_and_query.second;
-		string ct = m_request.get_header("Content-Type");
-		if (ct != "")
-		{
-			m_environ["CONTENT_TYPE"] = ct;
-		}
-		string cl = m_request.get_header("Content-Length");
-		if (cl != "")
-		{
-			m_environ["CONTENT_LENGTH"] = cl;
-		}
+		m_environ["CONTENT_TYPE"] = m_request.get_header("Content-Type");
+		m_environ["CONTENT_LENGTH"] = m_request.get_header("Content-Length");
 		m_environ["SERVER_NAME"] = m_request.host_name;
 		m_environ["SERVER_PORT"] = to_string(m_request.local_endpoint_port);
 		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
+		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
+		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		for (const auto& header : m_request.headers)
 		{
 			if (alg::iequals(header.first, "Content-Length") || alg::iequals(header.first, "Content-Type"))
@@ -277,10 +271,8 @@ namespace wsgi_boost
 			if (!m_environ.has_key(env_header))
 				m_environ[env_header] = header.second;
 			else
-				m_environ[env_header] += "," + header.second;
+				m_environ[env_header] += ", " + header.second;
 		}
-		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
-		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
 		m_environ["wsgi.input"] = InputStream{ m_request.connection(), m_async };
