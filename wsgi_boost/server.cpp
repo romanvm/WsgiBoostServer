@@ -88,7 +88,7 @@ namespace wsgi_boost
 			{
 				return;
 			}
-			// Send all remaining data from the output buffer re-use the socket
+			// Send all remaining data from the output buffer and re-use the socket
 			// for the next request if this is a keep-alive session.
 			if (!connection.flush(true) && response.keep_alive)
 				process_request(socket, strand);
@@ -130,14 +130,14 @@ namespace wsgi_boost
 			request.url_scheme = url_scheme;
 			request.host_name = host_name;
 			request.local_endpoint_port = m_port;
-			// Try to buffer the first 4KB POST data
+			// Try to buffer the first 8KB request data
 			if (request.connection().post_content_length() > 0)
 			{
 				sys::error_code ec;
 				if (request.check_header("Expect", "100-continue"))
 					// Send only plain status string with no headers
 					ec = response.send_data("HTTP/1.1 100 Continue\r\n\r\n", true);
-				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 4096LL), true))
+				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 8192LL), true))
 				{
 					cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
 					response.keep_alive = false;
