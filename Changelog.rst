@@ -5,6 +5,8 @@ Changelog
 -----
 
 - Fixed ``boost::asio::strand`` usage.
+- Fixed ``Content-Length`` header in ``206 Partial Content``
+  responses for static content.
 
 1.0.0
 -----
@@ -53,7 +55,8 @@ Changelog
 0.9.2
 -----
 
-- Fixed the bug with not sending keep-alive response header when such header is present in http 1.0 request
+- Fixed the bug with not sending keep-alive response header when such header is present
+  in http 1.0 request
 
 0.9.1
 -----
