@@ -186,7 +186,11 @@ namespace wsgi_boost
 		long long total_length = 0;
 		while ((line = readline()) != "")
 		{
+#if PY_MAJOR_VERSION < 3
 			listing.append(line);
+#else
+			listing.append(get_py3_bytes(line));
+#endif
 			if (sizehint >= 0)
 			{
 				total_length += line.length();

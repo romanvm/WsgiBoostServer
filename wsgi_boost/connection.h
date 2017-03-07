@@ -83,7 +83,6 @@ namespace wsgi_boost
 
 	public:
 		InputStream(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
-
 		// Read data from input content
 		std::string read(long long size = -1);
 
@@ -101,5 +100,25 @@ namespace wsgi_boost
 
 		// Return the length of input content
 		long long len() { return m_connection.post_content_length(); }
+
+#if PY_MAJOR_VERSION >= 3
+		// In Python3 wsgi.input must return bytes
+
+		// Read data from input content
+		boost::python::object read_bytes(long long size = -1) { return get_py3_bytes(read(size)); }
+
+		// Read a line from input content
+		boost::python::object read_byte_line(long long size = -1) { return get_py3_bytes(readline(size)); }
+
+		// Iterate the iterator
+		boost::python::object next_bytes() { return get_py3_bytes(next()); }
+
+	private:
+		// Convert C++ string to Python 3 bytes object
+		boost::python::object get_py3_bytes(const std::string& str) const
+		{
+			return boost::python::object(boost::python::handle<>(PyBytes_FromString(str.c_str())));
+		}
+#endif
 	};
 }

@@ -82,14 +82,14 @@ class App(object):
 
     def test_input_readline(self):
         line = self.environ['wsgi.input'].readline()
-        assert line == 'Mark Twain. The Awful German Language\n'
+        assert line == b'Mark Twain. The Awful German Language\n'
         return b'Input readline OK'
 
     def test_input_readlines(self):
         lines = self.environ['wsgi.input'].readlines()
         assert isinstance(lines, list)
         assert len(lines) == 61
-        content = ''.join(lines)
+        content = b''.join(lines)
         assert len(content) == 4194
         return b'Input readlines OK'
 
