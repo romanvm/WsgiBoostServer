@@ -7,6 +7,8 @@ Changelog
 - Fixed ``boost::asio::strand`` usage.
 - Fixed ``Content-Length`` header in ``206 Partial Content``
   responses for static content.
+- Fixed ``wsgi.input`` in Python 3 so that now it correctly produces bytes
+  instead of strings.
 
 1.0.0
 -----
