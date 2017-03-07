@@ -278,8 +278,8 @@ namespace wsgi_boost
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
-		m_environ["wsgi.input"] = InputWrapper{ m_request.connection(), m_async };
-		m_environ["wsgi.errors"] = py::import("sys").attr("stderr");
+		m_environ["wsgi.input"] = InputStream{ m_request.connection(), m_async };
+		m_environ["wsgi.errors"] = ErrorStream{};
 		m_environ["wsgi.multithread"] = !m_async;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;

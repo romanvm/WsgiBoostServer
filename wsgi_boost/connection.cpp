@@ -157,9 +157,9 @@ namespace wsgi_boost
 
 #pragma endregion
 
-#pragma region InputWrapper
+#pragma region InputStream
 
-	string InputWrapper::read(long long size)
+	string InputStream::read(long long size)
 	{
 		GilRelease release_gil;
 		string data;
@@ -169,7 +169,7 @@ namespace wsgi_boost
 	}
 
 
-	string InputWrapper::readline(long long size)
+	string InputStream::readline(long long size)
 	{
 		GilRelease release_gil;
 		string line = m_connection.read_line(m_async);
@@ -179,7 +179,7 @@ namespace wsgi_boost
 	}
 
 
-	py::list InputWrapper::readlines(long long sizehint)
+	py::list InputStream::readlines(long long sizehint)
 	{
 		py::list listing;
 		string line;
@@ -199,7 +199,7 @@ namespace wsgi_boost
 	}
 
 
-	std::string InputWrapper::next()
+	std::string InputStream::next()
 	{
 		string line = readline();
 		if (line != "")

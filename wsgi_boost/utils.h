@@ -137,7 +137,6 @@ namespace wsgi_boost
 			return "application/octet-stream";
 		}
 	}
-
 #pragma endregion
 
 #pragma region classes
@@ -201,6 +200,24 @@ namespace wsgi_boost
 
 	private:
 		PyGILState_STATE m_gstate;
+	};
+
+
+	// wsgi.errors stream implementation
+	struct ErrorStream
+	{
+		void write(std::string msg) { std::cerr << msg; }
+
+		void writelines(boost::python::list lines)
+		{
+			for (boost::python::ssize_t i = 0; i < boost::python::len(lines); ++i)
+			{
+				std::string line = boost::python::extract<std::string>(lines[i]);
+				std::cerr << line;
+			}
+		}
+
+		void flush() { std::cerr.flush(); }
 	};
 }
 #pragma endregion

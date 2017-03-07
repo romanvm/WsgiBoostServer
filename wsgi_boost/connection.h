@@ -75,14 +75,14 @@ namespace wsgi_boost
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input
-	class InputWrapper
+	class InputStream
 	{
 	private:
 		Connection& m_connection;
 		bool m_async;
 
 	public:
-		InputWrapper(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
+		InputStream(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
 
 		// Read data from input content
 		std::string read(long long size = -1);
@@ -94,7 +94,7 @@ namespace wsgi_boost
 		boost::python::list readlines(long long sizehint = -1);
 
 		// Return Python iterator
-		InputWrapper* iter() { return this; }
+		InputStream* iter() { return this; }
 
 		// Iterate the iterator
 		std::string next();

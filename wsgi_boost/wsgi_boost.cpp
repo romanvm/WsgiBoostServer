@@ -64,7 +64,9 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		"	httpd.start()\n"
 		,
 
-		py::init<std::string, unsigned short, unsigned int>((py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)))
+		py::init<std::string, unsigned short, unsigned int>(	(
+			py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)
+			))
 
 		.add_property("is_running", &HttpServer::is_running, "Get server running status")
 
@@ -131,16 +133,23 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		;
 
 
-	py::class_<InputWrapper>("InputWrapper", py::no_init)
-		.def("read", &InputWrapper::read, (py::arg("size") = -1))
-		.def("readline", &InputWrapper::readline, (py::arg("size") = -1))
-		.def("readlines", &InputWrapper::readlines, (py::arg("sizehint") = -1))
-		.def("__iter__", &InputWrapper::iter, py::return_internal_reference<>())
+	py::class_<InputStream>("InputStream", py::no_init)
+		.def("read", &InputStream::read, (py::arg("size") = -1))
+		.def("readline", &InputStream::readline, (py::arg("size") = -1))
+		.def("readlines", &InputStream::readlines, (py::arg("sizehint") = -1))
+		.def("__iter__", &InputStream::iter, py::return_internal_reference<>())
 #if PY_MAJOR_VERSION < 3
-		.def("next", &InputWrapper::next)
+		.def("next", &InputStream::next)
 #else
-		.def("__next__", &InputWrapper::next)
+		.def("__next__", &InputStream::next)
 #endif
-		.def("__len__", &InputWrapper::len)
+		.def("__len__", &InputStream::len)
+		;
+
+
+	py::class_<ErrorStream>("ErrorStream", py::no_init)
+		.def("write", &ErrorStream::write)
+		.def("writelines", &ErrorStream::writelines)
+		.def("flush", &ErrorStream::flush)
 		;
 }
