@@ -28,7 +28,6 @@ class App(object):
         self.environ = environ
         self.start_response = start_response
         headers = [('Content-type', 'text/plain')]
-        content = b'App OK'
         if self.environ['PATH_INFO'] == '/test_http_header':
             content = self.test_http_header()
         elif self.environ['PATH_INFO'] == '/test_query_string':
@@ -47,6 +46,14 @@ class App(object):
             content = b'Write OK'
         elif self.environ['PATH_INFO'] == '/test_transfer_chunked':
             content = b'Transfer chunked OK'
+        else:
+            print(self.environ['wsgi.input'].read(-1))
+            print(self.environ['wsgi.input'].readline())
+            print(self.environ['wsgi.input'].readlines())
+            self.environ['wsgi.errors'].write('foo\n')
+            self.environ['wsgi.errors'].writelines(['ham\n', 'spam\n'])
+            self.environ['wsgi.errors'].flush()
+            content = b'App OK'
         if content != b'Transfer chunked OK':
             headers.append(('Content-Length', str(len(content))))
         write = start_response('200 OK', headers)
@@ -110,8 +117,8 @@ class ValidateWsgiServerComplianceTestCase(unittest.TestCase):
         del cls._httpd
         print()
 
-    def test_validate_wsgi_server_compliance(self):        
-        resp = requests.get('http://127.0.0.1:8000/')
+    def test_validate_wsgi_server_compliance(self):
+        resp = requests.post('http://127.0.0.1:8000/', json={'foo': 'bar'})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.text, 'App OK')
 
