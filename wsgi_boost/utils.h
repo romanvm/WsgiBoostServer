@@ -160,6 +160,22 @@ namespace wsgi_boost
 			return m_iterable.attr(at.c_str());
 		}
 
+		boost::python::ssize_t len() const
+		{
+			try
+			{
+				return boost::python::len(m_iterable);
+			}
+			catch (const boost::python::error_already_set&)
+			{
+				if (PyErr_ExceptionMatches(PyExc_TypeError))
+					PyErr_Clear();
+				else
+					throw;
+			}
+			return -1;
+		}
+
 	private:
 		boost::python::object m_iterable;
 	};

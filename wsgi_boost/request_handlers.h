@@ -63,7 +63,7 @@ namespace wsgi_boost
 		boost::python::object m_write;
 		boost::python::object m_start_response;
 		bool m_async;
-		bool m_send_chunked = false;
+		long long m_content_length = -1;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
 		boost::python::object create_write();

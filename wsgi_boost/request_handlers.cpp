@@ -184,22 +184,23 @@ namespace wsgi_boost
 	{
 		function<void(py::object)> wr{
 			[this](py::object data)
-		{
-			sys::error_code ec = m_response.send_header(m_status, m_out_headers);
-			if (ec)
-				return;
-			string cpp_data = py::extract<string>(data);
-			size_t data_len = cpp_data.length();
-			if (data_len > 0)
 			{
+				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, this->m_async);
+				if (ec)
+					return;
+				string cpp_data = py::extract<string>(data);
 				GilRelease release_gil;
-				if (this->m_send_chunked)
-					cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
-				m_response.send_data(cpp_data, this->m_async);
+				size_t data_len = cpp_data.length();
+				if (data_len > 0)
+				{
+					if (this->m_content_length == -1)
+						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+					this->m_response.buffer_data(cpp_data);
+				}
 			}
-		}
 		};
-		return py::make_function(wr, py::default_call_policies(), py::args("data"), boost::mpl::vector<void, py::object>());
+		return py::make_function(wr, py::default_call_policies(),
+			py::args("data"), boost::mpl::vector<void, py::object>());
 	}
 
 
@@ -207,35 +208,39 @@ namespace wsgi_boost
 	{
 		function<py::object(py::str, py::list, py::object)> sr{
 			[this](py::str status, py::list headers, py::object exc_info = py::object())
-		{
-			if (!exc_info.is_none() && this->m_response.header_sent())
 			{
-				py::object type = exc_info[0];
-				py::object value = exc_info[1];
-				py::object traceback = exc_info[2];
-				PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
-				throw py::error_already_set();
+				if (!exc_info.is_none() && this->m_response.header_sent())
+				{
+					py::object type = exc_info[0];
+					py::object value = exc_info[1];
+					py::object traceback = exc_info[2];
+					PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
+					throw py::error_already_set();
+				}
+				this->m_status = py::extract<string>(status);
+				this->m_out_headers.clear();
+				for (py::ssize_t i = 0; i < py::len(headers); ++i)
+				{
+					string header_name = py::extract<string>(headers[i][0]);
+					string header_value = py::extract<string>(headers[i][1]);
+					if (alg::iequals(header_name, "Content-Length"))
+					{
+						try
+						{
+							this->m_content_length = stoll(header_value);
+						}
+						catch (const logic_error&) {}
+					}
+					this->m_out_headers.emplace_back(header_name, header_value);
+				}
+				if (this->m_content_length == -1)
+				{
+					// If a WSGI app does not provide Content-Length header (e.g. Django)
+					// we use Transfer-Encoding: chunked
+					this->m_out_headers.emplace_back("Transfer-Encoding", "chunked");
+				}
+				return this->m_write;
 			}
-			this->m_status = py::extract<string>(status);
-			m_out_headers.clear();
-			bool has_cont_len = false;
-			for (py::ssize_t i = 0; i < py::len(headers); ++i)
-			{
-				string header_name = py::extract<string>(headers[i][0]);
-				string header_value = py::extract<string>(headers[i][1]);
-				if (alg::iequals(header_name, "Content-Length"))
-					has_cont_len = true;
-				m_out_headers.emplace_back(header_name, header_value);
-			}
-			if (!has_cont_len)
-			{
-				// If a WSGI app does not provide Content-Length header (e.g. Django)
-				// we use Transfer-Encoding: chunked
-				this->m_send_chunked = true;
-				m_out_headers.emplace_back("Transfer-Encoding", "chunked");
-			}
-			return m_write;
-		}
 		};
 		return py::make_function(sr, py::default_call_policies(),
 			(py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::object()),
@@ -272,7 +277,7 @@ namespace wsgi_boost
 			if (!m_environ.has_key(env_header))
 				m_environ[env_header] = header.second;
 			else
-				m_environ[env_header] = m_environ[env_header] + "," + header.second;
+				m_environ[env_header] += "," + header.second;
 		}
 		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
@@ -305,6 +310,7 @@ namespace wsgi_boost
 	void WsgiRequestHandler::send_iterable(Iterable& iterable)
 	{
 		py::object iterator = iterable.attr("__iter__")();
+		bool transfer_later = iterable.len() == 1 || m_content_length <= 131072LL;
 		while (true)
 		{
 			try
@@ -318,11 +324,11 @@ namespace wsgi_boost
 				sys::error_code ec;
 				if (!m_response.header_sent())
 				{
-					ec = m_response.send_header(m_status, m_out_headers);
+					ec = m_response.send_header(m_status, m_out_headers, m_async);
 					if (ec)
 						break;
 				}
-				if (m_send_chunked)
+				if (m_content_length == -1)
 				{
 					size_t length = chunk.length();
 					// Skip 0-length chunks, if any
@@ -330,17 +336,29 @@ namespace wsgi_boost
 						continue;
 					chunk = hex(length) + "\r\n" + chunk + "\r\n";
 				}
-				ec = m_response.send_data(chunk, m_async);
-				if (ec)
-					break;
+				if (transfer_later)
+				{
+					// If the WSGI app has returned an iterable with only one item,
+					// which is a typical case when the app returns a rendered template or a JSON response,
+					// or the total length of the response content is less than 128KB
+					// we do not transfer data immediately but buffer them to transfer later
+					// asyncronously otside GIL.
+					m_response.buffer_data(chunk);
+				}
+				else
+				{
+					ec = m_response.send_data(chunk, m_async);
+					if (ec)
+						break;
+				}
 			}
 			catch (const py::error_already_set&)
 			{
 				if (PyErr_ExceptionMatches(PyExc_StopIteration))
 				{
 					PyErr_Clear();
-					if (m_send_chunked)
-						m_response.send_data("0\r\n\r\n", m_async);
+					if (m_content_length == -1)
+						m_response.buffer_data("0\r\n\r\n");
 					break;
 				}
 				throw;

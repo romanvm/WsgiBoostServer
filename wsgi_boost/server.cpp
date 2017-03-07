@@ -88,7 +88,9 @@ namespace wsgi_boost
 			{
 				return;
 			}
-			if (response.keep_alive)
+			// Send all remaining data from the output buffer re-use the socket
+			// for the next request if this is a keep-alive session.
+			if (!connection.flush(true) && response.keep_alive)
 				process_request(socket, strand);
 		});
 	}

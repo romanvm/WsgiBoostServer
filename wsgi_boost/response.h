@@ -42,6 +42,9 @@ namespace wsgi_boost
 		// Send data to the client
 		boost::system::error_code send_data(const std::string& data, bool async = false);
 
+		// Buffer data in the output stream but don't send them immediately
+		void buffer_data(const std::string& data) { m_connection << data; }
+
 		// Send a plain text HTTP message to a client
 		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string(),
 			bool async = false);
