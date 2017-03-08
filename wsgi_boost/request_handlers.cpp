@@ -215,7 +215,7 @@ namespace wsgi_boost
 					py::object value = exc_info[1];
 					py::object traceback = exc_info[2];
 					PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
-					throw py::error_already_set();
+					py::throw_error_already_set();
 				}
 				this->m_status = py::extract<string>(status);
 				this->m_out_headers.clear();
