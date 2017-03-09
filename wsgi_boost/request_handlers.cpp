@@ -211,10 +211,12 @@ namespace wsgi_boost
 			{
 				if (!exc_info.is_none() && this->m_response.header_sent())
 				{
-					py::object type = exc_info[0];
-					py::object value = exc_info[1];
-					py::object traceback = exc_info[2];
-					PyErr_Restore(type.ptr(), value.ptr(), traceback.ptr());
+					py::object t = exc_info[0];
+					py::object v = exc_info[1];
+					py::object tb = exc_info[2];
+					cerr << "The WSGI app passed exc_info after sending headers to the client!\n";
+					py::import("traceback").attr("print_exception")(t, v, tb);
+					PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
 					py::throw_error_already_set();
 				}
 				this->m_status = py::extract<string>(status);
