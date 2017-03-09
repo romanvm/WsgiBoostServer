@@ -137,7 +137,7 @@ namespace wsgi_boost
 				if (request.check_header("Expect", "100-continue"))
 					// Send only plain status string with no headers
 					ec = response.send_data("HTTP/1.1 100 Continue\r\n\r\n", true);
-				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 8192LL), true))
+				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 65536LL), true))
 				{
 					cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
 					response.keep_alive = false;
