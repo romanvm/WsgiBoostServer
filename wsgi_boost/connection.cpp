@@ -207,13 +207,9 @@ namespace wsgi_boost
 	{
 		string line = readline();
 		if (line != "")
-		{
 			return line;
-		}
 		else
-		{
 			throw StopIteration();
-		}
 	}
 
 #pragma endregion
