@@ -185,11 +185,11 @@ namespace wsgi_boost
 		function<void(py::object)> wr{
 			[this](py::object data)
 			{
+				string cpp_data = py::extract<string>(data);
+				GilRelease release_gil;
 				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, this->m_async);
 				if (ec)
 					return;
-				string cpp_data = py::extract<string>(data);
-				GilRelease release_gil;
 				size_t data_len = cpp_data.length();
 				if (data_len > 0)
 				{
