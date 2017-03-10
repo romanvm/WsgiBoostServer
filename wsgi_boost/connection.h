@@ -72,6 +72,9 @@ namespace wsgi_boost
 
 		// Get asio socket pointer
 		socket_ptr socket() const { return m_socket; }
+
+		// Clear the output buffer
+		void clear_output() { m_ostreambuf.consume(m_ostreambuf.size()); }
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input

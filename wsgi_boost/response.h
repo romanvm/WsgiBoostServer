@@ -36,6 +36,9 @@ namespace wsgi_boost
 
 		explicit Response(Connection& connection) : m_connection{ connection } {}
 
+		// Buffer HTTP header (status code + headers)
+		void buffer_header(const std::string& status, headers_type& headers);
+
 		// Send HTTP header (status code + headers)
 		boost::system::error_code send_header(const std::string& status, headers_type& headers, bool async = false);
 
@@ -55,5 +58,8 @@ namespace wsgi_boost
 
 		// Check if HTTP header has been sent
 		bool header_sent() { return m_header_sent;  }
+
+		// Clear output buffer
+		void clear() { m_connection.clear_output(); }
 	};
 }

@@ -8,7 +8,7 @@ namespace sys = boost::system;
 
 namespace wsgi_boost
 {
-	sys::error_code Response::send_header(const string& status, headers_type& headers, bool async)
+	void Response::buffer_header(const string& status, headers_type& headers)
 	{
 		m_connection << http_version << " " << status << "\r\n";
 		headers.emplace_back("Server", m_server_name);
@@ -20,6 +20,11 @@ namespace wsgi_boost
 		for (const auto& header : headers)
 			m_connection << header.first << ": " << header.second << "\r\n";
 		m_connection << "\r\n";
+	}
+
+	sys::error_code Response::send_header(const string& status, headers_type& headers, bool async)
+	{
+		buffer_header(status, headers);
 		m_header_sent = true;
 		return m_connection.flush(async);
 	}

@@ -154,7 +154,6 @@ namespace wsgi_boost
 		m_timer.cancel();
 		return ec;
 	}
-
 #pragma endregion
 
 #pragma region InputStream

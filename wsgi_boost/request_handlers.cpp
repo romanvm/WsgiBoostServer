@@ -305,6 +305,7 @@ namespace wsgi_boost
 	{
 		py::object iterator = iterable.attr("__iter__")();
 		bool transfer_later = iterable.len() == 1 || m_content_length <= 131072LL;
+		bool header_buffered = false;
 		while (true)
 		{
 			try
@@ -316,11 +317,13 @@ namespace wsgi_boost
 #endif
 				GilRelease release_gil;
 				sys::error_code ec;
-				if (!m_response.header_sent())
+				if (!header_buffered)
 				{
-					ec = m_response.send_header(m_status, m_out_headers, m_async);
-					if (ec)
+					if (transfer_later)
+						m_response.buffer_header(m_status, m_out_headers);
+					else if(m_response.send_header(m_status, m_out_headers, m_async))
 						break;
+					header_buffered = true;
 				}
 				if (m_content_length == -1)
 				{
@@ -333,17 +336,15 @@ namespace wsgi_boost
 				if (transfer_later)
 				{
 					// If the WSGI app has returned an iterable with only one item,
-					// which is a typical case when the app returns a rendered template or a JSON response,
+					// which is a typical case when a app returns a rendered template or a JSON response,
 					// or the total length of the response content is less than 128KB
 					// we do not transfer data immediately but buffer them to transfer later
 					// asyncronously otside GIL.
 					m_response.buffer_data(chunk);
 				}
-				else
+				else if (m_response.send_data(chunk, m_async))
 				{
-					ec = m_response.send_data(chunk, m_async);
-					if (ec)
-						break;
+					break;
 				}
 			}
 			catch (const py::error_already_set&)
