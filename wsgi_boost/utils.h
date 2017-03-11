@@ -168,7 +168,7 @@ namespace wsgi_boost
 			}
 			catch (const boost::python::error_already_set&)
 			{
-				if (PyErr_ExceptionMatches(PyExc_TypeError))
+				if (PyErr_ExceptionMatches(PyExc_TypeError) || PyErr_ExceptionMatches(PyExc_AttributeError))
 					PyErr_Clear();
 				else
 					throw;
