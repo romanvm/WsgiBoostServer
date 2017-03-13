@@ -136,6 +136,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	py::class_<InputStream>("InputStream", py::no_init)
 		.def("readlines", &InputStream::readlines, (py::arg("sizehint") = -1))
 		.def("__iter__", &InputStream::iter, py::return_internal_reference<>())
+		.def("__len__", &InputStream::len)
 #if PY_MAJOR_VERSION < 3
 		.def("read", &InputStream::read, (py::arg("size") = -1))
 		.def("readline", &InputStream::readline, (py::arg("size") = -1))
@@ -145,7 +146,6 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		.def("readline", &InputStream::read_byte_line, (py::arg("size") = -1))
 		.def("__next__", &InputStream::next_bytes)
 #endif
-		.def("__len__", &InputStream::len)
 		;
 
 
