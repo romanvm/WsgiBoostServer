@@ -101,9 +101,6 @@ namespace wsgi_boost
 		// Iterate the iterator
 		std::string next();
 
-		// Return the length of input content
-		long long len() { return m_connection.post_content_length(); }
-
 #if PY_MAJOR_VERSION >= 3
 		// In Python3 wsgi.input must return bytes
 
