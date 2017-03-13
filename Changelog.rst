@@ -9,6 +9,8 @@ Changelog
   responses for static content.
 - Fixed ``wsgi.input`` in Python 3 so that now it correctly produces bytes
   instead of strings.
+- Now in multi-threaded mode asynchronous operations are used for most common
+  WSGI application scenarios.
 
 1.0.0
 -----
@@ -22,7 +24,7 @@ Changelog
 0.9.8
 -----
 
-- Now the WSGI server is fully asynchronous in a single-thread mode.
+- Now the WSGI server is fully asynchronous in the single-thread mode.
 - Added ``static_cache_control`` property for setting the value of ``Cache-Control`` HTTP header
   for static content.
 
