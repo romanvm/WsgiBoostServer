@@ -18,6 +18,15 @@ SUPPORTED_MSVC_COMPILERS = [14.0]
 cwd = os.path.dirname(os.path.abspath(__file__))
 src = os.path.join(cwd, NAME)
 
+for item in sys.argv:
+    if '--boost-headers' in item:
+        os.environ['BOOST_ROOT'] = item.split('=')[1]
+        sys.argv.remove(item)
+for item in sys.argv:
+    if '--boost-libs' in item:
+        os.environ['BOOST_LIBRARYDIR'] = item.split('=')[1]
+        sys.argv.remove(item)
+
 
 class BuildError(Exception):
     pass
@@ -63,12 +72,12 @@ if sys.platform == 'win32':
     try:
         include_dirs.append(os.path.expandvars(os.environ['BOOST_ROOT']))
     except KeyError:
-        raise BuildError('BOOST_ROOT environment variable is not defined!')
+        raise BuildError('Path to Boost headers is not set! Use --boost-headers="<path>" option.')
 
     try:
         library_dirs.append(os.path.expandvars(os.environ['BOOST_LIBRARYDIR']))
     except KeyError:
-        raise BuildError('BOOST_LIBRARYDIR environment variable is not defined!')
+        raise BuildError('Path to Boost libraries is not set! Use --boost-libs="<path>" option.')
 
     define_macros.append(('BOOST_PYTHON_STATIC_LIB', None))
     extra_compile_args.append('/EHsk')
@@ -101,6 +110,7 @@ else:
         ]
 
     extra_compile_args.append('-std=c++11')
+
 
 setup(
     name='WsgiBoostServer',
