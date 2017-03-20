@@ -2,7 +2,7 @@ language: python
 
 python:
     - "2.7"
-    - "3.6"
+    - "3.5"
 
 addons:
     apt:
@@ -12,17 +12,17 @@ addons:
 
         packages:
             - g++-4.9
-            - g++-7
+            - g++-6
             - zlib1g-dev
             - libbz2-dev
-            - python3.6-dev
+            - python3.5-dev
 
 env:
     global:
         - BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
     matrix:
         - CC_VER=4.9
-        - CC_VER=7
+        - CC_VER=6
 
 install:
     - export CC=g++-$CC_VER
