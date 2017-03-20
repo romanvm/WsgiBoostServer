@@ -106,6 +106,7 @@ else:
             'boost_filesystem',
             'boost_iostreams',
             'boost_date_time',
+            'boost_thread',
             'z',
         ]
 
