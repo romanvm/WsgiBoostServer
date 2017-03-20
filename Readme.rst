@@ -178,17 +178,12 @@ Note that ``-sZLIB_SOURCE`` option should point to your actual ``zlib`` folder.
 Boost.Build engine will build the necessary libraries to link WsgiBoostServer against and place them into
 ``c:\boost\msvc14x32\lib`` folder. This folder is set by the ``--stagedir`` option.
 
-Now you need to set the necessary environment variables. Execute the following commands::
+Now you can build WsgiBoostServer using ``setup.py`` script::
 
-  >setx BOOST_ROOT c:\boost
-  >setx BOOST_LIBRARYDIR c:\boost\msvc14x32\lib
+  >python setup.py build --boost-headers="c:\boost" --boost-libs="c:\boost\msvc14x32\lib"
 
-The variables should point to actual folders where Boost header files and libraries are located. Now restart your computer
-or sign out and then sign in again.
-
-Now you can build and install WsgiBoostServer using the ``setup.py`` script or Python ``pip``
-as described in the preceding `Linux`_ section. Note that you must use the same Python version that was used to build
-Boost.Python library.
+The ``--boost-headers=`` and ``--boost-libs=`` options must point to actual folders where Boost header files and libraries are located.
+Note that you must use the same Python version that was used to build Boost.Python library.
 
 .. _Boost.Asio: http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio.html
 .. _Boost.Python: http://www.boost.org/doc/libs/1_61_0/libs/python/doc/html/index.html
