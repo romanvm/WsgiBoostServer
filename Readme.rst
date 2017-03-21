@@ -129,7 +129,8 @@ Ubuntu 16.04 LTS (Xenial Xerus) provides Python 2.7, 3.5 and Boost 1.58.
 
   It is strongly recommended to use Python virtual environments.
 
-Alternatively, you can install WsgiBoostServer using ``pip``::
+Alternatively, after installing prerequisites you can install WsgiBoostServer directly from GitHub repository
+using ``pip``::
 
   $ pip install git+https://github.com/romanvm/WsgiBoostServer.git#egg=WsgiBoostServer
 
@@ -165,18 +166,19 @@ The following procedure assumes that you want to use custom Python and/or Boost 
     using python : 3.6 ;
 
   The ``using python`` parameter should point to the Python version that will be used for building
-  WsgiBoostServer. Change it if necessary.
+  WsgiBoostServer. Change it if necessary. See `Boost.Build documentation`_ for more info about
+  how to configure Boost.Build with custom Python versions.
 
-- Go to Boost and run there::
+- Go to Boost folder and run there::
 
-    $ ./b2 link=static variant=release cxxflags=-fPIC --stagedir=$HOME/boost/gcc --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+    $ ./b2 link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
 
   Boost.Build engine will build the necessary libraries to link WsgiBoostServer against and place them into
-  ``$HOME/boost/gcc/lib`` folder. This folder is set by the ``--stagedir`` option.
+  ``$HOME/boost/stage/lib`` folder. This folder can be changed by the ``--stagedir=`` option.
 
 - Build WsgiBoostServer using ``setup.py`` script::
 
-    $ python3.6 setup.py build --boost-headers="$HOME/boost" --boost-libs="$HOME/boost/gcc/lib"
+    $ python3.6 setup.py build --boost-headers="$HOME/boost" --boost-libs="$HOME/boost/stage/lib"
 
   The ``--boost-headers=`` and ``--boost-libs=`` options must point to actual folders where Boost header files and libraries are located.
   Note that you must use the same Python version that was used to build Boost.Python library.
@@ -234,18 +236,18 @@ The build procedure is similar to that for custom Python and Boost versions on L
 
 - Open the console, go to the ``boost`` folder and execute there::
 
-    >b2 link=static runtime-link=static variant=release --stagedir=c:\boost\msvc14x32 -sZLIB_SOURCE=c:\zlib --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+    >b2 link=static runtime-link=static variant=release -sZLIB_SOURCE=c:\zlib --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
 
   Note that ``-sZLIB_SOURCE`` option should point to your actual ``zlib`` folder.
 
   Boost.Build engine will build the necessary libraries to link WsgiBoostServer against and place them into
-  ``c:\boost\msvc14x32\lib`` folder. This folder is set by the ``--stagedir`` option.
+  ``c:\boost\stage\lib`` folder. This folder can be changed by the ``--stagedir=`` option.
 
 - Build WsgiBoostServer using ``setup.py`` script::
 
-    >python setup.py build --boost-headers="c:\boost" --boost-libs="c:\boost\msvc14x32\lib"
+    >python setup.py build --boost-headers="c:\boost" --boost-libs="c:\boost\stage\lib"
 
-  The ``--boost-headers=`` and ``--boost-libs=`` options must point to actual folders where Boost header files and libraries are located.
+  The ``--boost-headers=`` and ``--boost-libs=`` options must point to the actual folders where Boost header files and libraries are located.
   Note that you must use the same Python version that was used to build Boost.Python library.
 
 - Install WsgiBoostServer::
@@ -263,3 +265,4 @@ The build procedure is similar to that for custom Python and Boost versions on L
 .. _zlib Home Site: http://www.zlib.net
 .. _Boost Home Site: http://www.boost.org
 .. _deadsnakes: https://launchpad.net/~fkrull/+archive/ubuntu/deadsnakes
+.. _Boost.Build documentation: http://www.boost.org/doc/libs/1_63_0/libs/python/doc/html/building/configuring_boost_build.html
