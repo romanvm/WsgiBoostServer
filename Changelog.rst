@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0.1a
+
+- Fixed missing library dependency in ``setup.py`` build script.
+- The ``setup.py`` build script now takes ``--boost-headers`` and ``--boost-libs`` options
+  that allow to explicitly set locations of Boost headers and pre-compiled libraries.
+- No changes to WsgiBoostServer code.
+
 1.0.1
 -----
 
@@ -9,8 +16,8 @@ Changelog
   responses for static content.
 - Fixed ``wsgi.input`` in Python 3 so that now it correctly produces bytes
   instead of strings.
-- Now in multi-threaded mode asynchronous operations are used for most common
-  WSGI application scenarios.
+- Now in multi-threaded mode WsgiBoostServer uses asynchronous operations
+  for most common WSGI application scenarios.
 
 1.0.0
 -----
