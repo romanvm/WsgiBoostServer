@@ -39,7 +39,7 @@ namespace wsgi_boost
 		{
 			auto in_buffer = m_istreambuf.data();
 			auto buffers_begin = asio::buffers_begin(in_buffer);
-			header = string{ buffers_begin, buffers_begin + bytes_read };
+			header.assign(buffers_begin, buffers_begin + bytes_read);
 			m_istreambuf.consume(bytes_read);
 		}
 		return ec;
@@ -93,7 +93,7 @@ namespace wsgi_boost
 				size = m_bytes_left;
 			auto in_buffer = m_istreambuf.data();
 			auto buffers_begin = asio::buffers_begin(in_buffer);
-			data = string{ buffers_begin, buffers_begin + size };
+			data.assign(buffers_begin, buffers_begin + size);
 			m_istreambuf.consume(size);
 			m_bytes_left -= size;
 		}
