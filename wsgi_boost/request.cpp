@@ -35,15 +35,15 @@ namespace wsgi_boost
 			size_t pos = line.find(':');
 			if (pos != string::npos)
 			{
-				string header = alg::trim_copy(line.substr(0, pos));
+				string name = alg::trim_copy(line.substr(0, pos));
 				string value = alg::trim_copy(line.substr(pos + 1));
-				if (headers.find(header) == headers.end())
+				if (headers.find(name) == headers.end())
 				{
-					headers.emplace(header, value);
+					headers.emplace(name, value);
 				}
 				else
 				{
-					headers[header] += "," + value;
+					headers[name] += ", " + value;
 				}
 			}
 		}
