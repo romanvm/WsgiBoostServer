@@ -266,14 +266,12 @@ namespace wsgi_boost
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		for (const auto& header : m_request.headers)
 		{
-			if (alg::iequals(header.first, "Content-Length") || alg::iequals(header.first, "Content-Type"))
-				continue;
 			string env_header = header.first;
 			transform_header(env_header);
-			if (!m_environ.has_key(env_header))
-				m_environ[env_header] = header.second;
-			else
-				m_environ[env_header] += ", " + header.second;
+			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
+				continue;
+			// Headers are already checked for duplicates during parsing
+			m_environ[env_header] = header.second;
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
