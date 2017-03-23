@@ -37,10 +37,10 @@ namespace wsgi_boost
 		m_timer.cancel();
 		if (!ec)
 		{
-			vector<char> buffer(bytes_read);
-			istream is{ &m_istreambuf };
-			is.read(&buffer[0], bytes_read);
-			header = string(buffer.begin(), buffer.end() - 2);
+			auto in_buffer = m_istreambuf.data();
+			auto buffers_begin = asio::buffers_begin(in_buffer);
+			header = string{ buffers_begin, buffers_begin + bytes_read };
+			m_istreambuf.consume(bytes_read);
 		}
 		return ec;
 	}
