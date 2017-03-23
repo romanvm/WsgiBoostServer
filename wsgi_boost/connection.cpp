@@ -133,6 +133,16 @@ namespace wsgi_boost
 	}
 
 
+	void Connection::buffer_output(const string& data)
+	{
+		size_t length = data.length();
+		auto out_buffers = m_ostreambuf.prepare(length);
+		auto buffers_begin = asio::buffers_begin(out_buffers);
+		copy(data.begin(), data.end(), buffers_begin);
+		m_ostreambuf.commit(length);
+	}
+
+
 	sys::error_code Connection::flush(bool async)
 	{
 		sys::error_code ec;

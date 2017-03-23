@@ -10,7 +10,7 @@ namespace wsgi_boost
 {
 	void Response::buffer_header(const string& status, headers_type& headers)
 	{
-		m_connection << http_version << " " << status << "\r\n";
+		m_connection.buffer_output(http_version + " " + status + "\r\n");
 		headers.emplace_back("Server", m_server_name);
 		headers.emplace_back("Date", get_current_gmt_time());
 		if (keep_alive)
@@ -18,8 +18,8 @@ namespace wsgi_boost
 		else
 			headers.emplace_back("Connection", "close");
 		for (const auto& header : headers)
-			m_connection << header.first << ": " << header.second << "\r\n";
-		m_connection << "\r\n";
+			m_connection.buffer_output(header.first + ": " + header.second + "\r\n");
+		m_connection.buffer_output("\r\n");
 	}
 
 	sys::error_code Response::send_header(const string& status, headers_type& headers, bool async)
@@ -32,7 +32,7 @@ namespace wsgi_boost
 
 	sys::error_code Response::send_data(const string& data, bool async)
 	{
-		m_connection << data;
+		m_connection.buffer_output(data);
 		return m_connection.flush(async);
 	}
 

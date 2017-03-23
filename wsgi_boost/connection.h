@@ -23,7 +23,7 @@ namespace wsgi_boost
 	typedef std::shared_ptr<boost::asio::strand> strand_ptr;
 
 	// Represents a http connection to a client
-	class Connection : public std::ostream
+	class Connection
 	{
 	private:
 		socket_ptr m_socket;
@@ -45,7 +45,6 @@ namespace wsgi_boost
 
 		Connection(socket_ptr socket, boost::asio::io_service& io_service, strand_ptr strand,
 			boost::asio::yield_context yc, unsigned int header_timeout, unsigned int content_timeout) :
-			std::ostream(&m_ostreambuf),
 			m_socket{ socket }, m_timer{ io_service }, m_strand{ strand }, m_yc{ yc },
 			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
@@ -66,6 +65,10 @@ namespace wsgi_boost
 
 		// Get POST content length
 		long long post_content_length() const { return m_content_length; }
+
+		// Save data to the output buffer
+
+		void buffer_output(const std::string& data);
 
 		// Send all output data to the client
 		boost::system::error_code flush(bool async = false);
