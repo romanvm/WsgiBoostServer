@@ -86,16 +86,16 @@ namespace wsgi_boost
 		bool result = read_into_buffer(length, async);
 		if (result)
 		{
-			istream is{ &m_istreambuf };
 			long long size;
 			if (length > 0)
 				size = min(length, m_bytes_left);
 			else
 				size = m_bytes_left;
-			vector<char> buffer(size);
-			is.read(&buffer[0], size);
-			data = string(buffer.begin(), buffer.end());
-			m_bytes_left -= data.length();
+			auto in_buffer = m_istreambuf.data();
+			auto buffers_begin = asio::buffers_begin(in_buffer);
+			data = string{ buffers_begin, buffers_begin + size };
+			m_istreambuf.consume(size);
+			m_bytes_left -= size;
 		}
 		return result;
 	}
