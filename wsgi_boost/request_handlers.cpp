@@ -160,7 +160,7 @@ namespace wsgi_boost
 			while (bytes_left > 0 &&
 				((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
 			{
-				sys::error_code ec = m_response.send_data(string(&buffer[0], read_length), true);
+				sys::error_code ec = m_response.send_data(string{ &buffer[0], read_length }, true);
 				if (ec)
 					return;
 				bytes_left -= read_length;

@@ -197,7 +197,7 @@ namespace wsgi_boost
 		py::list listing;
 		string line;
 		long long total_length = 0;
-		while ((line = readline()) != "")
+		while (!(line = readline()).empty())
 		{
 #if PY_MAJOR_VERSION < 3
 			listing.append(line);
@@ -219,7 +219,7 @@ namespace wsgi_boost
 	std::string InputStream::next()
 	{
 		string line = readline();
-		if (line != "")
+		if (!line.empty())
 			return line;
 		else
 			throw StopIteration();
