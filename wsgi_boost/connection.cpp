@@ -186,11 +186,9 @@ namespace wsgi_boost
 
 	string InputStream::readline(long long size)
 	{
+		// size argument is ignored
 		GilRelease release_gil;
-		string line = m_connection.read_line(m_async);
-		if (size > 0 && line.length() > size)
-			line = line.substr(0, size);
-		return line;
+		return m_connection.read_line(m_async);
 	}
 
 
