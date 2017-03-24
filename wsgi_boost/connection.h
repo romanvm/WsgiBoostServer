@@ -117,7 +117,7 @@ namespace wsgi_boost
 
 	private:
 		// Convert C++ string to Python 3 bytes object
-		boost::python::object get_py3_bytes(const std::string& str) const;
+		boost::python::object string_to_bytes(const std::string& str) const;
 #endif
 	};
 }

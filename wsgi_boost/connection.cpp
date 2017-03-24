@@ -202,7 +202,7 @@ namespace wsgi_boost
 #if PY_MAJOR_VERSION < 3
 			listing.append(line);
 #else
-			listing.append(get_py3_bytes(line));
+			listing.append(string_to_bytes(line));
 #endif
 			if (sizehint >= 0)
 			{
@@ -226,13 +226,13 @@ namespace wsgi_boost
 	}
 
 #if PY_MAJOR_VERSION >= 3
-	boost::python::object InputStream::read_bytes(long long size) { return get_py3_bytes(read(size)); }
+	boost::python::object InputStream::read_bytes(long long size) { return string_to_bytes(read(size)); }
 
-	boost::python::object InputStream::read_byte_line(long long size) { return get_py3_bytes(readline(size)); }
+	boost::python::object InputStream::read_byte_line(long long size) { return string_to_bytes(readline(size)); }
 
-	boost::python::object InputStream::next_bytes() { return get_py3_bytes(next()); }
+	boost::python::object InputStream::next_bytes() { return string_to_bytes(next()); }
 
-	boost::python::object InputStream::get_py3_bytes(const std::string& str) const
+	boost::python::object InputStream::string_to_bytes(const std::string& str) const
 		{
 			return boost::python::object(boost::python::handle<>(PyBytes_FromString(str.c_str())));
 		}
