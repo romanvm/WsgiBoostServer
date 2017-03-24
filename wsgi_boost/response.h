@@ -46,7 +46,7 @@ namespace wsgi_boost
 		boost::system::error_code send_data(const std::string& data, bool async = false);
 
 		// Buffer data in the output stream but don't send them immediately
-		void buffer_data(const std::string& data) { m_connection.buffer_output(data); }
+		void buffer_data(const std::string& data);
 
 		// Send a plain text HTTP message to a client
 		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string(),
@@ -57,9 +57,9 @@ namespace wsgi_boost
 			const std::string& header, const std::string& text, bool async = false);
 
 		// Check if HTTP header has been sent
-		bool header_sent() { return m_header_sent;  }
+		bool header_sent();
 
 		// Clear output buffer
-		void clear() { m_connection.clear_output(); }
+		void clear();
 	};
 }

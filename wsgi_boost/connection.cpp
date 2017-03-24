@@ -164,6 +164,12 @@ namespace wsgi_boost
 		m_timer.cancel();
 		return ec;
 	}
+
+	long long Connection::post_content_length() const { return m_content_length; }
+
+	socket_ptr Connection::socket() const { return m_socket; }
+
+	void Connection::clear_output() { m_ostreambuf.consume(m_ostreambuf.size()); }
 #pragma endregion
 
 #pragma region InputStream
@@ -220,6 +226,19 @@ namespace wsgi_boost
 		else
 			throw StopIteration();
 	}
+
+#if PY_MAJOR_VERSION >= 3
+	boost::python::object InputStream::read_bytes(long long size = -1) { return get_py3_bytes(read(size)); }
+
+	boost::python::object InputStream::read_byte_line(long long size = -1) { return get_py3_bytes(readline(size)); }
+
+	boost::python::object InputStream::next_bytes() { return get_py3_bytes(next()); }
+
+	boost::python::object InputStream::get_py3_bytes(const std::string& str) const
+		{
+			return boost::python::object(boost::python::handle<>(PyBytes_FromString(str.c_str())));
+		}
+#endif
 
 #pragma endregion
 }

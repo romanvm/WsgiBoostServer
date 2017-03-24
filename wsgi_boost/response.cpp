@@ -64,4 +64,10 @@ namespace wsgi_boost
 			ec = send_data(html, async);
 		return ec;
 	}
+
+	void Response::buffer_data(const std::string& data) { m_connection.buffer_output(data); }
+
+	bool Response::header_sent() { return m_header_sent; }
+
+	void Response::clear() { m_connection.clear_output(); }
 }

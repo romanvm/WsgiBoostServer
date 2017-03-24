@@ -64,20 +64,19 @@ namespace wsgi_boost
 		void post_content_length(long long cl);
 
 		// Get POST content length
-		long long post_content_length() const { return m_content_length; }
+		long long post_content_length() const;
 
 		// Save data to the output buffer
-
 		void buffer_output(const std::string& data);
 
 		// Send all output data to the client
 		boost::system::error_code flush(bool async = false);
 
 		// Get asio socket pointer
-		socket_ptr socket() const { return m_socket; }
+		socket_ptr socket() const;
 
 		// Clear the output buffer
-		void clear_output() { m_ostreambuf.consume(m_ostreambuf.size()); }
+		void clear_output();
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input
@@ -108,20 +107,17 @@ namespace wsgi_boost
 		// In Python3 wsgi.input must return bytes
 
 		// Read data from input content
-		boost::python::object read_bytes(long long size = -1) { return get_py3_bytes(read(size)); }
+		boost::python::object read_bytes(long long size = -1);
 
 		// Read a line from input content
-		boost::python::object read_byte_line(long long size = -1) { return get_py3_bytes(readline(size)); }
+		boost::python::object read_byte_line(long long size = -1);
 
 		// Iterate the iterator
-		boost::python::object next_bytes() { return get_py3_bytes(next()); }
+		boost::python::object next_bytes();
 
 	private:
 		// Convert C++ string to Python 3 bytes object
-		boost::python::object get_py3_bytes(const std::string& str) const
-		{
-			return boost::python::object(boost::python::handle<>(PyBytes_FromString(str.c_str())));
-		}
+		boost::python::object get_py3_bytes(const std::string& str) const;
 #endif
 	};
 }
