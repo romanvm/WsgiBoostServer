@@ -9,12 +9,12 @@ namespace sys = boost::system;
 
 namespace wsgi_boost
 {
-	boost::system::error_code Request::parse_header()
+	parse_result Request::parse_header()
 	{
 		string header;
 		sys::error_code ec = m_connection.read_header(header);
 		if (ec)
-			return ec;
+			return CONN_ERROR;
 		istringstream iss{ header };
 		string line;
 		getline(iss, line);
@@ -22,7 +22,7 @@ namespace wsgi_boost
 		vector<string> parts;
 		alg::split(parts, line, alg::is_space(), alg::token_compress_on);
 		if (parts.size() != 3)
-			return sys::error_code(sys::errc::bad_message, sys::system_category());
+			return BAD_REQUEST;
 		method = parts[0];
 		path = parts[1];
 		http_version = parts[2];
@@ -38,13 +38,9 @@ namespace wsgi_boost
 				string name = alg::trim_copy(line.substr(0, pos));
 				string value = alg::trim_copy(line.substr(pos + 1));
 				if (headers.find(name) == headers.end())
-				{
 					headers.emplace(name, value);
-				}
 				else
-				{
 					headers[name] += ", " + value;
-				}
 			}
 		}
 		if (method == "POST" || method == "PUT" || method == "PATCH")
@@ -56,14 +52,14 @@ namespace wsgi_boost
 			}
 			catch (const logic_error&)
 			{
-				return sys::error_code(sys::errc::invalid_argument, sys::system_category());
+				return LENGTH_REQUIRED;
 			}
 		}
 		else
 		{
 			m_connection.post_content_length(-1);
 		}
-		return sys::error_code(sys::errc::success, sys::system_category());
+		return PARSE_OK;
 	}
 
 
@@ -77,7 +73,7 @@ namespace wsgi_boost
 	string Request::get_header(const string& header) const
 	{
 		auto it = headers.find(header);
-		return it != headers.end() ? it->second : string();
+		return it != headers.end() ? it->second : string{};
 	}
 
 	bool Request::keep_alive() const

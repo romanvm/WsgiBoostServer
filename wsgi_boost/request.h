@@ -17,8 +17,17 @@ License: MIT, see License.txt
 #include <cctype>
 #include <string>
 
+
+#define PARSE_OK 0
+#define CONN_ERROR 1
+#define BAD_REQUEST 2
+#define LENGTH_REQUIRED 3
+
+
 namespace wsgi_boost
 {
+	typedef int parse_result;
+
 	// 2 structs below are used for unordered_map with case-insensitive string keys
 
 	struct iequal_to
@@ -63,7 +72,7 @@ namespace wsgi_boost
 		explicit Request(Connection& connection) : m_connection{ connection } {}
 
 		// Parse HTTP request headers
-		boost::system::error_code parse_header();
+		parse_result parse_header();
 
 		// Check if a header contains a specific value
 		bool check_header(const std::string& header, const std::string& value) const;

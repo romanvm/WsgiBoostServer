@@ -12,6 +12,7 @@ License: MIT, see License.txt
 #include <array>
 #include <string>
 
+
 namespace wsgi_boost
 {
 	const std::string html_template =

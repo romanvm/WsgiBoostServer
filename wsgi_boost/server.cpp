@@ -68,19 +68,19 @@ namespace wsgi_boost
 			Connection connection{ socket, m_io_service, strand, yc, header_timeout, content_timeout };
 			Request request{ connection };
 			Response response{ connection };
-			sys::error_code ec = request.parse_header();
-			if (!ec)
+			parse_result res = request.parse_header();
+			if (!res)
 			{
 				check_static_route(request);
 				response.http_version = request.http_version;
 				response.keep_alive = request.keep_alive();
 				handle_request(request, response);
 			}
-			else if (ec == sys::errc::bad_message)
+			else if (res == BAD_REQUEST)
 			{
 				response.send_mesage("400 Bad Request", "", true);
 			}
-			else if (ec == sys::errc::invalid_argument)
+			else if (res == LENGTH_REQUIRED)
 			{
 				response.send_mesage("411 Length Required", "", true);
 			}
