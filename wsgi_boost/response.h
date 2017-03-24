@@ -8,7 +8,6 @@ License: MIT, see License.txt
 
 #include "connection.h"
 #include "utils.h"
-#include "version.h"
 
 #include <boost/system/error_code.hpp>
 

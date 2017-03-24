@@ -6,8 +6,6 @@ Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
 
-#include "version.h"
-
 #include <unordered_map>
 #include <array>
 #include <string>
