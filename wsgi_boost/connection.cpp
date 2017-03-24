@@ -226,9 +226,9 @@ namespace wsgi_boost
 	}
 
 #if PY_MAJOR_VERSION >= 3
-	boost::python::object InputStream::read_bytes(long long size = -1) { return get_py3_bytes(read(size)); }
+	boost::python::object InputStream::read_bytes(long long size) { return get_py3_bytes(read(size)); }
 
-	boost::python::object InputStream::read_byte_line(long long size = -1) { return get_py3_bytes(readline(size)); }
+	boost::python::object InputStream::read_byte_line(long long size) { return get_py3_bytes(readline(size)); }
 
 	boost::python::object InputStream::next_bytes() { return get_py3_bytes(next()); }
 
