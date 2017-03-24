@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.0.2
+
+- Various internal optimizations.
+
 1.0.1a
 
 - Fixed missing library dependency in ``setup.py`` build script.
