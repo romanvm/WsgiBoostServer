@@ -152,6 +152,8 @@ namespace wsgi_boost
 	string InputStream::read(long long size)
 	{
 		GilRelease release_gil;
+		if (m_send_100_continue)
+			send_100_continue();
 		string data;
 		if (m_connection.read_bytes(data, size))
 			return data;
@@ -163,6 +165,8 @@ namespace wsgi_boost
 	{
 		// size argument is ignored
 		GilRelease release_gil;
+		if (m_send_100_continue)
+			send_100_continue();
 		return m_connection.read_line();
 	}
 
@@ -198,6 +202,16 @@ namespace wsgi_boost
 			return line;
 		else
 			throw StopIteration();
+	}
+
+
+	void InputStream::send_100_continue()
+	{
+		m_connection.buffer_output("HTTP/1.1 100 Continue\r\n\r\n");
+		sys::error_code ec = m_connection.flush();
+		if (ec)
+			throw IOError();
+		m_send_100_continue = false;
 	}
 
 #if PY_MAJOR_VERSION >= 3

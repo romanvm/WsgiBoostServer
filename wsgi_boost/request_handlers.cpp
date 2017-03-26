@@ -275,7 +275,7 @@ namespace wsgi_boost
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
-		m_environ["wsgi.input"] = InputStream{ m_request.connection() };
+		m_environ["wsgi.input"] = InputStream{ m_request.connection(), m_request.get_header("Expect") == "100-continue" };
 		m_environ["wsgi.errors"] = ErrorStream{};
 		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
