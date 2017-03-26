@@ -108,6 +108,7 @@ else:
             'boost_date_time',
             'boost_thread',
             'z',
+            'bz2',
         ]
 
     extra_compile_args.append('-std=c++11')
