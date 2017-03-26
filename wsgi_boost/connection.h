@@ -20,7 +20,6 @@ License: MIT, see License.txt
 namespace wsgi_boost
 {
 	typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
-	typedef std::shared_ptr<boost::asio::strand> strand_ptr;
 
 	// Represents a http connection to a client
 	class Connection
@@ -30,7 +29,6 @@ namespace wsgi_boost
 		boost::asio::streambuf m_istreambuf;
 		boost::asio::streambuf m_ostreambuf;
 		boost::asio::deadline_timer m_timer;
-		strand_ptr m_strand;
 		unsigned int m_header_timeout;
 		unsigned int m_content_timeout;
 		long long m_bytes_left = -1;
@@ -43,22 +41,22 @@ namespace wsgi_boost
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
 
-		Connection(socket_ptr socket, boost::asio::io_service& io_service, strand_ptr strand,
+		Connection(socket_ptr socket, std::shared_ptr<boost::asio::io_service> io_service,
 			boost::asio::yield_context yc, unsigned int header_timeout, unsigned int content_timeout) :
-			m_socket{ socket }, m_timer{ io_service }, m_strand{ strand }, m_yc{ yc },
+			m_socket{ socket }, m_timer{ *io_service }, m_yc{ yc },
 			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
 		// Read HTTP header
 		boost::system::error_code read_header(std::string& header);
 
 		// Read data from a socket into the input buffer
-		bool read_into_buffer(long long length = -1, bool async = false);
+		bool read_into_buffer(long long length = -1);
 
 		// Read line including a new line charachter
-		std::string read_line(bool async = false);
+		std::string read_line();
 
 		// Read a specified number of bytes or all data left
-		bool read_bytes(std::string& data, long long length = -1, bool async = false);
+		bool read_bytes(std::string& data, long long length = -1);
 
 		// Set content length to control reading POST data
 		void post_content_length(long long cl);
@@ -70,7 +68,7 @@ namespace wsgi_boost
 		void buffer_output(const std::string& data);
 
 		// Send all output data to the client
-		boost::system::error_code flush(bool async = false);
+		boost::system::error_code flush();
 
 		// Get asio socket pointer
 		socket_ptr socket() const;
@@ -84,10 +82,9 @@ namespace wsgi_boost
 	{
 	private:
 		Connection& m_connection;
-		bool m_async;
 
 	public:
-		InputStream(Connection& conn, bool async) : m_connection{ conn }, m_async{ async } {}
+		InputStream(Connection& conn) : m_connection{ conn } {}
 		// Read data from input content
 		std::string read(long long size = -1);
 

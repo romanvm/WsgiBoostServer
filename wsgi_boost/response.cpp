@@ -8,7 +8,7 @@ namespace sys = boost::system;
 
 namespace wsgi_boost
 {
-	void Response::buffer_header(const string& status, headers_type& headers)
+	sys::error_code Response::send_header(const string& status, headers_type& headers)
 	{
 		m_connection.buffer_output(http_version + " " + status + "\r\n");
 		headers.emplace_back("Server", m_server_name);
@@ -20,38 +20,33 @@ namespace wsgi_boost
 		for (const auto& header : headers)
 			m_connection.buffer_output(header.first + ": " + header.second + "\r\n");
 		m_connection.buffer_output("\r\n");
-	}
-
-	sys::error_code Response::send_header(const string& status, headers_type& headers, bool async)
-	{
-		buffer_header(status, headers);
 		m_header_sent = true;
-		return m_connection.flush(async);
+		return m_connection.flush();
 	}
 
 
-	sys::error_code Response::send_data(const string& data, bool async)
+	sys::error_code Response::send_data(const string& data)
 	{
 		m_connection.buffer_output(data);
-		return m_connection.flush(async);
+		return m_connection.flush();
 	}
 
 
-	sys::error_code Response::send_mesage(const string& status, const string& message, bool async)
+	sys::error_code Response::send_mesage(const string& status, const string& message)
 	{
 		headers_type headers;
 		headers.emplace_back("Content-Length", to_string(message.length()));
 		if (message.length() > 0)
 			headers.emplace_back("Content-Type", "text/plain");
-		sys::error_code ec = send_header(status, headers, async);
+		sys::error_code ec = send_header(status, headers);
 		if (!ec)
-			ec = send_data(message, async);
+			ec = send_data(message);
 		return ec;
 	}
 
 
 	sys::error_code Response::send_html(const string& status, const string& title,
-		const string& header, const string& text, bool async)
+		const string& header, const string& text)
 	{
 		boost::format tpl{ html_template };
 		tpl % title % header % text;
@@ -59,13 +54,11 @@ namespace wsgi_boost
 		headers_type headers;
 		headers.emplace_back("Content-Type", "text/html");
 		headers.emplace_back("Content-Length", to_string(html.length()));
-		sys::error_code ec = send_header(status, headers, async);
+		sys::error_code ec = send_header(status, headers);
 		if (!ec)
-			ec = send_data(html, async);
+			ec = send_data(html);
 		return ec;
 	}
-
-	void Response::buffer_data(const std::string& data) { m_connection.buffer_output(data); }
 
 	bool Response::header_sent() { return m_header_sent; }
 

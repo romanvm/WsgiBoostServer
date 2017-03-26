@@ -7,6 +7,7 @@ License: MIT, see License.txt
 */
 
 #include "request_handlers.h"
+#include "io_service_pool.h"
 
 #include <thread>
 #include <string>
@@ -19,10 +20,8 @@ namespace wsgi_boost
 	class HttpServer
 	{
 	private:
-		boost::asio::io_service m_io_service;
+		IoServicePool m_io_service_pool;
 		boost::asio::ip::tcp::acceptor m_acceptor;
-		std::vector<std::thread> m_threads;
-		unsigned int m_num_threads;
 		std::string m_ip_address;
 		unsigned short m_port;
 		boost::asio::signal_set m_signals;
@@ -31,7 +30,7 @@ namespace wsgi_boost
 		std::atomic_bool m_is_running;
 
 		void accept();
-		void process_request(socket_ptr socket, strand_ptr strand);
+		void process_request(socket_ptr socket, io_service_ptr io_service);
 		void check_static_route(Request& request);
 		void handle_request(Request& request, Response& response);
 		void process_error(Response& response, const std::exception& ex, const std::string& error_msg,

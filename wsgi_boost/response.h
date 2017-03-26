@@ -35,25 +35,18 @@ namespace wsgi_boost
 
 		explicit Response(Connection& connection) : m_connection{ connection } {}
 
-		// Buffer HTTP header (status code + headers)
-		void buffer_header(const std::string& status, headers_type& headers);
-
 		// Send HTTP header (status code + headers)
-		boost::system::error_code send_header(const std::string& status, headers_type& headers, bool async = false);
+		boost::system::error_code send_header(const std::string& status, headers_type& headers);
 
 		// Send data to the client
-		boost::system::error_code send_data(const std::string& data, bool async = false);
-
-		// Buffer data in the output stream but don't send them immediately
-		void buffer_data(const std::string& data);
+		boost::system::error_code send_data(const std::string& data);
 
 		// Send a plain text HTTP message to a client
-		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string(),
-			bool async = false);
+		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string());
 
 		// Send a html HTTP message to a client
 		boost::system::error_code send_html(const std::string& status, const std::string& title,
-			const std::string& header, const std::string& text, bool async = false);
+			const std::string& header, const std::string& text);
 
 		// Check if HTTP header has been sent
 		bool header_sent();

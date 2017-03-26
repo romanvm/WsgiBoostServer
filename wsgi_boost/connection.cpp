@@ -18,14 +18,14 @@ namespace wsgi_boost
 	void Connection::set_timeout(unsigned int timeout)
 	{
 		m_timer.expires_from_now(boost::posix_time::seconds(timeout));
-		m_timer.async_wait(m_strand->wrap([this](const sys::error_code& ec)
+		m_timer.async_wait([this](const sys::error_code& ec)
 		{
 			if (ec != asio::error::operation_aborted)
 			{
 				m_socket->shutdown(asio::ip::tcp::socket::shutdown_both);
 				m_socket->close();
 			}
-		}));
+		});
 	}
 
 
@@ -46,7 +46,7 @@ namespace wsgi_boost
 	}
 
 
-	bool Connection::read_into_buffer(long long length, bool async)
+	bool Connection::read_into_buffer(long long length)
 	{
 		if (m_bytes_left <= 0)
 			return false;
@@ -61,19 +61,7 @@ namespace wsgi_boost
 		sys::error_code ec;
 		size_t bytes_read;
 		set_timeout(m_content_timeout);
-		if (async)
-		{
-			// Initial POST buffering is done without GIL so switching threads does not matter.
-			// In single-threaded mode read operations are also does not asyncronously.
-			bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
-		}
-		else
-		{
-			// With multiple threads for receivind POST content I'm using a syncronous read
-			// because a stackful coroutine can be resumed
-			// in a different thread while the GIL is held which results in Python crash.
-			bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
-		}
+		bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
 		m_timer.cancel();
 		if (!ec || (ec && bytes_read > 0))			
 			return true;
@@ -81,9 +69,9 @@ namespace wsgi_boost
 	}
 
 
-	bool Connection::read_bytes(string& data, long long length, bool async)
+	bool Connection::read_bytes(string& data, long long length)
 	{
-		bool result = read_into_buffer(length, async);
+		bool result = read_into_buffer(length);
 		if (result)
 		{
 			long long size;
@@ -101,7 +89,7 @@ namespace wsgi_boost
 	}
 
 
-	string Connection::read_line(bool async)
+	string Connection::read_line()
 	{
 		istream is{ &m_istreambuf };
 		string line = string();
@@ -117,7 +105,7 @@ namespace wsgi_boost
 				--m_bytes_left;
 				break;
 			}
-			if (read_into_buffer(min(128LL, m_bytes_left), async))
+			if (read_into_buffer(min(128LL, m_bytes_left)))
 				is.clear();
 			else
 				break;
@@ -143,24 +131,11 @@ namespace wsgi_boost
 	}
 
 
-	sys::error_code Connection::flush(bool async)
+	sys::error_code Connection::flush()
 	{
 		sys::error_code ec;
 		set_timeout(m_content_timeout);
-		if (async)
-		{
-			// For sending static HTTP responses I'm using async write because static request handlers
-			// operate without the GIL so switching threads does not matter.
-			// With a singlie thread data is also sent to a client asyncronously.
-			asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
-		}
-		else
-		{
-			// With multiple threads for sending WSGI HTTP responses I'm using a syncronous write
-			// because a stackful coroutine can be resumed
-			// in a different thread while the GIL is held which results in Python crash.
-			asio::write(*m_socket, m_ostreambuf, ec);
-		}
+		asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
 		m_timer.cancel();
 		return ec;
 	}
@@ -178,7 +153,7 @@ namespace wsgi_boost
 	{
 		GilRelease release_gil;
 		string data;
-		if (m_connection.read_bytes(data, size, m_async))
+		if (m_connection.read_bytes(data, size))
 			return data;
 		return "";
 	}
@@ -188,7 +163,7 @@ namespace wsgi_boost
 	{
 		// size argument is ignored
 		GilRelease release_gil;
-		return m_connection.read_line(m_async);
+		return m_connection.read_line();
 	}
 
 

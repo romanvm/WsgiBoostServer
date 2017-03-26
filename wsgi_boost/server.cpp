@@ -16,21 +16,9 @@ namespace py = boost::python;
 namespace wsgi_boost
 {
 	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int threads) :
-		m_ip_address{ ip_address }, m_port{ port },
-		m_acceptor{ m_io_service }, m_signals{ m_io_service }
+		m_ip_address{ ip_address }, m_port{ port }, m_io_service_pool{ threads },
+		m_acceptor{ *(m_io_service_pool.get_io_service()) }, m_signals{ *(m_io_service_pool.get_io_service()) }
 	{
-		if (threads > 0)
-		{
-			m_num_threads = threads;
-		}
-		else
-		{
-			unsigned int threads_hint = thread::hardware_concurrency();
-			if (threads_hint > 0)
-				m_num_threads = threads_hint;
-			else
-				m_num_threads = 1;
-		}
 		m_is_running.store(false);
 		m_signals.add(SIGINT);
 		m_signals.add(SIGTERM);
@@ -42,30 +30,30 @@ namespace wsgi_boost
 
 	void HttpServer::accept()
 	{
-		socket_ptr socket = make_shared<asio::ip::tcp::socket>(asio::ip::tcp::socket(m_io_service));
-		m_acceptor.async_accept(*socket, [this, socket](const boost::system::error_code& ec)
+		io_service_ptr io_service = m_io_service_pool.get_io_service();
+		socket_ptr socket = make_shared<asio::ip::tcp::socket>(asio::ip::tcp::socket(*io_service));
+		m_acceptor.async_accept(*socket, [this, io_service, socket](const boost::system::error_code& ec)
 		{
 			accept();
 			if (!ec)
 			{
 				socket->set_option(asio::ip::tcp::no_delay(true));
-				strand_ptr strand = make_shared<asio::strand>(asio::strand{ m_io_service });
-				process_request(socket, strand);
+				process_request(socket, io_service);
 			}
 		});
 	}
 
 
-	void HttpServer::process_request(socket_ptr socket, strand_ptr strand)
+	void HttpServer::process_request(socket_ptr socket, io_service_ptr io_service)
 	{
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
 		// the number of server threads.
 		// Without the coroutine when all threads are busy the next request
 		// hangs in limbo and causes io_service to crash.
-		asio::spawn(*strand, [this, socket, strand](asio::yield_context yc)
+		asio::spawn(*io_service, [this, socket, io_service](asio::yield_context yc)
 		{
-			Connection connection{ socket, m_io_service, strand, yc, header_timeout, content_timeout };
+			Connection connection{ socket, io_service, yc, header_timeout, content_timeout };
 			Request request{ connection };
 			Response response{ connection };
 			parse_result res = request.parse_header();
@@ -78,11 +66,11 @@ namespace wsgi_boost
 			}
 			else if (res == BAD_REQUEST)
 			{
-				response.send_mesage("400 Bad Request", "", true);
+				response.send_mesage("400 Bad Request", "");
 			}
 			else if (res == LENGTH_REQUIRED)
 			{
-				response.send_mesage("411 Length Required", "", true);
+				response.send_mesage("411 Length Required", "");
 			}
 			else
 			{
@@ -90,8 +78,8 @@ namespace wsgi_boost
 			}
 			// Send all remaining data from the output buffer and re-use the socket
 			// for the next request if this is a keep-alive session.
-			if (!connection.flush(true) && response.keep_alive)
-				process_request(socket, strand);
+			if (response.keep_alive)
+				process_request(socket, io_service);
 		});
 	}
 
@@ -139,8 +127,8 @@ namespace wsgi_boost
 				sys::error_code ec;
 				if (request.check_header("Expect", "100-continue"))
 					// Send only plain status string with no headers
-					ec = response.send_data("HTTP/1.1 100 Continue\r\n\r\n", true);
-				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 131072LL), true))
+					ec = response.send_data("HTTP/1.1 100 Continue\r\n\r\n");
+				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 131072LL)))
 				{
 					cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
 					response.keep_alive = false;
@@ -148,7 +136,7 @@ namespace wsgi_boost
 				}
 			}
 			GilAcquire acquire_gil;
-			WsgiRequestHandler handler{ request, response, m_app , (m_num_threads == 1)};
+			WsgiRequestHandler handler{ request, response, m_app };
 			try
 			{
 				handler.handle();
@@ -197,14 +185,13 @@ namespace wsgi_boost
 		if (!is_running())
 		{
 			GilRelease release_gil;
-			cout << "WsgiBoostHttp server starting with " << m_num_threads << " thread(s).\n";
+			cout << "WsgiBoostHttp server starting with " << m_io_service_pool.pool_size << " thread(s).\n";
 			cout << "Press Ctrl+C to stop it.\n";
-			if (m_io_service.stopped())
-				m_io_service.reset();
+			m_io_service_pool.reset();
 			asio::ip::tcp::endpoint endpoint;
 			if (m_ip_address != "")
 			{
-				asio::ip::tcp::resolver resolver(m_io_service);
+				asio::ip::tcp::resolver resolver(*(m_io_service_pool.get_io_service()));
 				try
 				{
 					endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
@@ -225,21 +212,9 @@ namespace wsgi_boost
 			if (host_name == string())
 				host_name = asio::ip::host_name();
 			accept();
-			m_threads.clear();
-			for (unsigned int i = 1; i < m_num_threads; ++i)
-			{
-				m_threads.emplace_back([this]()
-				{
-					m_io_service.run();
-				});
-			}
 			m_signals.async_wait([this](sys::error_code, int) { stop(); });
 			m_is_running.store(true);
-			m_io_service.run();
-			for (auto& t : m_threads)
-			{
-				t.join();
-			}
+			m_io_service_pool.run();
 			cout << "WsgiBoostHttp server stopped.\n";
 			m_is_running.store(false);
 		}
@@ -255,7 +230,7 @@ namespace wsgi_boost
 		if (is_running())
 		{
 			m_acceptor.close();
-			m_io_service.stop();
+			m_io_service_pool.stop();
 			m_signals.cancel();
 		}
 		else

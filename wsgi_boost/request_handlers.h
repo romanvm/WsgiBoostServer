@@ -62,7 +62,6 @@ namespace wsgi_boost
 		boost::python::dict m_environ;
 		boost::python::object m_write;
 		boost::python::object m_start_response;
-		bool m_async;
 		long long m_content_length = -1;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
@@ -73,7 +72,7 @@ namespace wsgi_boost
 		void send_iterable(Iterable& iterable);
 
 	public:
-		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app, bool async);
+		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app);
 
 		// Handle request
 		void handle();

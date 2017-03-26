@@ -35,12 +35,12 @@ namespace wsgi_boost
 			m_response.send_html("500 Internal Server Error",
 				"Error 500",
 				"Internal Server Error",
-				"Invalid static content directory is configured.", true);
+				"Invalid static content directory is configured.");
 			return;
 		}
 		if (m_request.method != "GET" && m_request.method != "HEAD")
 		{
-			m_response.send_mesage("405 Method Not Allowed", "", true);
+			m_response.send_mesage("405 Method Not Allowed", "");
 			return;
 		}
 		open_file(content_dir_path);
@@ -79,7 +79,7 @@ namespace wsgi_boost
 						if (m_request.get_header("If-None-Match") == etag || (ims != "" && header_to_time(ims) >= last_modified))
 						{
 							out_headers.emplace_back("Content-Length", "0");
-							m_response.send_header("304 Not Modified", out_headers, true);
+							m_response.send_header("304 Not Modified", out_headers);
 							ifs.close();
 							return;
 						}
@@ -108,7 +108,7 @@ namespace wsgi_boost
 		}
 		m_response.send_html("404 Not Found",
 			"Error 404", "Not Found",
-			"The requested path <code>" + m_request.path + "</code> was not found on this server.", true);
+			"The requested path <code>" + m_request.path + "</code> was not found on this server.");
 	}
 
 
@@ -132,20 +132,20 @@ namespace wsgi_boost
 				range.second = to_string(end_pos);
 			if (start_pos > end_pos || start_pos >= length || end_pos >= length)
 			{
-				m_response.send_mesage("416 Range Not Satisfiable", "", true);
+				m_response.send_mesage("416 Range Not Satisfiable", "");
 				return;
 			}
 			else
 			{
 				headers.emplace_back("Content-Length", to_string(end_pos - start_pos));
 				headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
-				m_response.send_header("206 Partial Content", headers, true);
+				m_response.send_header("206 Partial Content", headers);
 			}
 		}
 		else
 		{
 			headers.emplace_back("Content-Length", to_string(length));
-			m_response.send_header("200 OK", headers, true);
+			m_response.send_header("200 OK", headers);
 		}
 		if (m_request.method == "GET")
 		{
@@ -160,7 +160,7 @@ namespace wsgi_boost
 			while (bytes_left > 0 &&
 				((read_length = content_stream.read(&buffer[0], min(bytes_left, buffer_size)).gcount()) > 0))
 			{
-				sys::error_code ec = m_response.send_data(string{ &buffer[0], read_length }, true);
+				sys::error_code ec = m_response.send_data(string{ &buffer[0], read_length });
 				if (ec)
 					return;
 				bytes_left -= read_length;
@@ -172,8 +172,8 @@ namespace wsgi_boost
 
 #pragma region WsgiRequestHandler
 
-	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app, bool async) :
-		BaseRequestHandler(request, response), m_app{ app }, m_async{ async }
+	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app) :
+		BaseRequestHandler(request, response), m_app{ app }
 	{
 		m_write = create_write();
 		m_start_response = create_start_response();	
@@ -187,7 +187,7 @@ namespace wsgi_boost
 			{
 				string cpp_data = py::extract<string>(data);
 				GilRelease release_gil;
-				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, this->m_async);
+				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers);
 				if (ec)
 					return;
 				size_t data_len = cpp_data.length();
@@ -195,7 +195,7 @@ namespace wsgi_boost
 				{
 					if (this->m_content_length == -1)
 						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
-					this->m_response.buffer_data(cpp_data);
+					this->m_response.send_data(cpp_data);
 				}
 			}
 		};
@@ -275,9 +275,9 @@ namespace wsgi_boost
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
 		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
-		m_environ["wsgi.input"] = InputStream{ m_request.connection(), m_async };
+		m_environ["wsgi.input"] = InputStream{ m_request.connection() };
 		m_environ["wsgi.errors"] = ErrorStream{};
-		m_environ["wsgi.multithread"] = !m_async;
+		m_environ["wsgi.multithread"] = true;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
 	}
@@ -301,8 +301,6 @@ namespace wsgi_boost
 	void WsgiRequestHandler::send_iterable(Iterable& iterable)
 	{
 		py::object iterator = iterable.attr("__iter__")();
-		bool transfer_later = iterable.len() == 1 || m_content_length <= 131072LL;
-		bool header_buffered = false;
 		while (true)
 		{
 			try
@@ -314,14 +312,12 @@ namespace wsgi_boost
 #endif
 				GilRelease release_gil;
 				sys::error_code ec;
-				if (!header_buffered)
+				if (!m_response.header_sent())
 				{
-					if (transfer_later)
-						m_response.buffer_header(m_status, m_out_headers);
-					else if(m_response.send_header(m_status, m_out_headers, m_async))
+					ec = m_response.send_header(m_status, m_out_headers);
+					if (ec)
 						break;
-					header_buffered = true;
-				}
+				}					
 				if (m_content_length == -1)
 				{
 					size_t length = chunk.length();
@@ -330,19 +326,9 @@ namespace wsgi_boost
 						continue;
 					chunk = hex(length) + "\r\n" + chunk + "\r\n";
 				}
-				if (transfer_later)
-				{
-					// If the WSGI app has returned an iterable with only one item,
-					// which is a typical case when a app returns a rendered template or a JSON response,
-					// or the total length of the response content is less than 128KB
-					// we do not transfer data immediately but buffer them to transfer later
-					// asyncronously otside GIL.
-					m_response.buffer_data(chunk);
-				}
-				else if (m_response.send_data(chunk, m_async))
-				{
+				ec = m_response.send_data(chunk);
+				if (ec)
 					break;
-				}
 			}
 			catch (const py::error_already_set&)
 			{
@@ -350,7 +336,7 @@ namespace wsgi_boost
 				{
 					PyErr_Clear();
 					if (m_content_length == -1)
-						m_response.buffer_data("0\r\n\r\n");
+						m_response.send_data("0\r\n\r\n");
 					break;
 				}
 				throw;
