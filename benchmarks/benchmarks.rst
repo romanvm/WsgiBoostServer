@@ -35,12 +35,9 @@ That is, Apache Benchmark was making 10,000 requests with 10 requests in paralle
 
 Benchmark Results
 =================
+
 WsgiBoostServer (1 thread)
 --------------------------
-
-With 1 thread WsgiBoostServer works in fully asynchronous mode using
-`Boost.Asio stackful coroutines`_, so even with a single thread
-it is still very fast.
 
 ::
 
@@ -82,9 +79,6 @@ it is still very fast.
 
 WsgiBoostServer (8 threads)
 ---------------------------
-
-With multiple threads WsgiBoostServer sends data from a WSGI application
-in synchronous mode because of Python `Global Interpreter Lock`_ limitations.
 
 ::
 
