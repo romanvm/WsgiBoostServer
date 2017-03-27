@@ -67,9 +67,9 @@ namespace wsgi_boost
 		size_t pos = path.find("?");
 		if (pos != std::string::npos)
 		{
-			return std::pair<std::string, std::string>{path.substr(0, pos), path.substr(pos + 1)};
+			return std::pair<std::string, std::string>{ path.substr(0, pos), path.substr(pos + 1) };
 		}
-		return std::pair<std::string, std::string>(path, "");
+		return std::pair<std::string, std::string>{ path, "" };
 	}
 
 
@@ -78,10 +78,10 @@ namespace wsgi_boost
 	{
 		for (auto& ch : header)
 		{
+			ch = std::toupper(ch);
 			if (ch == '-')
 				ch = '_';
 		}
-		boost::to_upper(header);
 		header = "HTTP_" + header;
 	}
 
