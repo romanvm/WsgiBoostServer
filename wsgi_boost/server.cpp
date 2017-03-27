@@ -116,7 +116,7 @@ namespace wsgi_boost
 
 	void HttpServer::handle_request(Request& request, Response& response)
 	{
-		if (request.content_dir == string())
+		if (request.content_dir.empty())
 		{
 			GilAcquire acquire_gil;
 			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port };
