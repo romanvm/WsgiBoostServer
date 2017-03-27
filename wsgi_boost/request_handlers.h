@@ -67,6 +67,7 @@ namespace wsgi_boost
 		std::string& m_url_scheme;
 		std::string& m_host_name;
 		unsigned short m_local_port;
+		bool m_multithread;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
 		boost::python::object create_write();
@@ -77,7 +78,7 @@ namespace wsgi_boost
 
 	public:
 		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app,
-			std::string& scheme, std::string& host, unsigned short local_port);
+			std::string& scheme, std::string& host, unsigned short local_port, bool multithread);
 
 		// Handle request
 		void handle();

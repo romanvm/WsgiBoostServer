@@ -133,7 +133,7 @@ namespace wsgi_boost
 				}
 			}
 			GilAcquire acquire_gil;
-			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port };
+			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port, m_io_service_pool.pool_size > 1 };
 			try
 			{
 				handler.handle();

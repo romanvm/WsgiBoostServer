@@ -173,9 +173,10 @@ namespace wsgi_boost
 #pragma region WsgiRequestHandler
 
 	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app,
-		string& scheme, string& host, unsigned short local_port) :
+		string& scheme, string& host, unsigned short local_port, bool multithread) :
 		BaseRequestHandler(request, response), m_app{ app },
-		m_url_scheme{ scheme }, m_host_name{ host }, m_local_port{ local_port }
+		m_url_scheme{ scheme }, m_host_name{ host },
+		m_local_port{ local_port }, m_multithread{ multithread }
 	{
 		m_write = create_write();
 		m_start_response = create_start_response();	
@@ -281,7 +282,7 @@ namespace wsgi_boost
 		m_environ["wsgi.url_scheme"] = m_url_scheme;
 		m_environ["wsgi.input"] = InputStream{ m_request.connection() };
 		m_environ["wsgi.errors"] = ErrorStream{};
-		m_environ["wsgi.multithread"] = true;
+		m_environ["wsgi.multithread"] = m_multithread;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
 	}
