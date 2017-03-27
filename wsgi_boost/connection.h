@@ -82,12 +82,10 @@ namespace wsgi_boost
 	{
 	private:
 		Connection& m_connection;
-		bool m_send_100_continue;
-
-		void send_100_continue();
 
 	public:
-		InputStream(Connection& conn, bool ex_100_cont) : m_connection{ conn }, m_send_100_continue{ ex_100_cont } {}
+		explicit InputStream(Connection& conn) : m_connection{ conn } {}
+
 		// Read data from input content
 		std::string read(long long size = -1);
 

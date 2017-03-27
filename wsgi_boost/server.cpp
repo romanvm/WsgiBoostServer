@@ -118,6 +118,20 @@ namespace wsgi_boost
 	{
 		if (request.content_dir.empty())
 		{
+			// Try to buffer the first 128KB of request data
+			if (request.connection().post_content_length() > 0)
+			{
+				sys::error_code ec;
+				if (request.check_header("Expect", "100-continue"))
+					// Send only plain status string with no headers
+					ec = response.send_data("HTTP/1.1 100 Continue\r\n\r\n");
+				if (ec || !request.connection().read_into_buffer(min(request.connection().post_content_length(), 131072LL), true))
+				{
+					cerr << "Unable to buffer POST/PUT/PATCH data from " << request.remote_address() << ':' << request.remote_port() << '\n';
+					response.keep_alive = false;
+					return;
+				}
+			}
 			GilAcquire acquire_gil;
 			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port };
 			try
