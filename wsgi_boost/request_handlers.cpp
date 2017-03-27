@@ -189,7 +189,8 @@ namespace wsgi_boost
 			{
 				string cpp_data = py::extract<string>(data);
 				GilRelease release_gil;
-				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers);
+				// Read/write operations executed from inside Python must be syncronous!
+				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, false);
 				if (ec)
 					return;
 				size_t data_len = cpp_data.length();
@@ -197,7 +198,8 @@ namespace wsgi_boost
 				{
 					if (this->m_content_length == -1)
 						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
-					this->m_response.send_data(cpp_data);
+					// Read/write operations executed from inside Python must be syncronous!
+					this->m_response.send_data(cpp_data, false);
 				}
 			}
 		};

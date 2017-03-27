@@ -46,7 +46,7 @@ namespace wsgi_boost
 	}
 
 
-	bool Connection::read_into_buffer(long long length)
+	bool Connection::read_into_buffer(long long length, bool async)
 	{
 		if (m_bytes_left <= 0)
 			return false;
@@ -61,7 +61,11 @@ namespace wsgi_boost
 		sys::error_code ec;
 		size_t bytes_read;
 		set_timeout(m_content_timeout);
-		bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
+		if (async)
+			bytes_read = asio::async_read(*m_socket, m_istreambuf, asio::transfer_exactly(size), m_yc[ec]);
+		else
+			// Read/write operations executed from inside Python must be syncronous!
+			bytes_read = asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
 		m_timer.cancel();
 		if (!ec || (ec && bytes_read > 0))			
 			return true;
@@ -131,11 +135,15 @@ namespace wsgi_boost
 	}
 
 
-	sys::error_code Connection::flush()
+	sys::error_code Connection::flush(bool async)
 	{
 		sys::error_code ec;
 		set_timeout(m_content_timeout);
-		asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
+		if (async)
+			asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
+		else
+			// Read/write operations executed from inside Python must be syncronous!
+			asio::write(*m_socket, m_ostreambuf, ec);
 		m_timer.cancel();
 		return ec;
 	}

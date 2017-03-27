@@ -36,10 +36,10 @@ namespace wsgi_boost
 		explicit Response(Connection& connection) : m_connection{ connection } {}
 
 		// Send HTTP header (status code + headers)
-		boost::system::error_code send_header(const std::string& status, headers_type& headers);
+		boost::system::error_code send_header(const std::string& status, headers_type& headers, bool async = true);
 
 		// Send data to the client
-		boost::system::error_code send_data(const std::string& data);
+		boost::system::error_code send_data(const std::string& data, bool async = true);
 
 		// Send a plain text HTTP message to a client
 		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string());
