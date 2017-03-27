@@ -85,7 +85,7 @@ namespace wsgi_boost
 						}
 						string ext = path.extension().string();
 						out_headers.emplace_back("Content-Type", get_mime(ext));
-						if (m_request.use_gzip && m_request.check_header("Accept-Encoding", "gzip") && is_compressable(ext))
+						if (m_use_gzip && m_request.check_header("Accept-Encoding", "gzip") && is_compressable(ext))
 						{
 							boost::iostreams::filtering_istream gzstream;
 							gzstream.push(boost::iostreams::gzip_compressor());
@@ -172,8 +172,10 @@ namespace wsgi_boost
 
 #pragma region WsgiRequestHandler
 
-	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app) :
-		BaseRequestHandler(request, response), m_app{ app }
+	WsgiRequestHandler::WsgiRequestHandler(Request& request, Response& response, py::object& app,
+		string& scheme, string& host, unsigned short local_port) :
+		BaseRequestHandler(request, response), m_app{ app },
+		m_url_scheme{ scheme }, m_host_name{ host }, m_local_port{ local_port }
 	{
 		m_write = create_write();
 		m_start_response = create_start_response();	
@@ -259,8 +261,8 @@ namespace wsgi_boost
 		m_environ["QUERY_STRING"] = path_and_query.second;
 		m_environ["CONTENT_TYPE"] = m_request.get_header("Content-Type");
 		m_environ["CONTENT_LENGTH"] = m_request.get_header("Content-Length");
-		m_environ["SERVER_NAME"] = m_request.host_name;
-		m_environ["SERVER_PORT"] = to_string(m_request.local_endpoint_port);
+		m_environ["SERVER_NAME"] = m_host_name;
+		m_environ["SERVER_PORT"] = to_string(m_local_port);
 		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
 		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
@@ -274,7 +276,7 @@ namespace wsgi_boost
 			m_environ[env_header] = header.second;
 		}
 		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
-		m_environ["wsgi.url_scheme"] = m_request.url_scheme;
+		m_environ["wsgi.url_scheme"] = m_url_scheme;
 		m_environ["wsgi.input"] = InputStream{ m_request.connection(), m_request.get_header("Expect") == "100-continue" };
 		m_environ["wsgi.errors"] = ErrorStream{};
 		m_environ["wsgi.multithread"] = true;

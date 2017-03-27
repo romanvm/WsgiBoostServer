@@ -38,8 +38,8 @@ namespace wsgi_boost
 	class StaticRequestHandler : public BaseRequestHandler
 	{
 	public:
-		StaticRequestHandler(Request& request, Response& response, std::string& cache_control) :
-			m_cache_control { cache_control },
+		StaticRequestHandler(Request& request, Response& response, std::string& cache_control, bool use_gzip) :
+			m_cache_control { cache_control }, m_use_gzip{ use_gzip },
 			BaseRequestHandler(request, response) {}
 
 		// Handle request
@@ -47,6 +47,7 @@ namespace wsgi_boost
 
 	private:
 		std::string& m_cache_control;
+		bool m_use_gzip;
 
 		void open_file(const boost::filesystem::path& content_dir_path);
 		void send_file(std::istream& content_stream, headers_type& headers);
@@ -63,6 +64,9 @@ namespace wsgi_boost
 		boost::python::object m_write;
 		boost::python::object m_start_response;
 		long long m_content_length = -1;
+		std::string& m_url_scheme;
+		std::string& m_host_name;
+		unsigned short m_local_port;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
 		boost::python::object create_write();
@@ -72,7 +76,8 @@ namespace wsgi_boost
 		void send_iterable(Iterable& iterable);
 
 	public:
-		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app);
+		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app,
+			std::string& scheme, std::string& host, unsigned short local_port);
 
 		// Handle request
 		void handle();

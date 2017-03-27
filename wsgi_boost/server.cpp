@@ -118,11 +118,8 @@ namespace wsgi_boost
 	{
 		if (request.content_dir == string())
 		{
-			request.url_scheme = url_scheme;
-			request.host_name = host_name;
-			request.local_endpoint_port = m_port;
 			GilAcquire acquire_gil;
-			WsgiRequestHandler handler{ request, response, m_app };
+			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port };
 			try
 			{
 				handler.handle();
@@ -138,8 +135,7 @@ namespace wsgi_boost
 		}
 		else
 		{
-			request.use_gzip = use_gzip;
-			StaticRequestHandler handler{ request, response, static_cache_control };
+			StaticRequestHandler handler{ request, response, static_cache_control, use_gzip };
 			try
 			{
 				handler.handle();

@@ -61,10 +61,6 @@ namespace wsgi_boost
 		std::unordered_map<std::string, std::string, ihash, iequal_to> headers;
 		boost::regex path_regex;
 		std::string content_dir;
-		std::string url_scheme;
-		std::string host_name;
-		unsigned short local_endpoint_port;
-		bool use_gzip;
 
 		Request(const Request&) = delete;
 		Request& operator=(const Request&) = delete;
