@@ -20,8 +20,6 @@ Main Features
 
 - Compliant with `PEP-3333`_.
 - Releases GIL for pure C++ operations, allowing more effective multi-threading.
-- Fully asynchronous in the single-threaded mode, so even with a single tread
-  it is still very fast.
 - Uses ``Transfer-Encoding: chunked`` if a WSGI application does not provide
   ``Content-Length`` header (like Django by default).
 - Can be used as a regular module in any Python application.
