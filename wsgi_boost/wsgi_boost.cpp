@@ -154,4 +154,18 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		.def("writelines", &ErrorStream::writelines)
 		.def("flush", &ErrorStream::flush)
 		;
+
+
+	py::class_<FileWrapper>("FileWrapper", py::no_init)
+		.def("__call__", &FileWrapper::call, (py::arg("file"), py::arg("block_size") = 8192),
+			py::return_internal_reference<>())
+		.def("read", &FileWrapper::read, (py::arg("size") = -1))
+		.def("__iter__", &FileWrapper::iter, py::return_internal_reference<>())
+#if PY_MAJOR_VERSION < 3
+		.def("next", &FileWrapper::next)
+#else
+		.def("__next__", &FileWrapper::next)
+#endif
+		.def("close", &FileWrapper::close)
+		;
 }

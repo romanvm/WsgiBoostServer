@@ -282,6 +282,7 @@ namespace wsgi_boost
 		m_environ["wsgi.url_scheme"] = m_url_scheme;
 		m_environ["wsgi.input"] = InputStream{ m_request.connection() };
 		m_environ["wsgi.errors"] = ErrorStream{};
+		m_environ["wsgi.file_wrapper"] = FileWrapper{};
 		m_environ["wsgi.multithread"] = m_multithread;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;

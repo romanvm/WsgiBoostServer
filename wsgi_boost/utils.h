@@ -235,5 +235,47 @@ namespace wsgi_boost
 
 		void flush() { std::cerr.flush(); }
 	};
+
+	// wsgi.file_wrapper implementation
+	class FileWrapper
+	{
+	private:
+		boost::python::object m_file;
+		int m_block_size;
+
+	public:
+		FileWrapper* call(boost::python::object file, int block_size = 8192)
+		{
+			m_file = file;
+			m_block_size = block_size;
+			return this;
+		}
+
+		boost::python::object read(int size = -1)
+		{
+			if (size == -1)
+				size = m_block_size;
+			return m_file.attr("read")(size);
+		}
+
+		FileWrapper* iter() { return this;  }
+
+		boost::python::object next()
+		{
+			boost::python::object chunk = read();
+			std::string str = boost::python::extract<std::string>(chunk);
+			if (str.empty())
+				throw StopIteration();
+			return chunk;
+		}
+
+		void close()
+		{
+			if (PyObject_HasAttrString(m_file.ptr(), "close"))
+			{
+				m_file.attr("close")();
+			}
+		}
+	};
 }
 #pragma endregion
