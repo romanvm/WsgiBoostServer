@@ -1,4 +1,10 @@
 #pragma once
+/*
+The pool for boost::asio::io_service
+
+Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
+License: MIT, see License.txt
+*/
 
 #include <boost/asio.hpp>
 
