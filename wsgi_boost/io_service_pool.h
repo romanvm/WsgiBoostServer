@@ -19,9 +19,7 @@ namespace wsgi_boost
 		unsigned int m_next_io_service = 0;
 
 	public:
-		unsigned int pool_size;
-
-		explicit IoServicePool(unsigned int ps = 0);
+		explicit IoServicePool(unsigned int pool_size = 0);
 
 		IoServicePool(const IoServicePool&) = delete;
 		IoServicePool& operator=(const IoServicePool&) = delete;
@@ -37,5 +35,8 @@ namespace wsgi_boost
 
 		// Get next IO service
 		io_service_ptr get_io_service();
+
+		// Get pool size
+		size_t size();
 	};
 }

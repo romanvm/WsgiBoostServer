@@ -133,7 +133,7 @@ namespace wsgi_boost
 				}
 			}
 			GilAcquire acquire_gil;
-			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port, m_io_service_pool.pool_size > 1 };
+			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port, m_io_service_pool.size() > 1 };
 			try
 			{
 				handler.handle();
@@ -181,7 +181,7 @@ namespace wsgi_boost
 		if (!is_running())
 		{
 			GilRelease release_gil;
-			cout << "WsgiBoostHttp server starting with " << m_io_service_pool.pool_size << " thread(s).\n";
+			cout << "WsgiBoostHttp server starting with " << m_io_service_pool.size() << " thread(s).\n";
 			cout << "Press Ctrl+C to stop it.\n";
 			m_io_service_pool.reset();
 			asio::ip::tcp::endpoint endpoint;

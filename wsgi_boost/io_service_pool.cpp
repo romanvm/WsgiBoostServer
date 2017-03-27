@@ -5,13 +5,9 @@ namespace asio = boost::asio;
 
 namespace wsgi_boost
 {
-	IoServicePool::IoServicePool(unsigned int ps)
+	IoServicePool::IoServicePool(unsigned int pool_size)
 	{
-		if (ps > 0)
-		{
-			pool_size = ps;
-		}
-		else
+		if (pool_size == 0)
 		{
 			unsigned int threads_hint = thread::hardware_concurrency();
 			if (threads_hint > 0)
@@ -33,7 +29,7 @@ namespace wsgi_boost
 	void IoServicePool::run()
 	{
 		m_thread_pool.clear();
-		for (unsigned int i = 1; i < pool_size; ++i)
+		for (size_t i = 1; i < size(); ++i)
 		{
 			m_thread_pool.emplace_back([this, i]()
 			{
@@ -70,5 +66,11 @@ namespace wsgi_boost
 		if (m_next_io_service == m_io_services.size())
 			m_next_io_service = 0;
 		return io_service;
+	}
+
+
+	size_t IoServicePool::size()
+	{
+		return m_io_services.size();
 	}
 }
