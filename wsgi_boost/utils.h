@@ -263,8 +263,7 @@ namespace wsgi_boost
 		boost::python::object next()
 		{
 			boost::python::object chunk = read();
-			std::string str = boost::python::extract<std::string>(chunk);
-			if (str.empty())
+			if (!chunk)
 				throw StopIteration();
 			return chunk;
 		}

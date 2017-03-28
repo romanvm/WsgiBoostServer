@@ -11,6 +11,7 @@ import threading
 import time
 import unittest
 from wsgiref.validate import validator
+from io import BytesIO
 import requests
 
 cwd = os.path.dirname(os.path.abspath(__file__))
@@ -46,6 +47,9 @@ class App(object):
             content = b'Write OK'
         elif self.environ['PATH_INFO'] == '/test_transfer_chunked':
             content = b'Transfer chunked OK'
+        elif self.environ['PATH_INFO'] == '/test_file_wrapper':
+            fo = BytesIO(b'File wrapper OK')
+            content = self.environ['wsgi.file_wrapper'](fo)
         else:
             print(self.environ['wsgi.input'].read(-1))
             print(self.environ['wsgi.input'].readline())
@@ -54,13 +58,15 @@ class App(object):
             self.environ['wsgi.errors'].writelines(['ham\n', 'spam\n'])
             self.environ['wsgi.errors'].flush()
             content = b'App OK'
-        if content != b'Transfer chunked OK':
+        if isinstance(content, bytes) and content != b'Transfer chunked OK':
             headers.append(('Content-Length', str(len(content))))
         write = start_response('200 OK', headers)
         if content == b'Write OK':
             write(content)
             content = b''
-        return [content]
+        if isinstance(content, bytes):
+            content = [content]
+        return content
 
     def test_http_header(self):
         assert self.environ['HTTP_FOO'] == 'bar'
@@ -188,6 +194,11 @@ class WsgiServerFunctionsTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers['Transfer-Encoding'], 'chunked')
         self.assertEqual(resp.text, 'Transfer chunked OK')
+
+    def test_file_wrapper(self):
+        resp = requests.get('http://127.0.0.1:8000/test_file_wrapper')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.text, 'File wrapper OK')
 
 
 class ServingStaticFilesTestCase(unittest.TestCase):
