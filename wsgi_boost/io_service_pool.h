@@ -21,7 +21,7 @@ namespace wsgi_boost
 	private:
 		std::vector<io_service_ptr> m_io_services;
 		std::vector<boost::asio::io_service::work> m_works;
-		std::vector<std::thread> m_thread_pool;
+		std::vector<std::thread> m_threads;
 		unsigned int m_next_io_service = 0;
 
 	public:

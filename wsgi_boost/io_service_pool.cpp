@@ -28,16 +28,16 @@ namespace wsgi_boost
 
 	void IoServicePool::run()
 	{
-		m_thread_pool.clear();
+		m_threads.clear();
 		for (size_t i = 1; i < size(); ++i)
 		{
-			m_thread_pool.emplace_back([this, i]()
+			m_threads.emplace_back([this, i]()
 			{
 				this->m_io_services[i]->run();
 			});
 		}
 		m_io_services[0]->run();
-		for (auto& t : m_thread_pool)
+		for (auto& t : m_threads)
 			t.join();
 	}
 
