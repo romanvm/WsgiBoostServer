@@ -51,6 +51,11 @@ namespace wsgi_boost
 		// the number of server threads.
 		// Without the coroutine when all threads are busy the next request
 		// hangs in limbo and causes io_service to crash.
+		//
+		// Because our io_service runs in one thread we work on an implicit strand
+		// with no special syncronization measures. This also allows us to safely
+		// toggle Python GIL around async operations
+		// without the risk of crashing Python interpreter.
 		asio::spawn(*io_service, [this, socket, io_service](asio::yield_context yc)
 		{
 			Connection connection{ socket, io_service, yc, header_timeout, content_timeout };
