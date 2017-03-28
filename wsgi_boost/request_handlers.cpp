@@ -316,6 +316,11 @@ namespace wsgi_boost
 #else
 				std::string chunk = py::extract<string>(iterator.attr("__next__")());
 #endif
+				// Releasing GIL around async operations not only allows other Python threads to run
+				// but also allows io_service to safely transfer control to another coroutine
+				// that may acquire GIL again.
+				// I found this scheme by accident and if we do not release GIL at this point
+				// Python will crash!
 				GilRelease release_gil;
 				sys::error_code ec;
 				if (!m_response.header_sent())
