@@ -63,6 +63,7 @@ namespace wsgi_boost
 		boost::python::dict m_environ;
 		boost::python::object m_write;
 		boost::python::object m_start_response;
+		// Reserved for future use. Now it only indicates that a response has Content-Length header.
 		long long m_content_length = -1;
 		std::string& m_url_scheme;
 		std::string& m_host_name;
