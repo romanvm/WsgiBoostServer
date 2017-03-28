@@ -39,7 +39,7 @@ namespace wsgi_boost
 		// Reset IO services
 		void reset();
 
-		// Get next IO service
+		// Get IO service
 		io_service_ptr get_io_service();
 
 		// Get pool size
