@@ -211,8 +211,8 @@ namespace wsgi_boost
 			m_signals.async_wait([this](sys::error_code, int) { stop(); });
 			m_is_running.store(true);
 			m_io_service_pool.run();
-			cout << "WsgiBoostHttp server stopped.\n";
 			m_is_running.store(false);
+			cout << "WsgiBoostHttp server stopped.\n";
 		}
 		else
 		{
