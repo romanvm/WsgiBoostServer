@@ -4,7 +4,7 @@ Changelog
 1.0.2
 
 - Implemented the pool of ``boost::asio::io_service`` that allows to send WSGI application data
-- in fully asynchronous mode.
+  in fully asynchronous mode.
 - Various internal optimizations.
 
 1.0.1a
