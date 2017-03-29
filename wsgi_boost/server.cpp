@@ -71,11 +71,11 @@ namespace wsgi_boost
 			}
 			else if (res == BAD_REQUEST)
 			{
-				response.send_mesage("400 Bad Request", "");
+				response.send_mesage("400 Bad Request", "Malformed HTTP request!");
 			}
 			else if (res == LENGTH_REQUIRED)
 			{
-				response.send_mesage("411 Length Required", "");
+				response.send_mesage("411 Length Required", "Content-Length header is missing!");
 			}
 			else
 			{
@@ -209,7 +209,7 @@ namespace wsgi_boost
 			m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
 			m_acceptor.bind(endpoint);
 			m_acceptor.listen();
-			if (host_name == string())
+			if (host_name.empty())
 				host_name = asio::ip::host_name();
 			accept();
 			m_signals.async_wait([this](sys::error_code, int) { stop(); });
