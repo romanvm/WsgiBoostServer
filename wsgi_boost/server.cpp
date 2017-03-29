@@ -110,7 +110,6 @@ namespace wsgi_boost
 			PyErr_Print();
 		if (!response.header_sent())
 		{
-			response.clear();
 			response.send_html("500 Internal Server Error", "Error 500", "Internal Server Error", error_msg);
 		}
 		else
