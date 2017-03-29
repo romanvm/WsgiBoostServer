@@ -51,58 +51,55 @@ namespace wsgi_boost
 	{
 		fs::path path = content_dir_path;
 		path /= boost::regex_replace(m_request.path, m_request.path_regex, "");
-		if (fs::exists(path))
+		path = fs::canonical(path);
+		// Checking if path is inside content_dir
+		if (distance(content_dir_path.begin(), content_dir_path.end()) <= distance(path.begin(), path.end()) &&
+			equal(content_dir_path.begin(), content_dir_path.end(), path.begin()))
 		{
-			path = fs::canonical(path);
-			// Checking if path is inside content_dir
-			if (distance(content_dir_path.begin(), content_dir_path.end()) <= distance(path.begin(), path.end()) &&
-				equal(content_dir_path.begin(), content_dir_path.end(), path.begin()))
+			if (fs::is_directory(path))
 			{
-				if (fs::is_directory(path))
+				path /= "index.html";
+			}
+			if (fs::exists(path) && fs::is_regular_file(path))
+			{
+				ifstream ifs;
+				ifs.open(path.string(), ifstream::in | ios::binary);
+				if (ifs)
 				{
-					path /= "index.html";
-				}
-				if (fs::exists(path) && fs::is_regular_file(path))
-				{
-					ifstream ifs;
-					ifs.open(path.string(), ifstream::in | ios::binary);
-					if (ifs)
+					headers_type out_headers;
+					out_headers.emplace_back("Cache-Control", m_cache_control);
+					time_t last_modified = fs::last_write_time(path);
+					out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
+					// Use hex representation of the last modified POSIX timestamp as ETag
+					string etag = "\"" + hex(static_cast<size_t>(last_modified)) + "\"";
+					out_headers.emplace_back("ETag", etag);
+					string ims = m_request.get_header("If-Modified-Since");
+					if (m_request.get_header("If-None-Match") == etag || (!ims.empty() && header_to_time(ims) >= last_modified))
 					{
-						headers_type out_headers;
-						out_headers.emplace_back("Cache-Control", m_cache_control);
-						time_t last_modified = fs::last_write_time(path);
-						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
-						// Use hex representation of the last modified POSIX timestamp as ETag
-						string etag = "\"" + hex(static_cast<size_t>(last_modified)) + "\"";
-						out_headers.emplace_back("ETag", etag);
-						string ims = m_request.get_header("If-Modified-Since");
-						if (m_request.get_header("If-None-Match") == etag || (ims != "" && header_to_time(ims) >= last_modified))
-						{
-							out_headers.emplace_back("Content-Length", "0");
-							m_response.send_header("304 Not Modified", out_headers);
-							ifs.close();
-							return;
-						}
-						string ext = path.extension().string();
-						out_headers.emplace_back("Content-Type", get_mime(ext));
-						if (m_use_gzip && m_request.check_header("Accept-Encoding", "gzip") && is_compressable(ext))
-						{
-							boost::iostreams::filtering_istream gzstream;
-							gzstream.push(boost::iostreams::gzip_compressor());
-							gzstream.push(ifs);
-							stringstream compressed;
-							boost::iostreams::copy(gzstream, compressed);
-							out_headers.emplace_back("Content-Encoding", "gzip");
-							send_file(compressed, out_headers);
-						}
-						else
-						{
-							out_headers.emplace_back("Accept-Ranges", "bytes");
-							send_file(ifs, out_headers);
-						}
+						out_headers.emplace_back("Content-Length", "0");
+						m_response.send_header("304 Not Modified", out_headers);
 						ifs.close();
 						return;
 					}
+					string ext = path.extension().string();
+					out_headers.emplace_back("Content-Type", get_mime(ext));
+					if (m_use_gzip && m_request.check_header("Accept-Encoding", "gzip") && is_compressable(ext))
+					{
+						boost::iostreams::filtering_istream gzstream;
+						gzstream.push(boost::iostreams::gzip_compressor());
+						gzstream.push(ifs);
+						stringstream compressed;
+						boost::iostreams::copy(gzstream, compressed);
+						out_headers.emplace_back("Content-Encoding", "gzip");
+						send_file(compressed, out_headers);
+					}
+					else
+					{
+						out_headers.emplace_back("Accept-Ranges", "bytes");
+						send_file(ifs, out_headers);
+					}
+					ifs.close();
+					return;
 				}
 			}
 		}
@@ -132,7 +129,7 @@ namespace wsgi_boost
 				range.second = to_string(end_pos);
 			if (start_pos > end_pos || start_pos >= length || end_pos >= length)
 			{
-				m_response.send_mesage("416 Range Not Satisfiable", "");
+				m_response.send_mesage("416 Range Not Satisfiable", "Invalid bytes range!");
 				return;
 			}
 			else
