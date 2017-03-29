@@ -151,8 +151,6 @@ namespace wsgi_boost
 	long long Connection::post_content_length() const { return m_content_length; }
 
 	socket_ptr Connection::socket() const { return m_socket; }
-
-	void Connection::clear_output() { m_ostreambuf.consume(m_ostreambuf.size()); }
 #pragma endregion
 
 #pragma region InputStream

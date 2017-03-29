@@ -72,9 +72,6 @@ namespace wsgi_boost
 
 		// Get asio socket pointer
 		socket_ptr socket() const;
-
-		// Clear the output buffer
-		void clear_output();
 	};
 
 	// Wraps Connection instance to provide Python file-like object for wsgi.input
