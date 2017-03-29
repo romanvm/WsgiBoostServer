@@ -125,6 +125,9 @@ namespace wsgi_boost
 	}
 
 
+	long long Connection::post_content_length() const { return m_content_length; }
+
+
 	void Connection::buffer_output(const string& data)
 	{
 		size_t length = data.length();
@@ -147,8 +150,6 @@ namespace wsgi_boost
 		m_timer.cancel();
 		return ec;
 	}
-
-	long long Connection::post_content_length() const { return m_content_length; }
 
 	socket_ptr Connection::socket() const { return m_socket; }
 #pragma endregion

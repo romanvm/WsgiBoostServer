@@ -49,6 +49,6 @@ namespace wsgi_boost
 			const std::string& header, const std::string& text);
 
 		// Check if HTTP header has been sent
-		bool header_sent();
+		bool header_sent() const;
 	};
 }

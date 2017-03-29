@@ -60,5 +60,6 @@ namespace wsgi_boost
 		return ec;
 	}
 
-	bool Response::header_sent() { return m_header_sent; }
+
+	bool Response::header_sent() const { return m_header_sent; }
 }
