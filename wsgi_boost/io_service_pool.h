@@ -43,6 +43,6 @@ namespace wsgi_boost
 		io_service_ptr get_io_service();
 
 		// Get pool size
-		size_t size();
+		size_t size() const;
 	};
 }

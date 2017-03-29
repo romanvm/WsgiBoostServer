@@ -69,7 +69,7 @@ namespace wsgi_boost
 	}
 
 
-	size_t IoServicePool::size()
+	size_t IoServicePool::size() const
 	{
 		return m_io_services.size();
 	}
