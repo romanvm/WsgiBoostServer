@@ -29,6 +29,11 @@ namespace wsgi_boost
 
 	void StaticRequestHandler::handle()
 	{
+		if (m_request.method != "GET" && m_request.method != "HEAD")
+		{
+			m_response.send_mesage("405 Method Not Allowed", "Invalid HTTP method! Only GET and HEAD are allowed.");
+			return;
+		}
 		const auto content_dir_path = fs::path{ m_request.content_dir };
 		if (!fs::exists(content_dir_path))
 		{
@@ -36,11 +41,6 @@ namespace wsgi_boost
 				"Error 500",
 				"Internal Server Error",
 				"Invalid static content directory is configured.");
-			return;
-		}
-		if (m_request.method != "GET" && m_request.method != "HEAD")
-		{
-			m_response.send_mesage("405 Method Not Allowed", "");
 			return;
 		}
 		open_file(content_dir_path);
