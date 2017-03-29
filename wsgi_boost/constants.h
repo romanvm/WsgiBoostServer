@@ -10,7 +10,7 @@ License: MIT, see License.txt
 #include <array>
 #include <string>
 
-#define WSGI_BOOST_VERSION "1.0.2"
+#define WSGI_BOOST_VERSION "1.0.3"
 
 
 namespace wsgi_boost

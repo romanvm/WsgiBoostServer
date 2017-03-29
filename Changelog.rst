@@ -1,13 +1,20 @@
 Changelog
 =========
 
+1.0.3
+-----
+
+- Fixed potential Python crash when sending a HTML error message.
+
 1.0.2
+-----
 
 - Implemented the pool of ``boost::asio::io_service`` that allows to send WSGI application data
   in fully asynchronous mode.
 - Various internal optimizations.
 
 1.0.1a
+------
 
 - Fixed missing library dependency in ``setup.py`` build script.
 - The ``setup.py`` build script now takes ``--boost-headers`` and ``--boost-libs`` options
