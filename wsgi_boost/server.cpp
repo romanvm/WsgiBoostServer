@@ -190,7 +190,7 @@ namespace wsgi_boost
 			cout << "Press Ctrl+C to stop it.\n";
 			m_io_service_pool.reset();
 			asio::ip::tcp::endpoint endpoint;
-			if (m_ip_address != "")
+			if (!m_ip_address.empty())
 			{
 				asio::ip::tcp::resolver resolver(*(m_io_service_pool.get_io_service()));
 				try
