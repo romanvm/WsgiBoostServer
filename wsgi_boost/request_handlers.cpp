@@ -117,13 +117,13 @@ namespace wsgi_boost
 		size_t end_pos = length - 1;
 		string requested_range = m_request.get_header("Range");
 		pair<string, string> range;
-		if (requested_range != "" && ((range = parse_range(requested_range)) != pair<string, string>()))
+		if (!requested_range.empty() && ((range = parse_range(requested_range)) != pair<string, string>()))
 		{
-			if (range.first != string())
+			if (!range.first.empty())
 				start_pos = stoull(range.first);
 			else
 				range.first = to_string(start_pos);
-			if (range.second != string())
+			if (!range.second.empty())
 				end_pos = stoull(range.second);
 			else
 				range.second = to_string(end_pos);
