@@ -54,9 +54,10 @@ namespace wsgi_boost
 		headers_type headers;
 		headers.emplace_back("Content-Type", "text/html");
 		headers.emplace_back("Content-Length", to_string(html.length()));
-		sys::error_code ec = send_header(status, headers);
+		// Error messages in HTML are sent syncronously so that not to mess with GIL.
+		sys::error_code ec = send_header(status, headers, false);
 		if (!ec)
-			ec = send_data(html);
+			ec = send_data(html, false);
 		return ec;
 	}
 
