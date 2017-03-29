@@ -50,8 +50,5 @@ namespace wsgi_boost
 
 		// Check if HTTP header has been sent
 		bool header_sent();
-
-		// Clear output buffer
-		void clear();
 	};
 }

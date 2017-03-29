@@ -61,6 +61,4 @@ namespace wsgi_boost
 	}
 
 	bool Response::header_sent() { return m_header_sent; }
-
-	void Response::clear() { m_connection.clear_output(); }
 }
