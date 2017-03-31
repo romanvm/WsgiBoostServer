@@ -8,7 +8,7 @@
 using namespace std;
 namespace asio = boost::asio;
 namespace sys = boost::system;
-namespace py = boost::python;
+namespace py = pybind11;
 
 
 namespace wsgi_boost
@@ -156,21 +156,33 @@ namespace wsgi_boost
 
 #pragma region InputStream
 
-	string InputStream::read(long long size)
+	string InputStream::read_(long long size)
 	{
-		GilRelease release_gil;
+		py::gil_scoped_release release_gil;
 		string data;
 		if (m_connection.read_bytes(data, size))
 			return data;
-		return "";
+		return string();
 	}
 
 
-	string InputStream::readline(long long size)
+	py::bytes InputStream::read(long long size)
+	{
+		return read_(size);
+	}
+
+
+	string InputStream::readline_()
+	{
+		py::gil_scoped_release release_gil;
+		return m_connection.read_line();
+	}
+
+
+	py::bytes InputStream::readline(long long size)
 	{
 		// size argument is ignored
-		GilRelease release_gil;
-		return m_connection.read_line();
+		return readline_();
 	}
 
 
@@ -181,11 +193,7 @@ namespace wsgi_boost
 		long long total_length = 0;
 		while (!(line = readline()).empty())
 		{
-#if PY_MAJOR_VERSION < 3
-			listing.append(line);
-#else
-			listing.append(string_to_bytes(line));
-#endif
+			listing.append(py::bytes(line));
 			if (sizehint >= 0)
 			{
 				total_length += line.length();
@@ -198,27 +206,12 @@ namespace wsgi_boost
 	}
 
 
-	std::string InputStream::next()
+	py::bytes InputStream::next()
 	{
-		string line = readline();
-		if (!line.empty())
-			return line;
-		else
-			throw StopIteration();
+		string line = readline_();
+		if (line.empty())
+			throw py::stop_iteration();
+		return line;
 	}
-
-#if PY_MAJOR_VERSION >= 3
-	boost::python::object InputStream::read_bytes(long long size) { return string_to_bytes(read(size)); }
-
-	boost::python::object InputStream::read_byte_line(long long size) { return string_to_bytes(readline(size)); }
-
-	boost::python::object InputStream::next_bytes() { return string_to_bytes(next()); }
-
-	boost::python::object InputStream::string_to_bytes(const std::string& str) const
-		{
-			return boost::python::object(boost::python::handle<>(PyBytes_FromString(str.c_str())));
-		}
-#endif
-
 #pragma endregion
 }

@@ -6,12 +6,10 @@ Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
 License: MIT, see License.txt
 */
 
-#include "exceptions.h"
 #include "utils.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
-#include <boost/python.hpp>
 
 #include <memory>
 #include <iostream>
@@ -80,39 +78,25 @@ namespace wsgi_boost
 	private:
 		Connection& m_connection;
 
+		std::string read_(long long size);
+		std::string readline_();
+
 	public:
 		explicit InputStream(Connection& conn) : m_connection{ conn } {}
 
 		// Read data from input content
-		std::string read(long long size = -1);
+		pybind11::bytes read(long long size = -1);
 
 		// Read a line from input content
-		std::string readline(long long size = -1);
+		pybind11::bytes readline(long long size = 1);
 
 		// Read a list of lines from input content
-		boost::python::list readlines(long long sizehint = -1);
+		pybind11::list readlines(long long sizehint = -1);
 
 		// Return Python iterator
 		InputStream* iter() { return this; }
 
 		// Iterate the iterator
-		std::string next();
-
-#if PY_MAJOR_VERSION >= 3
-		// In Python3 wsgi.input must return bytes
-
-		// Read data from input content
-		boost::python::object read_bytes(long long size = -1);
-
-		// Read a line from input content
-		boost::python::object read_byte_line(long long size = -1);
-
-		// Iterate the iterator
-		boost::python::object next_bytes();
-
-	private:
-		// Convert C++ string to Python 3 bytes object
-		boost::python::object string_to_bytes(const std::string& str) const;
-#endif
+		pybind11::bytes next();
 	};
 }
