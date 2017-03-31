@@ -29,10 +29,10 @@ install:
   - cmake .
   - cd %APPVEYOR_BUILD_FOLDER%
   - "git clone https://github.com/romanvm/boost.git"
-  - python appveyor.py
+  #- python appveyor.py
   - cd %BOOST_ROOT%
   - bootstrap.bat
-  - "b2 -j2 link=static runtime-link=static variant=release -sZLIB_SOURCE=%ZLIB_DIR% --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python"
+  - "b2 -j2 link=static runtime-link=static variant=release -sZLIB_SOURCE=%ZLIB_DIR% --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time"
 
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
