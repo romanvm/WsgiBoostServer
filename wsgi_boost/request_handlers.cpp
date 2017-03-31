@@ -220,13 +220,12 @@ namespace wsgi_boost
 				PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
 				throw py::error_already_set();
 			}
-			//cout << "casting status\n";
 			this->m_status.assign(status);
 			this->m_out_headers.clear();
 			exc_info = py::none();
-			for (py::size_t i = 1; i < py::len(headers); ++i)
+			for (const auto& h : headers)
 			{
-				py::tuple header = headers[i];
+				py::tuple header = py::reinterpret_borrow<py::tuple>(h);
 				string header_name = header[0].cast<string>();
 				string header_value = header[1].cast<string>();
 				if (alg::iequals(header_name, "Content-Length"))
