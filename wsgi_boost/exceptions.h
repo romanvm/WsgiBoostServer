@@ -16,8 +16,6 @@ namespace wsgi_boost
 {
 	struct StopIteration : public std::exception {};
 
-	struct IOError : public std::exception {};
-
 
 	inline void stop_iteration_translator(const StopIteration&)
 	{
@@ -28,11 +26,5 @@ namespace wsgi_boost
 	inline void runtime_error_translator(const std::runtime_error& ex)
 	{
 		PyErr_SetString(PyExc_RuntimeError, ex.what());
-	}
-
-
-	inline void io_error_translator(const IOError&)
-	{
-		PyErr_SetString(PyExc_IOError, "Connection aborted!");
 	}
 }
