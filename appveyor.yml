@@ -13,9 +13,6 @@ environment:
     ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.11"
 
   matrix:
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7"
-
     - PYTHON: "C:\\Python36"
       PYTHON_VERSION: "3.6"
       
