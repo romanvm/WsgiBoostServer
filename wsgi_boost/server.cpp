@@ -10,7 +10,7 @@
 using namespace std;
 namespace asio = boost::asio;
 namespace sys = boost::system;
-namespace py = boost::python;
+namespace py = pybind11;
 
 
 namespace wsgi_boost
@@ -136,15 +136,16 @@ namespace wsgi_boost
 					return;
 				}
 			}
-			GilAcquire acquire_gil;
+			py::gil_scoped_acquire acquire_gil;
 			WsgiRequestHandler handler{ request, response, m_app, url_scheme, host_name, m_port, m_io_service_pool.size() > 1 };
 			try
 			{
 				handler.handle();
 			}
-			catch (const py::error_already_set&)
+			catch (py::error_already_set& ex)
 			{
-				process_error(response, runtime_error(""), "Python error while processing a WSGI request", true);
+				ex.restore();
+				process_error(response, ex, "Python error while processing a WSGI request", true);
 			}
 			catch (const exception& ex)
 			{
@@ -184,7 +185,7 @@ namespace wsgi_boost
 	{
 		if (!is_running())
 		{
-			GilRelease release_gil;
+			py::gil_scoped_release release_gil;
 			cout << "WsgiBoostHttp server starting with " << m_io_service_pool.size() << " thread(s).\n";
 			cout << "Press Ctrl+C to stop it.\n";
 			m_io_service_pool.reset();
