@@ -6,17 +6,15 @@ import re
 from codecs import open
 from setuptools import setup
 from setuptools.extension import Extension
-try:
-    import distutils.msvc9compiler
-except ImportError:
-    pass
+
+if sys.version_info.major < 3:
+    raise DeprecationWarning('Python 2 is not supported!')
 
 NAME = 'wsgi_boost'
 
-SUPPORTED_MSVC_COMPILERS = [14.0]
-
-cwd = os.path.dirname(os.path.abspath(__file__))
-src = os.path.join(cwd, NAME)
+this_dir = os.path.dirname(os.path.abspath(__file__))
+include = os.path.join(this_dir, 'include')
+src = os.path.join(this_dir, NAME)
 
 for item in sys.argv:
     if '--boost-headers' in item:
@@ -32,33 +30,19 @@ class BuildError(Exception):
     pass
 
 
-def patch_msvc_compiler():
-    """
-    Monkey-patch distutils to use MS Visual C++ 2015+ compiler
-    """
-    for vc_version in SUPPORTED_MSVC_COMPILERS:
-        vcvarsall = distutils.msvc9compiler.find_vcvarsall(vc_version)
-        if vcvarsall is not None:
-            distutils.msvc9compiler.get_build_version = lambda: vc_version
-            distutils.msvc9compiler.find_vcvarsall = lambda version: vcvarsall
-            break
-    else:
-        raise BuildError('Compatible MS Visual C++ compiler not found! Only v. {0} are supported.'.format(str(SUPPORTED_MSVC_COMPILERS)))
-
-
 def get_version():
     with open(os.path.join(src, 'constants.h'), 'r') as fo:
         text = fo.read()
-    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+[a-z]*)"', text, re.I).group(1)
+    return re.search(r'#define WSGI_BOOST_VERSION "(\d+\.\d+\.\d+\w*)"', text, re.I).group(1)
 
 
 def get_file(filename):
-    with open(os.path.join(cwd, filename), 'r', encoding='utf-8') as fo:
+    with open(os.path.join(this_dir, filename), 'r', encoding='utf-8') as fo:
         return fo.read()
 
 
 sources = [os.path.join(src, file_) for file_ in os.listdir(src) if os.path.splitext(file_)[1] == '.cpp']
-include_dirs = [src]
+include_dirs = [include, src]
 libraries = []
 library_dirs=[]
 
@@ -67,7 +51,6 @@ extra_compile_args = []
 extra_link_args = []
 
 if sys.platform == 'win32':
-    patch_msvc_compiler()
 
     try:
         include_dirs.append(os.path.expandvars(os.environ['BOOST_ROOT']))
@@ -79,7 +62,6 @@ if sys.platform == 'win32':
     except KeyError:
         raise BuildError('Path to Boost libraries is not set! Use --boost-libs="<path>" option.')
 
-    define_macros.append(('BOOST_PYTHON_STATIC_LIB', None))
     extra_compile_args.append('/EHsk')
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
@@ -91,13 +73,7 @@ else:
     try:
         library_dirs.append(os.path.expandvars(os.environ['BOOST_LIBRARYDIR']))
     except KeyError:
-        libraries.append(
-            'boost_python-py{major}{minor}'.format(
-                major=sys.version_info.major,
-                minor=sys.version_info.minor
-                ))
-    else:
-        libraries.append('boost_python')
+        pass
     libraries += [
             'boost_regex',
             'boost_system',
@@ -108,7 +84,6 @@ else:
             'boost_date_time',
             'boost_thread',
             'z',
-            'bz2',
         ]
 
     extra_compile_args.append('-std=c++11')
@@ -135,7 +110,6 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: C++',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: WSGI',
