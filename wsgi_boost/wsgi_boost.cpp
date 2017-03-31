@@ -7,18 +7,15 @@ License: MIT, see License.txt
 
 #include "server.h"
 
-namespace py = boost::python;
+namespace py = pybind11;
 using namespace wsgi_boost;
 
 
-BOOST_PYTHON_MODULE(wsgi_boost)
+PYBIND11_PLUGIN(wsgi_boost)
 {
 	PyEval_InitThreads(); // Initialize GIL
-
-	py::register_exception_translator<StopIteration>(&stop_iteration_translator);
-	py::register_exception_translator<std::runtime_error>(&runtime_error_translator);
 	
-	py::scope module;
+	py::module module{ "wsgi_boost",  "This module provides WSGI/HTTP server class" };
 	module.attr("__doc__") = "This module provides WSGI/HTTP server class";
 	module.attr("__version__") = WSGI_BOOST_VERSION;
 	module.attr("__author__") = "Roman Miroshnychenko";
@@ -29,7 +26,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 	module.attr("__all__") = all;
 	
 
-	py::class_<HttpServer, boost::noncopyable>("WsgiBoostHttp",
+	py::class_<HttpServer>(module, "WsgiBoostHttp",
 		R"'''(
 		WsgiBoostHttp(ip_address='', port=8000, threads=0)
 
@@ -64,13 +61,12 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			httpd.set_app(hello_app)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
-		)'''",
+		)'''")
 
-		py::init<std::string, unsigned short, unsigned int>(	(
+		.def(py::init<std::string, unsigned short, unsigned int>(),
 			py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)
-			))
 
-		.add_property("is_running", &HttpServer::is_running, "Get server running status")
+		.def_property_readonly("is_running", &HttpServer::is_running, "Get server running status")
 
 		.def_readwrite("use_gzip", &HttpServer::use_gzip, "Use gzip compression for static content, default: ``True``")
 
@@ -113,7 +109,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 
 		.def("stop", &HttpServer::stop, "Stop processing HTTP requests")
 
-		.def("add_static_route", &HttpServer::add_static_route, py::args("path", "content_dir"),
+		.def("add_static_route", &HttpServer::add_static_route, py::arg("path"), py::arg("content_dir"),
 			R"'''(
 			Add a route for serving static files
 
@@ -130,7 +126,7 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 			    will be directed to that route and a WSGI application will never be reached.
 			)'''")
 
-		.def("set_app", &HttpServer::set_app, py::args("app"),
+		.def("set_app", &HttpServer::set_app, py::arg("app"),
 			R"'''(
 			Set a WSGI application to be served
 
@@ -141,38 +137,30 @@ BOOST_PYTHON_MODULE(wsgi_boost)
 		;
 
 
-	py::class_<InputStream>("InputStream", "wsgi.input", py::no_init)
-		.def("readlines", &InputStream::readlines, (py::arg("sizehint") = -1))
-		.def("__iter__", &InputStream::iter, py::return_internal_reference<>())
-#if PY_MAJOR_VERSION < 3
-		.def("read", &InputStream::read, (py::arg("size") = -1))
-		.def("readline", &InputStream::readline, (py::arg("size") = -1))
-		.def("next", &InputStream::next)
-#else
-		.def("read", &InputStream::read_bytes, (py::arg("size") = -1))
-		.def("readline", &InputStream::read_byte_line, (py::arg("size") = -1))
-		.def("__next__", &InputStream::next_bytes)
-#endif
+	py::class_<InputStream>(module, "InputStream", "wsgi.input")
+		.def("readlines", &InputStream::readlines, py::arg("sizehint") = -1)
+		.def("__iter__", &InputStream::iter, py::return_value_policy::reference_internal)
+		.def("read", &InputStream::read, py::arg("size") = -1)
+		.def("readline", &InputStream::readline, py::arg("size") = -1)
+		.def("__next__", &InputStream::next)
 		;
 
 
-	py::class_<ErrorStream>("ErrorStream", "wsgi.errors", py::no_init)
+	py::class_<ErrorStream>(module, "ErrorStream", "wsgi.errors")
 		.def("write", &ErrorStream::write)
 		.def("writelines", &ErrorStream::writelines)
 		.def("flush", &ErrorStream::flush)
 		;
 
 
-	py::class_<FileWrapper>("FileWrapper", "wsgi.file_wrapper", py::no_init)
-		.def("__call__", &FileWrapper::call, (py::arg("file"), py::arg("block_size") = 8192),
-			py::return_internal_reference<>())
+	py::class_<FileWrapper>(module, "FileWrapper", "wsgi.file_wrapper")
+		.def("__call__", &FileWrapper::call, py::arg("file"), py::arg("block_size") = 8192,
+			py::return_value_policy::reference_internal)
 		.def("read", &FileWrapper::read, (py::arg("size") = -1))
-		.def("__iter__", &FileWrapper::iter, py::return_internal_reference<>())
-#if PY_MAJOR_VERSION < 3
-		.def("next", &FileWrapper::next)
-#else
+		.def("__iter__", &FileWrapper::iter, py::return_value_policy::reference_internal)
 		.def("__next__", &FileWrapper::next)
-#endif
 		.def("close", &FileWrapper::close)
 		;
+
+	return module.ptr();
 }
