@@ -208,13 +208,14 @@ namespace wsgi_boost
 
 	py::object WsgiRequestHandler::create_start_response()
 	{
-		auto sr = [this](py::str status, py::list headers, py::tuple exc_info = py::none())
+		auto sr = [this](py::str status, py::list headers, py::object exc_info = py::none())
 		{
 			if (!exc_info.is_none() && this->m_response.header_sent())
 			{
-				py::object t = exc_info[0];
-				py::object v = exc_info[1];
-				py::object tb = exc_info[2];
+				py::tuple exc = exc_info;
+				py::object t = exc[0];
+				py::object v = exc[1];
+				py::object tb = exc[2];
 				cerr << "The WSGI app passed exc_info after sending headers to the client!\n";
 				PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
 				throw py::error_already_set();
@@ -293,7 +294,7 @@ namespace wsgi_boost
 			return;
 		}
 		prepare_environ();
-		Iterable iterable{ move(m_app(m_environ, m_start_response)) };
+		Iterable iterable{ m_app(m_environ, m_start_response) };
 		send_iterable(iterable);
 	}
 
