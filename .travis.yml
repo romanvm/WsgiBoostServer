@@ -1,6 +1,7 @@
 language: python
 
 python:
+    - "2.7"
     - "3.5"
 
 addons:
@@ -15,9 +16,10 @@ addons:
             - zlib1g-dev
             - libbz2-dev
             - python3.5-dev
-            - libboost-all-dev
 
 env:
+    global:
+        - BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
     matrix:
         - CC_VER=4.9
         - CC_VER=6
@@ -25,7 +27,14 @@ env:
 install:
     - export CC=g++-$CC_VER
     - export CXX=g++-$CC_VER
+    - git clone https://github.com/romanvm/boost.git
+    - chmod -R +x $BOOST_ROOT
+    - cd $BOOST_ROOT
+    - ./bootstrap.sh
+    - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+
 script:
+    - cd $TRAVIS_BUILD_DIR
     - python setup.py build test
 
 notifications:
