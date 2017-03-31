@@ -26,7 +26,6 @@ install:
     - export CC=g++-$CC_VER
     - export CXX=g++-$CC_VER
 script:
-    - cd $TRAVIS_BUILD_DIR
     - python setup.py build test
 
 notifications:
