@@ -8,8 +8,8 @@ License: MIT, see License.txt
 
 #include "constants.h"
 
+#include <pybind11/pybind11.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/python.hpp>
 #include <boost/regex.hpp>
 
 #include <string>
@@ -17,10 +17,7 @@ License: MIT, see License.txt
 #include <ctime>
 #include <iomanip>
 #include <cctype>
-#include <mutex>
-#include <queue>
 #include <iostream>
-#include <thread>
 
 
 namespace wsgi_boost
@@ -145,77 +142,23 @@ namespace wsgi_boost
 	class Iterable
 	{
 	public:
-		explicit Iterable(boost::python::object it) : m_iterable{ it } {}
+		explicit Iterable(pybind11::object it) : m_iterable{ it } {}
 
 		~Iterable()
 		{
-			if (PyObject_HasAttrString(m_iterable.ptr(), "close"))
+			if (pybind11::hasattr(m_iterable, "close"))
 			{
 				m_iterable.attr("close")();
 			}
 		}
 
-		boost::python::object attr(const std::string& at) const
+		pybind11::object attr(const std::string& at) const
 		{
 			return m_iterable.attr(at.c_str());
 		}
 
-		boost::python::ssize_t len() const
-		{
-			try
-			{
-				return boost::python::len(m_iterable);
-			}
-			catch (const boost::python::error_already_set&)
-			{
-				if (PyErr_ExceptionMatches(PyExc_TypeError) || PyErr_ExceptionMatches(PyExc_AttributeError))
-					PyErr_Clear();
-				else
-					throw;
-			}
-			return -1;
-		}
-
 	private:
-		boost::python::object m_iterable;
-	};
-
-
-	// Scoped GIL release
-	class GilRelease
-	{
-	public:
-		GilRelease() 
-		{
-			m_state = PyEval_SaveThread();
-		}
-
-		~GilRelease()
-		{ 
-			PyEval_RestoreThread(m_state);
-		}
-
-	private:
-		PyThreadState* m_state;
-	};
-
-
-	// Scoped GIL acquire
-	class GilAcquire
-	{
-	public:
-		GilAcquire() 
-		{
-			m_gstate = PyGILState_Ensure();
-		}
-
-		~GilAcquire() 
-		{
-			PyGILState_Release(m_gstate);
-		}
-
-	private:
-		PyGILState_STATE m_gstate;
+		pybind11::object m_iterable;
 	};
 
 
@@ -224,11 +167,11 @@ namespace wsgi_boost
 	{
 		void write(std::string msg) { std::cerr << msg; }
 
-		void writelines(boost::python::list lines)
+		void writelines(pybind11::list lines)
 		{
-			for (boost::python::ssize_t i = 0; i < boost::python::len(lines); ++i)
+			for (const auto& py_line : lines)
 			{
-				std::string line = boost::python::extract<std::string>(lines[i]);
+				std::string line = py_line.cast<std::string>();
 				std::cerr << line;
 			}
 		}
@@ -240,18 +183,18 @@ namespace wsgi_boost
 	class FileWrapper
 	{
 	private:
-		boost::python::object m_file;
+		pybind11::object m_file;
 		int m_block_size;
 
 	public:
-		FileWrapper* call(boost::python::object file, int block_size = 8192)
+		FileWrapper* call(pybind11::object file, int block_size = 8192)
 		{
 			m_file = file;
 			m_block_size = block_size;
 			return this;
 		}
 
-		boost::python::object read(int size = -1)
+		pybind11::bytes read(int size = -1)
 		{
 			if (size == -1)
 				size = m_block_size;
@@ -260,17 +203,17 @@ namespace wsgi_boost
 
 		FileWrapper* iter() { return this;  }
 
-		boost::python::object next()
+		pybind11::bytes next()
 		{
-			boost::python::object chunk = read();
-			if (!chunk)
-				throw StopIteration();
+			pybind11::bytes chunk = read();
+			if ((std::string{ chunk }).empty())
+				throw pybind11::stop_iteration();
 			return chunk;
 		}
 
 		void close()
 		{
-			if (PyObject_HasAttrString(m_file.ptr(), "close"))
+			if (pybind11::hasattr(m_file, "close"))
 			{
 				m_file.attr("close")();
 			}
