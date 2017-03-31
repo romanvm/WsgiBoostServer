@@ -59,10 +59,10 @@ namespace wsgi_boost
 	private:
 		std::string m_status;
 		headers_type m_out_headers;
-		boost::python::object& m_app;
-		boost::python::dict m_environ;
-		boost::python::object m_write;
-		boost::python::object m_start_response;
+		pybind11::object& m_app;
+		pybind11::dict m_environ;
+		pybind11::object m_write;
+		pybind11::object m_start_response;
 		// Reserved for future use. Now it only indicates that a response has Content-Length header.
 		long long m_content_length = -1;
 		std::string& m_url_scheme;
@@ -71,14 +71,14 @@ namespace wsgi_boost
 		bool m_multithread;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
-		boost::python::object create_write();
+		pybind11::object create_write();
 		// Create start_response() callable: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
-		boost::python::object create_start_response();
+		pybind11::object create_start_response();
 		void prepare_environ();
 		void send_iterable(Iterable& iterable);
 
 	public:
-		WsgiRequestHandler(Request& request, Response& response, boost::python::object& app,
+		WsgiRequestHandler(Request& request, Response& response, pybind11::object& app,
 			std::string& scheme, std::string& host, unsigned short local_port, bool multithread);
 
 		// Handle request

@@ -17,7 +17,7 @@ License: MIT, see License.txt
 #include <utility>
 
 using namespace std;
-namespace py = boost::python;
+namespace py = pybind11;
 namespace fs = boost::filesystem;
 namespace sys = boost::system;
 namespace alg = boost::algorithm;
@@ -180,81 +180,74 @@ namespace wsgi_boost
 		m_local_port{ local_port }, m_multithread{ multithread }
 	{
 		m_write = create_write();
-		m_start_response = create_start_response();	
+		m_start_response = create_start_response();
 	}
 
 
 	py::object WsgiRequestHandler::create_write()
 	{
-		function<void(py::object)> wr{
-			[this](py::object data)
+		auto wr = [this](py::bytes data)
+		{
+			string cpp_data{ data };
+			py::gil_scoped_release release_gil;
+			// Read/write operations executed from inside Python must be syncronous!
+			sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, false);
+			if (ec)
+				return;
+			size_t data_len = cpp_data.length();
+			if (data_len > 0)
 			{
-				string cpp_data = py::extract<string>(data);
-				GilRelease release_gil;
+				if (this->m_content_length == -1)
+					cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
 				// Read/write operations executed from inside Python must be syncronous!
-				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, false);
-				if (ec)
-					return;
-				size_t data_len = cpp_data.length();
-				if (data_len > 0)
-				{
-					if (this->m_content_length == -1)
-						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
-					// Read/write operations executed from inside Python must be syncronous!
-					this->m_response.send_data(cpp_data, false);
-				}
+				this->m_response.send_data(cpp_data, false);
 			}
 		};
-		return py::make_function(wr, py::default_call_policies(),
-			py::args("data"), boost::mpl::vector<void, py::object>());
+		return py::cpp_function(wr, py::arg("data"));
 	}
-
 
 	py::object WsgiRequestHandler::create_start_response()
 	{
-		function<py::object(py::str, py::list, py::object)> sr{
-			[this](py::str status, py::list headers, py::object exc_info = py::object())
+		auto sr = [this](py::str status, py::list headers, py::tuple exc_info = py::none())
+		{
+			if (!exc_info.is_none() && this->m_response.header_sent())
 			{
-				if (!exc_info.is_none() && this->m_response.header_sent())
-				{
-					py::object t = exc_info[0];
-					py::object v = exc_info[1];
-					py::object tb = exc_info[2];
-					cerr << "The WSGI app passed exc_info after sending headers to the client!\n";
-					py::import("traceback").attr("print_exception")(t, v, tb);
-					PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
-					py::throw_error_already_set();
-				}
-				this->m_status = py::extract<string>(status);
-				this->m_out_headers.clear();
-				for (py::ssize_t i = 0; i < py::len(headers); ++i)
-				{
-					string header_name = py::extract<string>(headers[i][0]);
-					string header_value = py::extract<string>(headers[i][1]);
-					if (alg::iequals(header_name, "Content-Length"))
-					{
-						try
-						{
-							this->m_content_length = stoll(header_value);
-						}
-						catch (const logic_error&) {}
-					}
-					this->m_out_headers.emplace_back(header_name, header_value);
-				}
-				if (this->m_content_length == -1)
-				{
-					// If a WSGI app does not provide Content-Length header (e.g. Django)
-					// we use Transfer-Encoding: chunked
-					this->m_out_headers.emplace_back("Transfer-Encoding", "chunked");
-				}
-				return this->m_write;
+				py::object t = exc_info[0];
+				py::object v = exc_info[1];
+				py::object tb = exc_info[2];
+				cerr << "The WSGI app passed exc_info after sending headers to the client!\n";
+				PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
+				throw py::error_already_set();
 			}
+			//cout << "casting status\n";
+			this->m_status.assign(status);
+			this->m_out_headers.clear();
+			exc_info = py::none();
+			for (py::size_t i = 1; i < py::len(headers); ++i)
+			{
+				py::tuple header = headers[i];
+				string header_name = header[0].cast<string>();
+				string header_value = header[1].cast<string>();
+				if (alg::iequals(header_name, "Content-Length"))
+				{
+					try
+					{
+						this->m_content_length = stoll(header_value);
+					}
+					catch (const logic_error&) {}
+				}
+				this->m_out_headers.emplace_back(header_name, header_value);
+			}
+			if (this->m_content_length == -1)
+			{
+				// If a WSGI app does not provide Content-Length header (e.g. Django)
+				// we use Transfer-Encoding: chunked
+				this->m_out_headers.emplace_back("Transfer-Encoding", "chunked");
+			}
+			return this->m_write;
 		};
-		return py::make_function(sr, py::default_call_policies(),
-			(py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::object()),
-			boost::mpl::vector<py::object, py::str, py::list, py::object>());
+		return py::cpp_function(sr, py::arg("status"), py::arg("headers"), py::arg("exc_info") = py::none());
 	}
-
 
 	void WsgiRequestHandler::prepare_environ()
 	{
@@ -268,7 +261,8 @@ namespace wsgi_boost
 		m_environ["SERVER_NAME"] = m_host_name;
 		m_environ["SERVER_PORT"] = to_string(m_local_port);
 		m_environ["SERVER_PROTOCOL"] = m_request.http_version;
-		m_environ["REMOTE_ADDR"] = m_environ["REMOTE_HOST"] = m_request.remote_address();
+		m_environ["REMOTE_ADDR"] = m_request.remote_address();
+		m_environ["REMOTE_HOST"] = m_request.remote_address();
 		m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
 		for (const auto& header : m_request.headers)
 		{
@@ -277,9 +271,9 @@ namespace wsgi_boost
 			if (env_header == "HTTP_CONTENT_TYPE" || env_header == "HTTP_CONTENT_LENGTH")
 				continue;
 			// Headers are already checked for duplicates during parsing
-			m_environ[env_header] = header.second;
+			m_environ[env_header.c_str()] = header.second;
 		}
-		m_environ["wsgi.version"] = py::make_tuple<int, int>(1, 0);
+		m_environ["wsgi.version"] = py::make_tuple(1, 0);
 		m_environ["wsgi.url_scheme"] = m_url_scheme;
 		m_environ["wsgi.input"] = InputStream{ m_request.connection() };
 		m_environ["wsgi.errors"] = ErrorStream{};
@@ -289,13 +283,12 @@ namespace wsgi_boost
 		m_environ["wsgi.run_once"] = false;
 	}
 
-
 	void WsgiRequestHandler::handle()
 	{
 		if (m_app.is_none())
 		{
 			m_response.send_html("500 Internal Server Error",
-				"Error 500",  "Internal Server Error",
+				"Error 500", "Internal Server Error",
 				"A WSGI application is not set.");
 			return;
 		}
@@ -312,24 +305,21 @@ namespace wsgi_boost
 		{
 			try
 			{
-#if PY_MAJOR_VERSION < 3
-				std::string chunk = py::extract<string>(iterator.attr("next")());
-#else
-				std::string chunk = py::extract<string>(iterator.attr("__next__")());
-#endif
+				py::bytes py_chunk = iterator.attr("__next__")();
+				string chunk{ py_chunk };
 				// Releasing GIL around async operations not only allows other Python threads to run
 				// but also allows io_service to safely transfer control to another coroutine
 				// that may acquire GIL again.
 				// I found this scheme by accident and if we do not release GIL at this point
 				// Python will crash!
-				GilRelease release_gil;
+				py::gil_scoped_release release_gil;
 				sys::error_code ec;
 				if (!m_response.header_sent())
 				{
 					ec = m_response.send_header(m_status, m_out_headers);
 					if (ec)
 						break;
-				}					
+				}
 				if (m_content_length == -1)
 				{
 					size_t length = chunk.length();
@@ -342,8 +332,9 @@ namespace wsgi_boost
 				if (ec)
 					break;
 			}
-			catch (const py::error_already_set&)
+			catch (py::error_already_set& ex)
 			{
+				ex.restore();
 				if (PyErr_ExceptionMatches(PyExc_StopIteration))
 				{
 					PyErr_Clear();
@@ -351,7 +342,7 @@ namespace wsgi_boost
 						m_response.send_data("0\r\n\r\n");
 					break;
 				}
-				throw;
+				throw py::error_already_set();
 			}
 		}
 	}
