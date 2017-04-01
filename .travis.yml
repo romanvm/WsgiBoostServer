@@ -15,6 +15,7 @@ addons:
             - libbz2-dev
             - python3.5-dev
             - libboost-all-dev
+            - libbosst-asio-dev
 
 env:
     matrix:
@@ -26,6 +27,7 @@ install:
     - export CXX=g++-$CC_VER
     - ls /usr/include
     - ls /usr/include/boost
+    - ls /usr/include/boost/asio
 
 script: python setup.py build test
 
