@@ -9,7 +9,7 @@ environment:
   global:
     MSVC_DEFAULT_OPTIONS: ON
     BOOST_ROOT: "C:\\Libraries\\boost_1_63_0"
-    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\stage\\lib"
+    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib32-msvc-14.0"
     ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.11"
 
   matrix:
