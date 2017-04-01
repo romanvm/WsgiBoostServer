@@ -15,7 +15,6 @@ addons:
             - libbz2-dev
             - python3.5-dev
             - libboost-all-dev
-            - libbosst-asio-dev
 
 env:
     matrix:
