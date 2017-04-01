@@ -10,7 +10,6 @@ addons:
 
         packages:
             - g++-4.9
-            - g++-6
             - zlib1g-dev
             - libbz2-dev
             - python3.5-dev
