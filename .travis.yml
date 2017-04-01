@@ -7,6 +7,7 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
             - deadsnakes
+            - boost-latest
 
         packages:
             - g++-4.9
@@ -14,7 +15,7 @@ addons:
             - zlib1g-dev
             - libbz2-dev
             - python3.5-dev
-            - libboost-all-dev
+            - libboost1.55-all-dev
 
 env:
     matrix:
@@ -24,9 +25,6 @@ env:
 install:
     - export CC=g++-$CC_VER
     - export CXX=g++-$CC_VER
-    - ls /usr/include
-    - ls /usr/include/boost
-    - ls /usr/include/boost/asio
 
 script: python setup.py build test
 
