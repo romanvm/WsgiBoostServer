@@ -17,7 +17,8 @@ namespace wsgi_boost
 		}
 		for (unsigned int i = 0; i < pool_size; ++i)
 		{
-			io_service_ptr io_service = make_shared<asio::io_service>();
+			// make_shared does not work with an explicit io_service constructor
+			io_service_ptr io_service{ new asio::io_service{ 1 } };
 			auto work = asio::io_service::work{ *io_service };
 			m_io_services.emplace_back(io_service);
 			m_works.emplace_back(work);
