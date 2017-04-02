@@ -34,7 +34,8 @@ namespace wsgi_boost
 		socket_ptr socket = make_shared<asio::ip::tcp::socket>(asio::ip::tcp::socket(*io_service));
 		m_acceptor.async_accept(*socket, [this, io_service, socket](const boost::system::error_code& ec)
 		{
-			accept();
+			if (ec != asio::error::operation_aborted)
+				accept();
 			if (!ec)
 			{
 				socket->set_option(asio::ip::tcp::no_delay(true));
