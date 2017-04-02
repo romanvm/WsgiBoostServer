@@ -73,7 +73,7 @@ namespace wsgi_boost
 	string Request::get_header(const string& header) const
 	{
 		auto it = headers.find(header);
-		return it != headers.end() ? it->second : string{};
+		return it != headers.end() ? it->second : string();
 	}
 
 	bool Request::keep_alive() const

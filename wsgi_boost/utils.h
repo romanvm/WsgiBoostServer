@@ -63,9 +63,7 @@ namespace wsgi_boost
 	{
 		size_t pos = path.find("?");
 		if (pos != std::string::npos)
-		{
 			return std::pair<std::string, std::string>{ path.substr(0, pos), path.substr(pos + 1) };
-		}
 		return std::pair<std::string, std::string>{ path, "" };
 	}
 
@@ -147,9 +145,7 @@ namespace wsgi_boost
 		~Iterable()
 		{
 			if (pybind11::hasattr(m_iterable, "close"))
-			{
 				m_iterable.attr("close")();
-			}
 		}
 
 		pybind11::object attr(const std::string& at) const
@@ -214,9 +210,7 @@ namespace wsgi_boost
 		void close()
 		{
 			if (pybind11::hasattr(m_file, "close"))
-			{
 				m_file.attr("close")();
-			}
 		}
 	};
 }

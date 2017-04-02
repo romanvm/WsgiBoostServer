@@ -60,9 +60,7 @@ namespace wsgi_boost
 				equal(content_dir_path.begin(), content_dir_path.end(), path.begin()))
 			{
 				if (fs::is_directory(path))
-				{
 					path /= "index.html";
-				}
 				if (fs::exists(path) && fs::is_regular_file(path))
 				{
 					ifstream ifs;
@@ -187,22 +185,22 @@ namespace wsgi_boost
 	py::object WsgiRequestHandler::create_write()
 	{
 		auto wr = [this](py::bytes data)
-		{
-			string cpp_data{ data };
-			py::gil_scoped_release release_gil;
-			// Read/write operations executed from inside Python must be syncronous!
-			sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, false);
-			if (ec)
-				return;
-			size_t data_len = cpp_data.length();
-			if (data_len > 0)
 			{
-				if (this->m_content_length == -1)
-					cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+				string cpp_data{ data };
+				py::gil_scoped_release release_gil;
 				// Read/write operations executed from inside Python must be syncronous!
-				this->m_response.send_data(cpp_data, false);
-			}
-		};
+				sys::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, false);
+				if (ec)
+					return;
+				size_t data_len = cpp_data.length();
+				if (data_len > 0)
+				{
+					if (this->m_content_length == -1)
+						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+					// Read/write operations executed from inside Python must be syncronous!
+					this->m_response.send_data(cpp_data, false);
+				}
+			};
 		return py::cpp_function(wr, py::arg("data"));
 	}
 
@@ -276,8 +274,8 @@ namespace wsgi_boost
 		m_environ["wsgi.version"] = py::make_tuple(1, 0);
 		m_environ["wsgi.url_scheme"] = m_url_scheme;
 		m_environ["wsgi.input"] = InputStream{ m_request.connection() };
-		m_environ["wsgi.errors"] = ErrorStream{};
-		m_environ["wsgi.file_wrapper"] = FileWrapper{};
+		m_environ["wsgi.errors"] = ErrorStream();
+		m_environ["wsgi.file_wrapper"] = FileWrapper();
 		m_environ["wsgi.multithread"] = m_multithread;
 		m_environ["wsgi.multiprocess"] = false;
 		m_environ["wsgi.run_once"] = false;
