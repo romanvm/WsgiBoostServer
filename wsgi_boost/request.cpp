@@ -90,12 +90,12 @@ namespace wsgi_boost
 
 	string Request::remote_address() const
 	{
-		return m_connection.socket()->remote_endpoint().address().to_string();
+		return m_connection.socket()->lowest_layer().remote_endpoint().address().to_string();
 	}
 
 
 	unsigned short Request::remote_port() const
 	{
-		return m_connection.socket()->remote_endpoint().port();
+		return m_connection.socket()->lowest_layer().remote_endpoint().port();
 	}
 }

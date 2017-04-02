@@ -22,8 +22,8 @@ namespace wsgi_boost
 		{
 			if (ec != asio::error::operation_aborted)
 			{
-				m_socket->shutdown(asio::ip::tcp::socket::shutdown_both);
-				m_socket->close();
+				m_socket->lowest_layer.shutdown(asio::ip::tcp::socket::shutdown_both);
+				m_socket->lowest_layer.close();
 			}
 		});
 	}
