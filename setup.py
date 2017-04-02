@@ -13,7 +13,7 @@ if sys.version_info.major < 3:
 NAME = 'wsgi_boost'
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
-include = os.path.join(this_dir, 'include')
+third_party = os.path.join(this_dir, 'third-party')
 src = os.path.join(this_dir, NAME)
 
 for item in sys.argv:
@@ -42,7 +42,7 @@ def get_file(filename):
 
 
 sources = [os.path.join(src, file_) for file_ in os.listdir(src) if os.path.splitext(file_)[1] == '.cpp']
-include_dirs = [include, src]
+include_dirs = [third_party, src]
 libraries = []
 library_dirs=[]
 
