@@ -29,7 +29,7 @@ namespace wsgi_boost
 	void IoServicePool::run()
 	{
 		m_threads.clear();
-		for (size_t i = 1; i < size(); ++i)
+		for (size_t i = 1; i < m_io_services.size(); ++i)
 		{
 			m_threads.emplace_back([this, i]()
 			{
