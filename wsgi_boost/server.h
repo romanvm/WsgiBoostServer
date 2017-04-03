@@ -26,7 +26,7 @@ namespace wsgi_boost
 		unsigned short m_port;
 		boost::asio::signal_set m_signals;
 		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
-		boost::python::object m_app;
+		pybind11::object m_app;
 		std::atomic_bool m_is_running;
 
 		void accept();
@@ -54,7 +54,7 @@ namespace wsgi_boost
 		void add_static_route(std::string path, std::string content_dir);
 
 		// Set WSGI application
-		void set_app(boost::python::object app);
+		void set_app(pybind11::object app);
 
 		// Start handling HTTP requests
 		void start();
