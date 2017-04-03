@@ -31,7 +31,7 @@ namespace wsgi_boost
 	void HttpServer::accept()
 	{
 		io_service_ptr io_service = m_io_service_pool.get_io_service();
-		socket_ptr socket = make_shared<asio::ip::tcp::socket>(asio::ip::tcp::socket(*io_service));
+		socket_ptr socket = make_shared<asio::ip::tcp::socket>(*io_service);
 		m_acceptor.async_accept(*socket, [this, io_service, socket](const boost::system::error_code& ec)
 		{
 			if (ec != asio::error::operation_aborted)
