@@ -28,15 +28,15 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 	py::class_<HttpServer>(module, "WsgiBoostHttp",
 		R"'''(
-		WsgiBoostHttp(ip_address='', port=8000, threads=0)
+		WsgiBoostHttp(address='', port=8000, threads=0)
 
 		PEP-3333-compliant multi-threaded WSGI server
 
 		The server can serve both Python WSGI applications and static files.
 		For static files gzip compression, 'If-None-Match' and 'If-Modified-Since' headers are supported.
 
-		:param ip_adderess: Server's IP address.
-		:type ip_address: str
+		:param adderess: Server's address
+		:type address: str
 		:param port: Server's port.
 		:type port: int
 		:param threads: The number of threads for the server to run.
@@ -64,7 +64,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 		)'''")
 
 		.def(py::init<std::string, unsigned short, unsigned int>(),
-			py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)
+			py::arg("address") = "", py::arg("port") = 8000, py::arg("threads") = 0)
 
 		.def_property_readonly("is_running", &HttpServer::is_running, "Get server running status")
 

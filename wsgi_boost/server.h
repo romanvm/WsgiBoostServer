@@ -22,7 +22,7 @@ namespace wsgi_boost
 	private:
 		IoServicePool m_io_service_pool;
 		boost::asio::ip::tcp::acceptor m_acceptor;
-		std::string m_ip_address;
+		std::string m_address;
 		unsigned short m_port;
 		boost::asio::signal_set m_signals;
 		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
@@ -48,7 +48,7 @@ namespace wsgi_boost
 		HttpServer(const HttpServer&) = delete;
 		HttpServer& operator=(const HttpServer&) = delete;
 
-		HttpServer(std::string ip_address = "", unsigned short port = 8000, unsigned int threads = 0);
+		HttpServer(std::string address = "", unsigned short port = 8000, unsigned int threads = 0);
 
 		// Add a path to static content
 		void add_static_route(std::string path, std::string content_dir);

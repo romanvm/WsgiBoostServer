@@ -15,8 +15,8 @@ namespace py = pybind11;
 
 namespace wsgi_boost
 {
-	HttpServer::HttpServer(std::string ip_address, unsigned short port, unsigned int threads) :
-		m_ip_address{ ip_address }, m_port{ port }, m_io_service_pool{ threads },
+	HttpServer::HttpServer(std::string address, unsigned short port, unsigned int threads) :
+		m_address{ address }, m_port{ port }, m_io_service_pool{ threads },
 		m_acceptor{ *(m_io_service_pool.get_io_service()) }, m_signals{ *(m_io_service_pool.get_io_service()) }
 	{
 		m_is_running.store(false);
@@ -188,16 +188,16 @@ namespace wsgi_boost
 			cout << "Press Ctrl+C to stop it.\n";
 			m_io_service_pool.reset();
 			asio::ip::tcp::endpoint endpoint;
-			if (!m_ip_address.empty())
+			if (!m_address.empty())
 			{
 				asio::ip::tcp::resolver resolver(*(m_io_service_pool.get_io_service()));
 				try
 				{
-					endpoint = *resolver.resolve({ m_ip_address, to_string(m_port) });
+					endpoint = *resolver.resolve({ m_address, to_string(m_port) });
 				}
 				catch (const exception&)
 				{
-					throw runtime_error("Unable to resolve IP address and port " + m_ip_address + ":" + to_string(m_port) + "!");
+					throw runtime_error("Unable to resolve IP address and port " + m_address + ":" + to_string(m_port) + "!");
 				}
 			}
 			else
