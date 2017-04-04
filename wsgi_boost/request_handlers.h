@@ -50,7 +50,7 @@ namespace wsgi_boost
 		bool m_use_gzip;
 
 		void open_file(const boost::filesystem::path& content_dir_path);
-		void send_file(std::istream& content_stream, headers_type& headers);
+		void send_file(std::istream& content_stream, out_headers_t& headers);
 	};
 
 	// Handles WSGI requests
@@ -58,7 +58,7 @@ namespace wsgi_boost
 	{
 	private:
 		std::string m_status;
-		headers_type m_out_headers;
+		out_headers_t m_out_headers;
 		pybind11::object& m_app;
 		pybind11::dict m_environ;
 		pybind11::object m_write;

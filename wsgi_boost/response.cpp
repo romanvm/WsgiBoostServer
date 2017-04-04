@@ -8,7 +8,7 @@ namespace sys = boost::system;
 
 namespace wsgi_boost
 {
-	sys::error_code Response::send_header(const string& status, headers_type& headers, bool async)
+	sys::error_code Response::send_header(const string& status, out_headers_t& headers, bool async)
 	{
 		m_connection.buffer_output(http_version + " " + status + "\r\n");
 		headers.emplace_back("Server", m_server_name);
@@ -34,7 +34,7 @@ namespace wsgi_boost
 
 	sys::error_code Response::send_mesage(const string& status, const string& message)
 	{
-		headers_type headers;
+		out_headers_t headers;
 		headers.emplace_back("Content-Length", to_string(message.length()));
 		if (!message.empty())
 			headers.emplace_back("Content-Type", "text/plain");
@@ -51,7 +51,7 @@ namespace wsgi_boost
 		boost::format tpl{ html_template };
 		tpl % title % header % text;
 		string html = tpl.str();
-		headers_type headers;
+		out_headers_t headers;
 		headers.emplace_back("Content-Type", "text/html");
 		headers.emplace_back("Content-Length", to_string(html.length()));
 		// Error messages in HTML are sent syncronously so that not to mess with GIL.

@@ -67,7 +67,7 @@ namespace wsgi_boost
 					ifs.open(path.string(), ifstream::in | ios::binary);
 					if (ifs)
 					{
-						headers_type out_headers;
+						out_headers_t out_headers;
 						out_headers.emplace_back("Cache-Control", m_cache_control);
 						time_t last_modified = fs::last_write_time(path);
 						out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
@@ -111,7 +111,7 @@ namespace wsgi_boost
 	}
 
 
-	void StaticRequestHandler::send_file(istream& content_stream, headers_type& headers)
+	void StaticRequestHandler::send_file(istream& content_stream, out_headers_t& headers)
 	{
 		content_stream.seekg(0, ios::end);
 		size_t length = content_stream.tellg();

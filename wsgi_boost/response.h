@@ -17,7 +17,7 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
-	typedef std::vector<std::pair<std::string, std::string>> headers_type;
+	typedef std::vector<std::pair<std::string, std::string>> out_headers_t;
 
 	class Response
 	{
@@ -36,7 +36,7 @@ namespace wsgi_boost
 		explicit Response(Connection& connection) : m_connection{ connection } {}
 
 		// Send HTTP header (status code + headers)
-		boost::system::error_code send_header(const std::string& status, headers_type& headers, bool async = true);
+		boost::system::error_code send_header(const std::string& status, out_headers_t& headers, bool async = true);
 
 		// Send data to the client
 		boost::system::error_code send_data(const std::string& data, bool async = true);
