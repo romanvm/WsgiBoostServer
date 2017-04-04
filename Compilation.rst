@@ -13,14 +13,11 @@ Python and Boost From System Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following procedure assumes that you are using Python and Boost from system repositories. For example,
-Ubuntu 16.04 LTS (Xenial Xerus) provides Python 2.7, 3.5 and Boost 1.58.
+Ubuntu 16.04 LTS (Xenial Xerus) provides Python 3.5 and Boost 1.58.
 
 - Install prerequisites::
 
-    $ sudo apt-get install build-essential python-dev python-pip zlib1g-dev libbz2-dev libboost-all-dev
-
-  To build against Python 3 you need to install the respective libraries, for example ``python3-dev``
-  and ``python3-pip``.
+    $ sudo apt-get install build-essential python3-dev python3-pip zlib1g-dev libbz2-dev libboost-all-dev
 
 - Download or clone WsgiBoostServer sources to your computer.
 
@@ -28,25 +25,22 @@ Ubuntu 16.04 LTS (Xenial Xerus) provides Python 2.7, 3.5 and Boost 1.58.
 
 - Build WsgiBoostServer::
 
-    $ python setup.py build
-
-  To build against Python 3 use ``python3`` instead of ``python``
-  (on those Linux distributions that still use Python 2 by default).
+    $ python3 setup.py build
 
 - Run tests (optional)::
 
-    $ python setup.py test
+    $ python3 setup.py test
 
 - Install WsgiBoostServer::
 
-    $ python setup.py install
+    $ python3 setup.py install
 
   It is strongly recommended to use Python virtual environments.
 
 Alternatively, after installing prerequisites you can install WsgiBoostServer directly from GitHub repository
 using ``pip``::
 
-  $ pip install git+https://github.com/romanvm/WsgiBoostServer.git#egg=WsgiBoostServer
+  $ pip3 install git+https://github.com/romanvm/WsgiBoostServer.git#egg=WsgiBoostServer
 
 ``pip`` will download WsgiBoostServer sources, compile the binary module
 and install it into your working Python environment.
@@ -54,7 +48,10 @@ and install it into your working Python environment.
 Custom Python and Boost Versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following procedure assumes that you want to use custom Python and/or Boost versions.
+The following procedure assumes that you want to use custom Boost versions.
+In WsgiBoostServer v.2.0 Python bindings were converted to Pybind11 library that allowed to remove
+dependency on Boost.Python library pre-built against a specific Python version.
+Now WsgiBoostServer uses only generic Boost libraries.
 
 - Install prerequisites::
 
@@ -74,18 +71,9 @@ The following procedure assumes that you want to use custom Python and/or Boost 
 
     $ sh bootstrap.sh
 
-- After the bootstrap script finishes building Boost.Build engine, create Boost.Build configuration file
-  ``user-config.jam`` in your ``$HOME`` folder with the following content::
+- Run in the Boost folder::
 
-    using python : 3.6 ;
-
-  The ``using python`` parameter should point to the Python version that will be used for building
-  WsgiBoostServer. Change it if necessary. See `Boost.Build documentation`_ for more info about
-  how to configure Boost.Build with custom Python versions.
-
-- Go to Boost folder and run there::
-
-    $ ./b2 link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+    $ ./b2 link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 
   Boost.Build engine will build the necessary libraries to link WsgiBoostServer against and place them into
   ``$HOME/boost/stage/lib`` folder. This folder can be changed by the ``--stagedir=`` option.
@@ -103,25 +91,27 @@ The following procedure assumes that you want to use custom Python and/or Boost 
 
   It is strongly recommended to use Python virtual environments.
 
-**Note**: On **Releases** tab of this repository you can find statically compiled wheels
-for Python 2.7 and 3.4 on Raspberry Pi 2.
+**Note**: On **Releases** tab of this repository you can find a statically compiled wheel
+for 3.4 on Raspberry Pi 2.
 
 Windows
 -------
 
-Compiled wheels for Python 2.7 and 3.6 (32 bit) can be downloaded from "**Releases**" tab of this repository.
+A compiled wheel for Python 3.6 (32 bit) can be downloaded from "**Releases**" tab of this repository.
 If you want to compile WsgiBoostServer for Windows yourself, follow the instruction below.
 You can also check AppVeyor CI build configuration ``appveyor.yml``.
 
-**Tools required**: MS Visual Studio 2015 Update 2+, Cmake
+**Tools required**: MS Visual Studio 2015 Update 3+, Cmake
 
-Note that WsgiBoostServer ``setup.py`` script monkey-patches the default ``distutils`` complier on Windows
-and uses MS Visual Studio 2015 regardless of Python version used to compile the extension module.
+Note that on Windows you can build WsgiBoostServer only with Python 3 versions that have been compiled
+with MS Visual Studio 2015 and above which are versions 3.5 and newer.
 
 Procedure
 ~~~~~~~~~
 
 The build procedure is similar to that for custom Python and Boost versions on Linux.
+Again, WsgiBoostServer no longer requires linking against a version-specific Boost.Python library
+and uses only generic Boost libraries.
 
 - Download ``zlib`` sources from `zlib Home Site`_ and unpack them into the folder of your choice,
   for example ``c:\zlib``.
@@ -139,18 +129,9 @@ The build procedure is similar to that for custom Python and Boost versions on L
 
     >bootstrap
 
-- After the bootstrap script finishes building Boost.Build engine, create Boost.Build configuration file
-  ``user-config.jam`` in your ``%USERPROFILE%`` folder with the following content::
+- Execute in the ``boost`` folder::
 
-    using python : 3.6 : c:\\Python36-32 ;
-    using msvc : 14.0 ;
-
-  The ``using python`` parameter should point to the Python version that will be used for building
-  WsgiBoostServer. Change it if necessary.
-
-- Open the console, go to the ``boost`` folder and execute there::
-
-    >b2 link=static runtime-link=static variant=release -sZLIB_SOURCE=c:\zlib --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time --with-python
+    >b2 link=static runtime-link=static variant=release -sZLIB_SOURCE=c:\zlib --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 
   Note that ``-sZLIB_SOURCE`` option should point to your actual ``zlib`` folder.
 
