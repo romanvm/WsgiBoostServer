@@ -17,7 +17,7 @@ namespace wsgi_boost
 {
 	HttpServer::HttpServer(std::string address, unsigned short port, unsigned int threads) :
 		m_address{ address }, m_port{ port }, m_io_service_pool{ threads },
-		m_acceptor{ *(m_io_service_pool.get_io_service()) }, m_signals{ *(m_io_service_pool.get_io_service()) }
+		m_acceptor{ *m_io_service_pool.get_io_service() }, m_signals{ *m_io_service_pool.get_io_service() }
 	{
 		m_is_running.store(false);
 		m_signals.add(SIGINT);
@@ -30,7 +30,7 @@ namespace wsgi_boost
 
 	void HttpServer::accept()
 	{
-		socket_ptr socket = make_shared<asio::ip::tcp::socket>(*(m_io_service_pool.get_io_service()));
+		socket_ptr socket = make_shared<asio::ip::tcp::socket>(*m_io_service_pool.get_io_service());
 		m_acceptor.async_accept(socket->lowest_layer(), [this, socket](const boost::system::error_code& ec)
 		{
 			if (ec != asio::error::operation_aborted)
@@ -190,7 +190,7 @@ namespace wsgi_boost
 			asio::ip::tcp::endpoint endpoint;
 			if (!m_address.empty())
 			{
-				asio::ip::tcp::resolver resolver(*(m_io_service_pool.get_io_service()));
+				asio::ip::tcp::resolver resolver(*m_io_service_pool.get_io_service());
 				try
 				{
 					endpoint = *resolver.resolve({ m_address, to_string(m_port) });
