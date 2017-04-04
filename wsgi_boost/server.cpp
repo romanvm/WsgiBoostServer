@@ -30,22 +30,21 @@ namespace wsgi_boost
 
 	void HttpServer::accept()
 	{
-		io_service_ptr io_service = m_io_service_pool.get_io_service();
-		socket_ptr socket = make_shared<asio::ip::tcp::socket>(*io_service);
-		m_acceptor.async_accept(*socket, [this, io_service, socket](const boost::system::error_code& ec)
+		socket_ptr socket = make_shared<asio::ip::tcp::socket>(*(m_io_service_pool.get_io_service()));
+		m_acceptor.async_accept(socket->lowest_layer(), [this, socket](const boost::system::error_code& ec)
 		{
 			if (ec != asio::error::operation_aborted)
 				accept();
 			if (!ec)
 			{
-				socket->set_option(asio::ip::tcp::no_delay(true));
-				process_request(socket, io_service);
+				socket->lowest_layer().set_option(asio::ip::tcp::no_delay(true));
+				process_request(socket);
 			}
 		});
 	}
 
 
-	void HttpServer::process_request(socket_ptr socket, io_service_ptr io_service)
+	void HttpServer::process_request(socket_ptr socket)
 	{
 		// A stackful coroutine is needed here to correctly implement keep-alive
 		// in case if the number of concurent requests is greater than
@@ -57,9 +56,9 @@ namespace wsgi_boost
 		// with no special syncronization measures. This also allows us to safely
 		// toggle Python GIL around async operations
 		// without the risk of crashing Python interpreter.
-		asio::spawn(*io_service, [this, socket, io_service](asio::yield_context yc)
+		asio::spawn(socket->get_io_service(), [this, socket](asio::yield_context yc)
 		{
-			Connection connection{ socket, io_service, yc, header_timeout, content_timeout };
+			Connection connection{ socket, yc, header_timeout, content_timeout };
 			Request request{ connection };
 			Response response{ connection };
 			parse_result res = request.parse_header();
@@ -85,7 +84,7 @@ namespace wsgi_boost
 			// Send all remaining data from the output buffer and re-use the socket
 			// for the next request if this is a keep-alive session.
 			if (response.keep_alive)
-				process_request(socket, io_service);
+				process_request(socket);
 		});
 	}
 

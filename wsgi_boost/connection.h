@@ -39,9 +39,9 @@ namespace wsgi_boost
 		Connection(const Connection&) = delete;
 		Connection& operator=(const Connection&) = delete;
 
-		Connection(socket_ptr socket, std::shared_ptr<boost::asio::io_service> io_service,
-			boost::asio::yield_context yc, unsigned int header_timeout, unsigned int content_timeout) :
-			m_socket{ socket }, m_timer{ *io_service }, m_yc{ yc },
+		Connection(socket_ptr socket, boost::asio::yield_context yc,
+				unsigned int header_timeout, unsigned int content_timeout) :
+			m_socket{ socket }, m_timer{ socket->get_io_service() }, m_yc{ yc },
 			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
 		// Read HTTP header
