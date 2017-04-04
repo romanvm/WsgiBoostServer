@@ -7,7 +7,7 @@ WsgiBoostServer
     :target: https://ci.appveyor.com/project/romanvm/wsgiboostserver
 
 WsgiBoostServer is an asynchronous multi-threaded WSGI and HTTP server written
-as a Python extension module in C++ using `Boost.Asio`_ and `Boost.Python`_ libraries.
+as a Python extension module in C++ using `Boost.Asio`_ and `Pybind11`_ libraries.
 It can serve both Python WSGI applications and static files.
 Because it is written in C++, WsgiBoostServer is faster than pure Python
 solutions, like `Waitress`_. It can be used for hosting Python micro-services
@@ -47,9 +47,9 @@ Compatibility
 
 - **OS**: Windows, Linux. In theory, WsgiBoostServer can be built and used on any OS that has
   a C++ 11/14-compatible compiler and supports Python ``setuptools``.
-- **Python**: 2.7 and above (tested with 2.7, 3.5 and 3.6).
+- **Python 3** (tested with 3.4, 3.5 and 3.6). Python 2 is no longer supported!
 - **Boost**: tested with 1.55 and above.
-- **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 2 and above (regardless of Python version).
+- **Compilers**: GCC 4.9+, MS Visual Studio 2015 Update 3 and above.
 
 Usage
 =====
@@ -88,7 +88,7 @@ Compilation
 See `compilation instructions <Compilation.rst>`_.
 
 .. _Boost.Asio: http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio.html
-.. _Boost.Python: http://www.boost.org/doc/libs/1_61_0/libs/python/doc/html/index.html
+.. _Pybind11: https://github.com/pybind/pybind11
 .. _Waitress: https://github.com/Pylons/waitress
 .. _Flask: http://flask.pocoo.org
 .. _PEP-3333: https://www.python.org/dev/peps/pep-3333

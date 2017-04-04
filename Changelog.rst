@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.0.0
+-----
+
+- Converted Python bindings from Boost.Python to Pybind11.
+- Dropped Python 2 support.
+- Code optimization and clean-up.
+
 1.0.4
 -----
 
