@@ -24,9 +24,84 @@ PYBIND11_PLUGIN(wsgi_boost)
 	py::list all;
 	all.append("WsgiBoostHttp");
 	module.attr("__all__") = all;
-	
 
-	py::class_<HttpServer>(module, "WsgiBoostHttp",
+
+	py::class_<BaseServer<socket_ptr>>(module, "_BaseServerHttp")
+
+		.def(py::init<std::string, unsigned short, unsigned int>())
+
+		.def_property_readonly("is_running", &BaseServer<socket_ptr>::is_running, "Get server running status")
+
+		.def_readwrite("use_gzip", &BaseServer<socket_ptr>::use_gzip, "Use gzip compression for static content, default: ``True``")
+
+		.def_readwrite("host_hame", &BaseServer<socket_ptr>::host_name, "Get or set the host name, default: automatically determined")
+
+		.def_readwrite("header_timeout", &BaseServer<socket_ptr>::header_timeout,
+			R"'''(
+			Get or set timeout for receiving HTTP request headers
+
+			This is the max. interval for reciving request headers before closing connection.
+			Default: 5s
+			)'''")
+
+		.def_readwrite("content_timeout", &BaseServer<socket_ptr>::content_timeout,
+			R"'''(
+			Get or set timeout for receiving POST/PUT content or sending response
+
+			This is the max. interval for receiving POST/PUT content
+			or sending response before closing connection.
+			Default: 300s
+			)'''")
+
+		.def_readwrite("url_scheme", &BaseServer<socket_ptr>::url_scheme,
+			"Get or set url scheme -- http or https (default: ``'http'``)"
+			)
+
+		.def_readwrite("static_cache_control", &BaseServer<socket_ptr>::static_cache_control,
+			R"'''(
+			The value of ``Cache-Control`` HTTP header for static content
+			(default: ``'public, max-age=3600'``)
+			)'''")
+
+		.def("start", &BaseServer<socket_ptr>::start,
+			R"'''(
+			Start processing HTTP requests
+			
+			.. note:: This method blocks the current thread until the server is stopped
+				either by calling :meth:`WsgiBoostHttp.stop` or by pressing :kbd:`Ctrl+C`
+			)'''")
+
+		.def("stop", &BaseServer<socket_ptr>::stop, "Stop processing HTTP requests")
+
+		.def("add_static_route", &BaseServer<socket_ptr>::add_static_route, py::arg("path"), py::arg("content_dir"),
+			R"'''(
+			Add a route for serving static files
+
+			Allows to serve static files from ``content_dir``
+
+			:param path: a path regex to match URLs for static files
+			:type path: str
+			:param content_dir: a directory with static files to be served
+			:type content_dir: str
+
+			.. note:: ``path`` parameter is a regex that must start with ``^/``, for example :regexp:`^/static``
+				Static URL paths have priority over WSGI application paths,
+			    that is, if you set a static route for path :regexp:`^/` *all* requests for ``http://example.com/
+			    will be directed to that route and a WSGI application will never be reached.
+			)'''")
+
+		.def("set_app", &BaseServer<socket_ptr>::set_app, py::arg("app"),
+			R"'''(
+			Set a WSGI application to be served
+
+			:param app: a WSGI application to be served as an executable object
+			:type app: object
+			:raises RuntimeError: on attempt to set a WSGI application while the server is running
+			)'''")
+		;
+
+
+	py::class_<HttpServer<socket_ptr>, BaseServer<socket_ptr>>(module, "WsgiBoostHttp",
 		R"'''(
 		WsgiBoostHttp(ip_address='', port=8000, threads=0)
 
@@ -62,87 +137,18 @@ PYBIND11_PLUGIN(wsgi_boost)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
 		)'''")
-
+		
 		.def(py::init<std::string, unsigned short, unsigned int>(),
 			py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)
-
-		.def_property_readonly("is_running", &HttpServer::is_running, "Get server running status")
-
-		.def_readwrite("use_gzip", &HttpServer::use_gzip, "Use gzip compression for static content, default: ``True``")
-
-		.def_readwrite("host_hame", &HttpServer::host_name, "Get or set the host name, default: automatically determined")
-
-		.def_readwrite("header_timeout", &HttpServer::header_timeout,
-			R"'''(
-			Get or set timeout for receiving HTTP request headers
-
-			This is the max. interval for reciving request headers before closing connection.
-			Default: 5s
-			)'''")
-
-		.def_readwrite("content_timeout", &HttpServer::content_timeout,
-			R"'''(
-			Get or set timeout for receiving POST/PUT content or sending response
-
-			This is the max. interval for receiving POST/PUT content
-			or sending response before closing connection.
-			Default: 300s
-			)'''")
-
-		.def_readwrite("url_scheme", &HttpServer::url_scheme,
-			"Get or set url scheme -- http or https (default: ``'http'``)"
-			)
-
-		.def_readwrite("static_cache_control", &HttpServer::static_cache_control,
-			R"'''(
-			The value of ``Cache-Control`` HTTP header for static content
-			(default: ``'public, max-age=3600'``)
-			)'''")
-
-		.def("start", &HttpServer::start,
-			R"'''(
-			Start processing HTTP requests
-			
-			.. note:: This method blocks the current thread until the server is stopped
-				either by calling :meth:`WsgiBoostHttp.stop` or by pressing :kbd:`Ctrl+C`
-			)'''")
-
-		.def("stop", &HttpServer::stop, "Stop processing HTTP requests")
-
-		.def("add_static_route", &HttpServer::add_static_route, py::arg("path"), py::arg("content_dir"),
-			R"'''(
-			Add a route for serving static files
-
-			Allows to serve static files from ``content_dir``
-
-			:param path: a path regex to match URLs for static files
-			:type path: str
-			:param content_dir: a directory with static files to be served
-			:type content_dir: str
-
-			.. note:: ``path`` parameter is a regex that must start with ``^/``, for example :regexp:`^/static``
-				Static URL paths have priority over WSGI application paths,
-			    that is, if you set a static route for path :regexp:`^/` *all* requests for ``http://example.com/
-			    will be directed to that route and a WSGI application will never be reached.
-			)'''")
-
-		.def("set_app", &HttpServer::set_app, py::arg("app"),
-			R"'''(
-			Set a WSGI application to be served
-
-			:param app: a WSGI application to be served as an executable object
-			:type app: object
-			:raises RuntimeError: on attempt to set a WSGI application while the server is running
-			)'''")
 		;
 
 
-	py::class_<InputStream>(module, "InputStream", "wsgi.input")
-		.def("readlines", &InputStream::readlines, py::arg("sizehint") = -1)
-		.def("__iter__", &InputStream::iter, py::return_value_policy::reference_internal)
-		.def("read", &InputStream::read, py::arg("size") = -1)
-		.def("readline", &InputStream::readline, py::arg("size") = -1)
-		.def("__next__", &InputStream::next)
+	py::class_<InputStream<Connection<socket_ptr>>>(module, "InputStream", "wsgi.input")
+		.def("readlines", &InputStream<Connection<socket_ptr>>::readlines, py::arg("sizehint") = -1)
+		.def("__iter__", &InputStream<Connection<socket_ptr>>::iter, py::return_value_policy::reference_internal)
+		.def("read", &InputStream<Connection<socket_ptr>>::read, py::arg("size") = -1)
+		.def("readline", &InputStream<Connection<socket_ptr>>::readline, py::arg("size") = -1)
+		.def("__next__", &InputStream<Connection<socket_ptr>>::next)
 		;
 
 

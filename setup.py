@@ -41,7 +41,7 @@ def get_file(filename):
         return fo.read()
 
 
-sources = [os.path.join(src, file_) for file_ in os.listdir(src) if os.path.splitext(file_)[1] == '.cpp']
+sources = [os.path.join(src, 'wsgi_boost.cpp')]
 include_dirs = [third_party, src]
 libraries = []
 library_dirs=[]

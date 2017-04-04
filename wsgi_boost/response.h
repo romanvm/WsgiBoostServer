@@ -68,7 +68,7 @@ namespace wsgi_boost
 			headers.emplace_back("Content-Length", std::to_string(message.length()));
 			if (!message.empty())
 				headers.emplace_back("Content-Type", "text/plain");
-			boost:system::error_code ec = send_header(status, headers);
+			boost::system::error_code ec = send_header(status, headers);
 			if (!ec)
 				ec = send_data(message);
 			return ec;

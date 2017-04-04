@@ -55,16 +55,16 @@ namespace wsgi_boost
 			m_header_timeout{ header_timeout }, m_content_timeout{ content_timeout } {}
 
 		// Read HTTP header
-		sys::error_code read_header(std::string& header)
+		boost::system::error_code read_header(std::string& header)
 		{
-			boost:system::error_code ec;
+			boost::system::error_code ec;
 			set_timeout(m_header_timeout);
 			size_t bytes_read = boost::asio::async_read_until(*m_socket, m_istreambuf, "\r\n\r\n", m_yc[ec]);
 			m_timer.cancel();
 			if (!ec)
 			{
 				auto in_buffer = m_istreambuf.data();
-				auto buffers_begin = asio::buffers_begin(in_buffer);
+				auto buffers_begin = boost::asio::buffers_begin(in_buffer);
 				header.assign(buffers_begin, buffers_begin + bytes_read);
 				m_istreambuf.consume(bytes_read);
 			}
@@ -72,7 +72,7 @@ namespace wsgi_boost
 		}
 
 		// Read data from a socket into the input buffer
-		bool read_into_buffer(long long length, bool async)
+		bool read_into_buffer(long long length, bool async = false)
 		{
 			if (m_bytes_left <= 0)
 				return false;
@@ -92,7 +92,7 @@ namespace wsgi_boost
 					boost::asio::transfer_exactly(size), m_yc[ec]);
 			else
 				// Read/write operations executed from inside Python must be syncronous!
-				bytes_read = boost::asio::read(*m_socket, m_istreambuf, asio::transfer_exactly(size), ec);
+				bytes_read = boost::asio::read(*m_socket, m_istreambuf, boost::asio::transfer_exactly(size), ec);
 			m_timer.cancel();
 			if (!ec || (ec && bytes_read > 0))
 				return true;
@@ -116,7 +116,7 @@ namespace wsgi_boost
 					--m_bytes_left;
 					break;
 				}
-				if (read_into_buffer(min(128LL, m_bytes_left)))
+				if (read_into_buffer(std::min(128LL, m_bytes_left)))
 					is.clear();
 				else
 					break;
@@ -165,7 +165,7 @@ namespace wsgi_boost
 		}
 
 		// Send all output data to the client
-		sys::error_code flush(bool async)
+		boost::system::error_code flush(bool async = true)
 		{
 			boost::system::error_code ec;
 			set_timeout(m_content_timeout);
@@ -214,7 +214,7 @@ namespace wsgi_boost
 		}
 
 		// Read a line from input content
-		pybind11::bytes readline(long long size)
+		pybind11::bytes readline(long long size = -1)
 		{
 			// size argument is ignored
 			return readline_();

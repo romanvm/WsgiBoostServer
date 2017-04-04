@@ -72,7 +72,7 @@ namespace wsgi_boost
 						{
 							out_headers_t out_headers;
 							out_headers.emplace_back("Cache-Control", m_cache_control);
-							time_t last_modified = fs::last_write_time(path);
+							time_t last_modified = boost::filesystem::last_write_time(path);
 							out_headers.emplace_back("Last-Modified", time_to_header(last_modified));
 							// Use hex representation of the last modified POSIX timestamp as ETag
 							std::string etag = "\"" + hex(static_cast<size_t>(last_modified)) + "\"";
@@ -115,7 +115,7 @@ namespace wsgi_boost
 
 		void send_file(std::istream& content_stream, out_headers_t& headers)
 		{
-			content_stream.seekg(0, ios::end);
+			content_stream.seekg(0, std::ios::end);
 			size_t length = content_stream.tellg();
 			size_t start_pos = 0;
 			size_t end_pos = length - 1;
@@ -130,7 +130,7 @@ namespace wsgi_boost
 				if (!range.second.empty())
 					end_pos = std::stoull(range.second);
 				else
-					range.second = to_string(end_pos);
+					range.second = std::to_string(end_pos);
 				if (start_pos > end_pos || start_pos >= length || end_pos >= length)
 				{
 					m_response.send_mesage("416 Range Not Satisfiable", "Invalid bytes range!");
@@ -138,14 +138,14 @@ namespace wsgi_boost
 				}
 				else
 				{
-					headers.emplace_back("Content-Length", to_string(end_pos - start_pos));
-					headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + to_string(length));
+					headers.emplace_back("Content-Length", std::to_string(end_pos - start_pos));
+					headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + std::to_string(length));
 					m_response.send_header("206 Partial Content", headers);
 				}
 			}
 			else
 			{
-				headers.emplace_back("Content-Length", to_string(length));
+				headers.emplace_back("Content-Length", std::to_string(length));
 				m_response.send_header("200 OK", headers);
 			}
 			if (m_request.method == "GET")
@@ -182,8 +182,8 @@ namespace wsgi_boost
 				m_response.send_mesage("405 Method Not Allowed", "Invalid HTTP method! Only GET and HEAD are allowed.");
 				return;
 			}
-			const auto content_dir_path = boost:filesystem::path{ m_request.content_dir };
-			if (!boost:filesystem::exists(content_dir_path))
+			const auto content_dir_path = boost::filesystem::path{ m_request.content_dir };
+			if (!boost::filesystem::exists(content_dir_path))
 			{
 				m_response.send_html("500 Internal Server Error",
 					"Error 500",
@@ -247,7 +247,7 @@ namespace wsgi_boost
 					pybind11::object t = exc[0];
 					pybind11::object v = exc[1];
 					pybind11::object tb = exc[2];
-					cerr << "The WSGI app passed exc_info after sending headers to the client!\n";
+					std::cerr << "The WSGI app passed exc_info after sending headers to the client!\n";
 					PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
 					throw pybind11::error_already_set();
 				}
@@ -292,11 +292,11 @@ namespace wsgi_boost
 			m_environ["CONTENT_TYPE"] = m_request.get_header("Content-Type");
 			m_environ["CONTENT_LENGTH"] = m_request.get_header("Content-Length");
 			m_environ["SERVER_NAME"] = m_host_name;
-			m_environ["SERVER_PORT"] = to_string(m_local_port);
+			m_environ["SERVER_PORT"] = std::to_string(m_local_port);
 			m_environ["SERVER_PROTOCOL"] = m_request.http_version;
 			m_environ["REMOTE_ADDR"] = m_request.remote_address();
 			m_environ["REMOTE_HOST"] = m_request.remote_address();
-			m_environ["REMOTE_PORT"] = to_string(m_request.remote_port());
+			m_environ["REMOTE_PORT"] = std::to_string(m_request.remote_port());
 			for (const auto& header : m_request.headers)
 			{
 				std::string env_header = header.first;

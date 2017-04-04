@@ -75,14 +75,14 @@ namespace wsgi_boost
 		parse_result Request::parse_header()
 		{
 			std::string header;
-			sys::error_code ec = m_connection.read_header(header);
+			boost::system::error_code ec = m_connection.read_header(header);
 			if (ec)
 				return CONN_ERROR;
 			std::istringstream iss{ header };
 			std::string line;
 			std::getline(iss, line);
 			line.pop_back();
-			std::vector<string> parts;
+			std::vector<std::string> parts;
 			boost::algorithm::split(parts, line,
 				boost::algorithm::is_space(),
 				boost::algorithm::token_compress_on);
@@ -138,7 +138,7 @@ namespace wsgi_boost
 		std::string get_header(const std::string& header) const
 		{
 			auto it = headers.find(header);
-			return it != headers.end() ? it->second : string();
+			return it != headers.end() ? it->second : std::string();
 		}
 
 		// Check if the connection is persistent (keep-alive)
@@ -154,6 +154,6 @@ namespace wsgi_boost
 		std::string remote_address() const { return m_connection.socket()->lowest_layer().remote_endpoint().address().to_string(); }
 
 		// Get remote endpoint port
-		unsigned short remote_port() const { m_connection.socket()->lowest_layer().remote_endpoint().port() }
+		unsigned short remote_port() const { return m_connection.socket()->lowest_layer().remote_endpoint().port(); }
 	};
 }
