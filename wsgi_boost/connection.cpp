@@ -96,10 +96,10 @@ namespace wsgi_boost
 	string Connection::read_line()
 	{
 		istream is{ &m_istreambuf };
-		string line = string();
+		string line;
 		while (true)
 		{
-			string temp = string();
+			string temp;
 			getline(is, temp);
 			line += temp;
 			m_bytes_left -= temp.length();
