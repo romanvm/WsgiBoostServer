@@ -10,6 +10,7 @@ License: MIT, see License.txt
 #include "utils.h"
 
 #include <boost/system/error_code.hpp>
+#include <boost/format.hpp>
 
 #include <vector>
 #include <string>
@@ -17,13 +18,14 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
-	typedef std::vector<std::pair<std::string, std::string>> headers_type;
+	typedef std::vector<std::pair<std::string, std::string>> out_headers_t;
 
+	template <class conn_t>
 	class Response
 	{
 	private:
 		const std::string m_server_name = "WsgiBoost v." WSGI_BOOST_VERSION;
-		Connection& m_connection;
+		conn_t& m_connection;
 		bool m_header_sent = false;
 
 	public:
@@ -33,22 +35,63 @@ namespace wsgi_boost
 		Response(const Response&) = delete;
 		Response& operator=(const Response&) = delete;
 
-		explicit Response(Connection& connection) : m_connection{ connection } {}
+		explicit Response(conn_t& connection) : m_connection{ connection } {}
 
 		// Send HTTP header (status code + headers)
-		boost::system::error_code send_header(const std::string& status, headers_type& headers, bool async = true);
+		boost::system::error_code send_header(const std::string& status, out_headers_t& headers, bool async = true)
+		{
+			m_connection.buffer_output(http_version + " " + status + "\r\n");
+			headers.emplace_back("Server", m_server_name);
+			headers.emplace_back("Date", get_current_gmt_time());
+			if (keep_alive)
+				headers.emplace_back("Connection", "keep-alive");
+			else
+				headers.emplace_back("Connection", "close");
+			for (const auto& header : headers)
+				m_connection.buffer_output(header.first + ": " + header.second + "\r\n");
+			m_connection.buffer_output("\r\n");
+			m_header_sent = true;
+			return m_connection.flush(async);
+		}
 
 		// Send data to the client
-		boost::system::error_code send_data(const std::string& data, bool async = true);
+		boost::system::error_code send_data(const std::string& data, bool async = true)
+		{
+			m_connection.buffer_output(data);
+			return m_connection.flush(async);
+		}
 
 		// Send a plain text HTTP message to a client
-		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string());
+		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string())
+		{
+			out_headers_t headers;
+			headers.emplace_back("Content-Length", std::to_string(message.length()));
+			if (!message.empty())
+				headers.emplace_back("Content-Type", "text/plain");
+			boost:system::error_code ec = send_header(status, headers);
+			if (!ec)
+				ec = send_data(message);
+			return ec;
+		}
 
 		// Send a html HTTP message to a client
 		boost::system::error_code send_html(const std::string& status, const std::string& title,
-			const std::string& header, const std::string& text);
+			const std::string& header, const std::string& text)
+		{
+			boost::format tpl{ html_template };
+			tpl % title % header % text;
+			std::string html = tpl.str();
+			out_headers_t headers;
+			headers.emplace_back("Content-Type", "text/html");
+			headers.emplace_back("Content-Length", std::to_string(html.length()));
+			// Error messages in HTML are sent syncronously so that not to mess with GIL.
+			boost::system::error_code ec = send_header(status, headers, false);
+			if (!ec)
+				ec = send_data(html, false);
+			return ec;
+		}
 
 		// Check if HTTP header has been sent
-		bool header_sent() const;
+		bool header_sent() const { return m_header_sent; }
 	};
 }
