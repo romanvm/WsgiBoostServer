@@ -39,8 +39,6 @@ if ssl_enabled:
             os.environ['OPENSSL_ROOT_DIR'] = item.split('=')[1]
             sys.argv.remove(item)
             break
-    else:
-        ssl_enabled = False
 
 
 class BuildError(Exception):
