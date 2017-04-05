@@ -13,6 +13,7 @@ addons:
             - zlib1g-dev
             - libbz2-dev
             - python3.5-dev
+            - libssl-dev
 
 env: CC_VER=4.9 BOOST_ROOT=$TRAVIS_BUILD_DIR/boost BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib LD_LIBRARY_PATH="$BOOST_LIBRARYDIR:$LD_LIBRARY_PATH"
 
