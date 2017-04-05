@@ -25,6 +25,17 @@ for item in sys.argv:
         os.environ['BOOST_LIBRARYDIR'] = item.split('=')[1]
         sys.argv.remove(item)
 
+ssl_enabled = True
+for item in sys.argv:
+    if '--without-ssl' in item:
+        ssl_enabled = False
+        sys.argv.remove(item)
+if ssl_enabled:
+    for item in sys.argv:
+        if '--open-ssl-dir' in item:
+            os.environ['OPENSSL_ROOT_DIR'] = item.split('=')[1]
+            sys.argv.remove(item)
+
 
 class BuildError(Exception):
     pass
@@ -62,6 +73,28 @@ if sys.platform == 'win32':
     except KeyError:
         raise BuildError('Path to Boost libraries is not set! Use --boost-libs="<path>" option.')
 
+    if ssl_enabled:
+        try:
+            openssl_root = os.path.expandvars(os.environ['OPENSSL_ROOT_DIR'])
+        except KeyError:
+            pass
+        else:
+            define_macros.append(('HTTPS_ENABLED', None))
+            include_dirs.append(os.path.join(openssl_root, 'include'))
+            library_dirs.append(os.path.join(openssl_root, 'lib', 'VC', 'static'))
+            if sys.maxsize > 2 ** 32 // 2 - 1:
+                arch = 64
+            else:
+                arch = 32
+            libraries += [
+                'libcrypto{}MT'.format(arch),
+                'libssl{}MT'.format(arch),
+
+                'advapi{}'.format(arch),
+                'crypt{}'.format(arch),
+                'legacy_stdio_definitions',
+                ]
+
     extra_compile_args.append('/EHsk')
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
@@ -86,6 +119,9 @@ else:
             'z',
         ]
 
+    if ssl_enabled:
+        define_macros.append(('SSL_ENABLED', None))
+        libraries += ['crypto', 'ssl']
     extra_compile_args.append('-std=c++11')
 
 

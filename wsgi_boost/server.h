@@ -40,7 +40,7 @@ namespace wsgi_boost
 		std::atomic_bool m_is_running;
 
 		// Pybind11 cannot expose abstract C++ classes
-		virtual void accept() { throw std::runtime_error("Method is not implemented!"); };
+		virtual void accept() { };
 
 		virtual void process_request(socket_p socket)
 		{
@@ -207,7 +207,7 @@ namespace wsgi_boost
 			if (!is_running())
 			{
 				pybind11::gil_scoped_release release_gil;
-				std::cout << "WsgiBoostHttp server starting with " << m_io_service_pool.size() << " thread(s).\n";
+				std::cout << "WsgiBoost server starting with " << m_io_service_pool.size() << " thread(s).\n";
 				std::cout << "Press Ctrl+C to stop it.\n";
 				m_io_service_pool.reset();
 				boost::asio::ip::tcp::endpoint endpoint;

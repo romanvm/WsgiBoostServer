@@ -6,9 +6,13 @@ License: MIT, see License.txt
 */
 
 #include "server.h"
+#ifdef HTTPS_ENABLED
+#include "server_https.h"
+#endif // HTTPS_ENABLED
 
 namespace py = pybind11;
 using namespace wsgi_boost;
+using namespace std;
 
 
 PYBIND11_PLUGIN(wsgi_boost)
@@ -22,13 +26,9 @@ PYBIND11_PLUGIN(wsgi_boost)
 	module.attr("__email__") = "romanvm@yandex.ua";
 	module.attr("__license__") = "MIT";
 	py::list all;
-	all.append("WsgiBoostHttp");
-	module.attr("__all__") = all;
 
 
 	py::class_<BaseServer<socket_ptr>>(module, "_BaseServerHttp")
-
-		.def(py::init<std::string, unsigned short, unsigned int>())
 
 		.def_property_readonly("is_running", &BaseServer<socket_ptr>::is_running, "Get server running status")
 
@@ -103,7 +103,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 	py::class_<HttpServer<socket_ptr>, BaseServer<socket_ptr>>(module, "WsgiBoostHttp",
 		R"'''(
-		WsgiBoostHttp(ip_address='', port=8000, threads=0)
+		WsgiBoostHttp(address='', port=8000, threads=0)
 
 		PEP-3333-compliant multi-threaded WSGI server
 
@@ -138,12 +138,48 @@ PYBIND11_PLUGIN(wsgi_boost)
 			httpd.start()
 		)'''")
 		
-		.def(py::init<std::string, unsigned short, unsigned int>(),
-			py::arg("ip_address") = "", py::arg("port") = 8000, py::arg("threads") = 0)
+		.def(py::init<string, unsigned short, unsigned int>(),
+			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
 		;
 
+	all.append("WsgiBoostHttp");
 
-	py::class_<InputStream<Connection<socket_ptr>>>(module, "InputStream", "wsgi.input")
+#ifdef HTTPS_ENABLED
+	py::class_<BaseServer<ssl_socket_ptr>>(module, "_BaseServerHttps")
+		.def_property_readonly("is_running", &BaseServer<ssl_socket_ptr>::is_running)
+		.def_readwrite("use_gzip", &BaseServer<ssl_socket_ptr>::use_gzip)
+		.def_readwrite("host_hame", &BaseServer<ssl_socket_ptr>::host_name)
+		.def_readwrite("header_timeout", &BaseServer<ssl_socket_ptr>::header_timeout)
+		.def_readwrite("content_timeout", &BaseServer<ssl_socket_ptr>::content_timeout)
+		.def_readwrite("url_scheme", &BaseServer<ssl_socket_ptr>::url_scheme)
+		.def_readwrite("static_cache_control", &BaseServer<ssl_socket_ptr>::static_cache_control)
+		.def("start", &BaseServer<ssl_socket_ptr>::start)
+		.def("stop", &BaseServer<ssl_socket_ptr>::stop)
+		.def("add_static_route", &BaseServer<ssl_socket_ptr>::add_static_route, py::arg("path"), py::arg("content_dir"))
+		.def("set_app", &BaseServer<ssl_socket_ptr>::set_app, py::arg("app"))
+		;
+
+	py::class_<HttpsServer<ssl_socket_ptr>, BaseServer<ssl_socket_ptr>>(module, "WsgiBoostHttps",
+		R"'''(
+		)'''")
+
+		.def(py::init<string, string, string, string, unsigned short, unsigned int>(),
+			py::arg("cert"), py::arg("private_key"), py::arg("dh") = string(),
+			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
+		;
+
+	all.append("WsgiBoostHttps");
+
+	py::class_<InputStream<Connection<ssl_socket_ptr>>>(module, "HttpsInputStream", "wsgi.input")
+		.def("readlines", &InputStream<Connection<ssl_socket_ptr>>::readlines, py::arg("sizehint") = -1)
+		.def("__iter__", &InputStream<Connection<ssl_socket_ptr>>::iter, py::return_value_policy::reference_internal)
+		.def("read", &InputStream<Connection<ssl_socket_ptr>>::read, py::arg("size") = -1)
+		.def("readline", &InputStream<Connection<ssl_socket_ptr>>::readline, py::arg("size") = -1)
+		.def("__next__", &InputStream<Connection<ssl_socket_ptr>>::next)
+		;
+#endif // HTTPS_ENABLED
+
+	py::class_<InputStream<Connection<socket_ptr>>>(module, "HttpInputStream", "wsgi.input")
 		.def("readlines", &InputStream<Connection<socket_ptr>>::readlines, py::arg("sizehint") = -1)
 		.def("__iter__", &InputStream<Connection<socket_ptr>>::iter, py::return_value_policy::reference_internal)
 		.def("read", &InputStream<Connection<socket_ptr>>::read, py::arg("size") = -1)
@@ -168,5 +204,6 @@ PYBIND11_PLUGIN(wsgi_boost)
 		.def("close", &FileWrapper::close)
 		;
 
+	module.attr("__all__") = all;
 	return module.ptr();
 }
