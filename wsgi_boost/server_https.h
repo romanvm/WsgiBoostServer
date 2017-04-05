@@ -1,4 +1,10 @@
 #pragma once
+/*
+HTTPS Server class
+
+Copyright (c) 2016 Roman Miroshnychenko <romanvm@yandex.ua>
+License: MIT, see License.txt
+*/
 #ifdef HTTPS_ENABLED
 
 #include "server.h"

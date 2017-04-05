@@ -90,6 +90,7 @@ if sys.platform == 'win32':
                 arch = 64
             else:
                 arch = 32
+            # Appveyor uses old OpenSSL for Windows
             if os.environ.get('APPVEYOR'):
                 libraries += [
                     'libeay{}MT'.format(arch),
