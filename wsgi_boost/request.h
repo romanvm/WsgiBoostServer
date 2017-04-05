@@ -72,7 +72,7 @@ namespace wsgi_boost
 		explicit Request(conn_t& connection) : m_connection{ connection } {}
 
 		// Parse HTTP request headers
-		parse_result Request::parse_header()
+		parse_result parse_header()
 		{
 			std::string header;
 			boost::system::error_code ec = m_connection.read_header(header);
