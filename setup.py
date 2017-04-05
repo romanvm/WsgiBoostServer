@@ -90,10 +90,17 @@ if sys.platform == 'win32':
                 arch = 64
             else:
                 arch = 32
+            if os.environ.get('APPVEYOR'):
+                libraries += [
+                    'libeay{}MT'.format(arch),
+                    'ssleay{}MT'.format(arch),
+                ]
+            else:
+                libraries += [
+                    'libcrypto{}MT'.format(arch),
+                    'libssl{}MT'.format(arch),
+                ]
             libraries += [
-                'libcrypto{}MT'.format(arch),
-                'libssl{}MT'.format(arch),
-
                 'advapi{}'.format(arch),
                 'crypt{}'.format(arch),
                 'legacy_stdio_definitions',
