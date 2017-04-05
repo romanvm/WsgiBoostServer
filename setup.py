@@ -94,6 +94,8 @@ if sys.platform == 'win32':
                 libraries += [
                     'libeay{}MT'.format(arch),
                     'ssleay{}MT'.format(arch),
+                    'gdi{}'.format(arch),
+                    'User{}'.format(arch),
                 ]
             else:
                 libraries += [
