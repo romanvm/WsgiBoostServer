@@ -61,13 +61,12 @@ namespace wsgi_boost
 		}
 
 	public:
-		std::string url_scheme = "https";
-
 		HttpsServer(std::string cert, const std::string private_key, std::string dh = std::string(),
 			std::string address = std::string(), unsigned short port = 8000, unsigned int threads = 0) :
 			m_context{ boost::asio::ssl::context::tlsv1_server },
 			BaseServer<ssl_socket_ptr>{ address, port, threads }
 		{
+			url_scheme = "https";
 			m_context.set_options(boost::asio::ssl::context::default_workarounds
 				| boost::asio::ssl::context::no_sslv2
 				| boost::asio::ssl::context::no_sslv3

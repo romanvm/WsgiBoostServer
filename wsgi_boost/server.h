@@ -238,7 +238,7 @@ namespace wsgi_boost
 				m_is_running.store(true);
 				m_io_service_pool.run();
 				m_is_running.store(false);
-				std::cout << "WsgiBoostHttp server stopped.\n";
+				std::cout << "WsgiBoost server stopped.\n";
 			}
 			else
 			{
