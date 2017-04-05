@@ -23,6 +23,8 @@ install:
   - dir
   - cd VC
   - dir
+  - cd static
+  - dir
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
