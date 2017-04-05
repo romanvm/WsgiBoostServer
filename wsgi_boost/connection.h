@@ -191,7 +191,7 @@ namespace wsgi_boost
 
 		std::string read_(long long size)
 		{
-			py::gil_scoped_release release_gil;
+			pybind11::gil_scoped_release release_gil;
 			std::string data;
 			if (m_connection.read_bytes(data, size))
 				return data;
@@ -228,7 +228,7 @@ namespace wsgi_boost
 			long long total_length = 0;
 			while (!(line = readline()).empty())
 			{
-				listing.append(py::bytes(line));
+				listing.append(pybind11::bytes(line));
 				if (sizehint >= 0)
 				{
 					total_length += line.length();
