@@ -17,6 +17,8 @@ environment:
       PYTHON_VERSION: "3.6"
       
 install:
+  - "cd C:\\OpenSSL-Win32"
+  - dir
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -27,7 +29,7 @@ install:
 
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - python setup.py build --open-ssl-dir="C:\\OpenSSL-Win32"
+  - python setup.py build --open-ssl-dir="C:\OpenSSL-Win32"
 
 test_script:
   - python setup.py test
