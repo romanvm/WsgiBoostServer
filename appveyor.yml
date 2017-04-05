@@ -27,7 +27,7 @@ install:
 
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - python setup.py build
+  - python setup.py build --open-ssl-dir="C:\\OpenSSL-Win32"
 
 test_script:
   - python setup.py test
