@@ -63,9 +63,6 @@ namespace wsgi_boost
 	public:
 		std::string url_scheme = "https";
 
-		HttpsServer(const HttpsServer&) = delete;
-		HttpsServer& operator=(const HttpsServer&) = delete;
-
 		HttpsServer(std::string cert, const std::string private_key, std::string dh = std::string(),
 			std::string address = std::string(), unsigned short port = 8000, unsigned int threads = 0) :
 			m_context{ boost::asio::ssl::context::tlsv1_server },
