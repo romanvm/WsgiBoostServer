@@ -2,10 +2,6 @@ version: "{build}"
 
 os: Visual Studio 2015
 
-platform:
-  - x86
-  - x64
-
 configuration: Release
 
 environment:  
@@ -14,18 +10,22 @@ environment:
     BOOST_ROOT: "C:\\Libraries\\boost_1_63_0"
     ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.11"
 
+  matrix:
+  - platform: x86
+    PYTHON: "C:\\Python36"
+    PYTHON_VERSION: "3.6"
+    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib32-msvc-14.0"
+    OPEN_SSL: "C:\\OpenSSL-Win32"
+
+  - platform: x64
+    PYTHON: "C:\\Python36-x64"
+    PYTHON_VERSION: "3.6"
+    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib64-msvc-14.0"
+    OPEN_SSL: "C:\\OpenSSL-Win64"
+
 install:
-  - if %PLATFORM% == "x86" (
-        set PYTHON="C:\\Python36"
-        set BOOST_LIBRARYDIR="%BOOST_ROOT%\\lib32-msvc-14.0"
-        set OPEN_SSL="C:\\OpenSSL-Win32"
-        )
-  - if %PLATFORM% == "x64" (
-        set PYTHON="C:\\Python36-x64"
-        set BOOST_LIBRARYDIR="%BOOST_ROOT%\\lib64-msvc-14.0"
-        set OPEN_SSL="C:\\OpenSSL-Win64"
-        )
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
   - ps: Start-FileDownload "http://zlib.net/zlib1211.zip" -FileName zlib.zip
   - 7z x zlib.zip -y
