@@ -267,5 +267,37 @@ class ServingStaticFilesTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 416)
 
 
+try:
+    wsgi_boost.WsgiBoostHttps
+except AttributeError:
+    pass
+else:
+    class HttpsServerTestCase(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cert = os.path.join(cwd, 'server.crt')
+            key = os.path.join(cwd, 'server.key')
+            dh = os.path.join(cwd, 'dh512.pem')
+            cls._httpd = wsgi_boost.WsgiBoostHttps(cert, key, dh, threads=1)
+            app = App()
+            cls._httpd.set_app(app)
+            cls._server_thread = threading.Thread(target=cls._httpd.start)
+            cls._server_thread.daemon = True
+            cls._server_thread.start()
+            time.sleep(0.5)
+
+        @classmethod
+        def tearDownClass(cls):
+            cls._httpd.stop()
+            cls._server_thread.join()
+            del cls._httpd
+            print()
+
+        def test_https_server(self):
+            resp = requests.get('https://127.0.0.1:8000/', verify=False)
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.text, 'App OK')
+
+
 if __name__ == '__main__':
     unittest.main()
