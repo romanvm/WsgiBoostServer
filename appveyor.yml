@@ -24,7 +24,7 @@ environment:
     OPEN_SSL: "C:\\OpenSSL-Win64"
 
 install:
-  - "cd %OPEN_SSL%\\lib\\VC\\static"
+  - cd "%OPEN_SSL%\\lib\\VC\\static"
   - dir
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
