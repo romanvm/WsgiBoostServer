@@ -46,6 +46,9 @@ namespace wsgi_boost
 	template<class req_t, class resp_t>
 	class StaticRequestHandler : public BaseRequestHandler<req_t, resp_t>
 	{
+		using BaseRequestHandler<req_t, resp_t>::m_request;
+		using BaseRequestHandler<req_t, resp_t>::m_response;
+
 	private:
 		std::string& m_cache_control;
 		bool m_use_gzip;
@@ -199,6 +202,9 @@ namespace wsgi_boost
 	template<class conn_t, class req_t, class resp_t>
 	class WsgiRequestHandler : public BaseRequestHandler<req_t, resp_t>
 	{
+		using BaseRequestHandler<req_t, resp_t>::m_request;
+		using BaseRequestHandler<req_t, resp_t>::m_response;
+
 	private:
 		std::string m_status;
 		out_headers_t m_out_headers;
