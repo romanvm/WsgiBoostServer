@@ -277,7 +277,7 @@ else:
         def setUpClass(cls):
             cert = os.path.join(cwd, 'server.crt')
             key = os.path.join(cwd, 'server.key')
-            dh = os.path.join(cwd, 'dh512.pem')
+            dh = os.path.join(cwd, 'dh2048.pem')
             cls._httpd = wsgi_boost.WsgiBoostHttps(cert, key, dh, threads=1)
             app = App()
             cls._httpd.set_app(app)
