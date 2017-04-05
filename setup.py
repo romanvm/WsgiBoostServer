@@ -20,21 +20,27 @@ for item in sys.argv:
     if '--boost-headers' in item:
         os.environ['BOOST_ROOT'] = item.split('=')[1]
         sys.argv.remove(item)
+        break
 for item in sys.argv:
     if '--boost-libs' in item:
         os.environ['BOOST_LIBRARYDIR'] = item.split('=')[1]
         sys.argv.remove(item)
+        break
 
 ssl_enabled = True
 for item in sys.argv:
     if '--without-ssl' in item:
         ssl_enabled = False
         sys.argv.remove(item)
+        break
 if ssl_enabled:
     for item in sys.argv:
         if '--open-ssl-dir' in item:
             os.environ['OPENSSL_ROOT_DIR'] = item.split('=')[1]
             sys.argv.remove(item)
+            break
+    else:
+        ssl_enabled = False
 
 
 class BuildError(Exception):
