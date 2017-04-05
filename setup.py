@@ -120,7 +120,7 @@ else:
         ]
 
     if ssl_enabled:
-        define_macros.append(('SSL_ENABLED', None))
+        define_macros.append(('HTTPS_ENABLED', None))
         libraries += ['crypto', 'ssl']
     extra_compile_args.append('-std=c++11')
 
