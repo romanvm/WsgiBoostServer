@@ -65,7 +65,6 @@ namespace wsgi_boost
 
 		HttpsServer(const HttpsServer&) = delete;
 		HttpsServer& operator=(const HttpsServer&) = delete;
-		virtual ~HttpsServer() {}
 
 		HttpsServer(std::string cert, const std::string private_key, std::string dh = std::string(),
 			std::string address = std::string(), unsigned short port = 8000, unsigned int threads = 0) :
