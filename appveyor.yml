@@ -20,6 +20,7 @@ install:
   - "cd C:\\OpenSSL-Win32"
   - dir
   - cd lib
+  - dir
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
