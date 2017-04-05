@@ -2,23 +2,30 @@ version: "{build}"
 
 os: Visual Studio 2015
 
-platform: 
-  - Win32
+platform:
+  - x86
+  - x64
+
+configuration: Release
 
 environment:  
   global:
     MSVC_DEFAULT_OPTIONS: ON
     BOOST_ROOT: "C:\\Libraries\\boost_1_63_0"
-    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib32-msvc-14.0"
     ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.11"
 
-  matrix:
-    - PYTHON: "C:\\Python36"
-      PYTHON_VERSION: "3.6"
-      
 install:
+  - if %PLATFORM% == "x86" (
+        set PYTHON="C:\\Python36"
+        set BOOST_LIBRARYDIR="%BOOST_ROOT%\\lib32-msvc-14.0"
+        set OPEN_SSL="C:\\OpenSSL-Win32"
+        )
+  - if %PLATFORM% == "x64" (
+        set PYTHON="C:\\Python36-x64"
+        set BOOST_LIBRARYDIR="%BOOST_ROOT%\\lib64-msvc-14.0"
+        set OPEN_SSL="C:\\OpenSSL-Win64"
+        )
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - python --version
   - cd %APPVEYOR_BUILD_FOLDER%
   - ps: Start-FileDownload "http://zlib.net/zlib1211.zip" -FileName zlib.zip
   - 7z x zlib.zip -y
@@ -27,7 +34,7 @@ install:
 
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
-  - python setup.py build --open-ssl-dir="C:\OpenSSL-Win32"
+  - python setup.py build --open-ssl-dir=%OPEN_SSL%
 
 test_script:
   - python setup.py test
