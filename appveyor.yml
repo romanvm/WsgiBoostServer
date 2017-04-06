@@ -26,13 +26,16 @@ environment:
 install:
   - cd "%OPENSSL_ROOT_DIR%\\lib\\VC\\static"
   - dir
-  - "set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "set PATH=%PYTHON%;%PYTHON%\\Scripts;OPENSSL_ROOT_DIR\\bin;%PATH%"
   - python --version
+  - pip --version
+  - openssl version
   - cd %APPVEYOR_BUILD_FOLDER%
   - ps: Start-FileDownload "http://zlib.net/zlib1211.zip" -FileName zlib.zip
   - 7z x zlib.zip -y
   - cd %ZLIB_DIR%
   - cmake .
+  - pip install wheel
 
 build_script:
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -40,3 +43,9 @@ build_script:
 
 test_script:
   - python setup.py test
+
+after_test:
+  - python setup.py bdist_wheel
+
+artifacts:
+  - path: dist\*.whl
