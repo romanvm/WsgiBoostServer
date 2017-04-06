@@ -87,7 +87,7 @@ if sys.platform == 'win32':
             include_dirs.append(os.path.join(openssl_root, 'include'))
             openssl_libs = os.path.join(openssl_root, 'lib', 'VC', 'static')
             library_dirs.append(openssl_libs)
-            if os.path.exists(os.path.join(openssl_libs, 'libeay32MT')):
+            if os.path.exists(os.path.join(openssl_libs, 'libeay32MT.lib')):
                 # OpenSSL v.1.0.x
                 libraries += [
                     'libeay32MT',
