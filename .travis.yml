@@ -1,26 +1,37 @@
-sudo: required
+language: python
 
-services:
-  - docker
+python: "3.5"
 
-before_install:
-  - docker pull ubuntu
-  - docker run -d --name ubuntu-test -v $(pwd):/travis ubuntu tail -f /dev/null
-  - docker ps -a
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+            - deadsnakes
+
+        packages:
+            - g++-4.9
+            - zlib1g-dev
+            - libbz2-dev
+            - python3.5-dev
+            - libssl-dev
+
+env: CC_VER=4.9
+    BOOST_ROOT=$TRAVIS_BUILD_DIR/boost
+    BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
 
 install:
-  - docker exec ubuntu-test bash -c "apt-get update;
-    apt-get install -y software-properties-common python-software-properties;
-    add-apt-repository ppa:fkrull/deadsnakes;
-    apt-get update;
-    apt-get install -y build-essential gcc-4.9 g++-4.9 python3-pip python3.6 python3.6-dev zlib1g-dev libbz2-dev libboost-all-dev libssl-dev;
-    python3.6 -m pip install setuptools"
+    - export CC=g++-$CC_VER
+    - export CXX=g++-$CC_VER
+    # We are building Boost libs here because libboost1.55-all-dev does not include static boost_coroutine
+    - git clone https://github.com/romanvm/boost.git
+    - chmod -R +x $BOOST_ROOT
+    - cd $BOOST_ROOT
+    - ./bootstrap.sh
+    - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 
 script:
-  - docker exec ubuntu-test bash -c "cd /travis;
-    export CC=gcc-4.9;
-    export CXX=g++-4.9;
-    python3.6 setup.py build test"
+    - cd $TRAVIS_BUILD_DIR
+    - python setup.py build test
 
 notifications:
     email: false
