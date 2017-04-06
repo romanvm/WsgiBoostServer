@@ -11,7 +11,7 @@ as a Python extension module in C++ using `Boost.Asio`_ and `Pybind11`_ librarie
 It can serve both Python WSGI applications and static files.
 Because it is written in C++, WsgiBoostServer is faster than pure Python
 solutions, like `Waitress`_. It can be used for hosting Python micro-services
-and/or static files.
+and/or static files. WsgiBoostServer also supports HTTPS protocol.
 
 Main Features
 =============
@@ -82,6 +82,37 @@ Simple example with `Flask`_ micro-framework:
 
 More advanced examples with Flask and Django frameworks can be found ``examples`` folder.
 
+HTTPS Support
+=============
+
+WsgiBoostServer provides ``WsgiBoostHttps`` class that allows to serve your
+WSGI application and static files via a secure connection. To use HTTPS,
+in the preceding example you need to replace ``WsgiBoostHttp`` class
+with ``WsgiBoostHttps`` like this:
+
+.. code-block:: python
+
+  httpd = WsgiBoostHttps('server.crt', 'server.key', port=8080, threads=4)
+
+Here ``'server.crt'`` and ``'server.key'`` are paths to HTTPS certificate
+and private key files respectively. If your private key is password-protected
+you can provide a password via ``HTTPS_KEY_PASS`` environment variable.
+
+It is recommended to obtain a HTTPS certificate from a trusted Certificate Authority
+but for testing purposes you can create a `self-signed certificate`_.
+Note that most programs won't accept such certificate with default security
+settings. For example, in browsers you need to add your site to browser's security
+exceptions. With ``curl`` you need to use ``-k`` option, and with Python ``requests``
+library you need to provide ``verify=False`` argument to request functions.
+
+Optionally, you can generate parameters for `Diffie-Hellman`_ key exchange::
+
+  $openssl dhparam -out dh.pem 2048
+
+It is strongly recommended to use at least 2048 bit prime number length.
+A path to the generated file can be passed as the third positional parameter
+to ``WsgiBoostHttps`` constructor.
+
 Compilation
 ===========
 
@@ -93,3 +124,5 @@ See `compilation instructions <Compilation.rst>`_.
 .. _Flask: http://flask.pocoo.org
 .. _PEP-3333: https://www.python.org/dev/peps/pep-3333
 .. _here: https://github.com/romanvm/WsgiBoostServer/blob/master/benchmarks/benchmarks.rst
+.. _self-signed certificate: http://www.akadia.com/services/ssh_test_certificate.html
+.. _Diffie-Hellman: https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
