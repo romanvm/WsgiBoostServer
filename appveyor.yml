@@ -24,12 +24,12 @@ environment:
     OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win64"
 
 install:
-  - cd "%OPENSSL_ROOT_DIR%\\lib\\VC\\static"
-  - dir
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;OPENSSL_ROOT_DIR\\bin;%PATH%"
   - python --version
   - pip --version
   - openssl version
+  - cd "%OPENSSL_ROOT_DIR%\\lib\\VC\\static"
+  - dir
   - cd %APPVEYOR_BUILD_FOLDER%
   - ps: Start-FileDownload "http://zlib.net/zlib1211.zip" -FileName zlib.zip
   - 7z x zlib.zip -y
@@ -49,3 +49,16 @@ after_test:
 
 artifacts:
   - path: dist\*.whl
+
+deploy:
+  tag: "%APPVEYOR_REPO_TAG_NAME%"
+  description: "WsgiBoostServer %APPVEYOR_REPO_TAG_NAME%"
+  provider: GitHub
+  auth_token:
+    secure: Re1VQJJUIe8Dlcz5Ug34e0VY4ySc8+l0nluwWkJ+LC/XxZIAUSmDU5i0rmPExjoi
+  artifact: dist\*.whl
+  draft: false
+  prerelease: false
+  on:
+    branch: master
+    appveyor_repo_tag: true
