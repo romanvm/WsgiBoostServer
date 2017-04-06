@@ -13,7 +13,8 @@ install:
     apt-get install -y software-properties-common python-software-properties;
     add-apt-repository ppa:fkrull/deadsnakes;
     apt-get update;
-    apt-get install -y build-essential gcc-4.9 python3.6 python3.6-dev zlib1g-dev libbz2-dev libboost-all-dev libssl-dev"
+    apt-get install -y build-essential gcc-4.9 python3-pip python3.6 python3.6-dev zlib1g-dev libbz2-dev libboost-all-dev libssl-dev;
+    python3.6 -m pip install setuptools"
 
 script:
   - docker exec ubuntu-test bash -c "cd /travis;
