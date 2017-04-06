@@ -17,7 +17,7 @@ Ubuntu 16.04 LTS (Xenial Xerus) provides Python 3.5 and Boost 1.58.
 
 - Install prerequisites::
 
-    $ sudo apt-get install build-essential python3-dev python3-pip zlib1g-dev libbz2-dev libboost-all-dev
+    $ sudo apt-get install build-essential python3-dev python3-pip zlib1g-dev libbz2-dev libboost-all-dev libssl-dev
 
 - Download or clone WsgiBoostServer sources to your computer.
 
@@ -55,7 +55,7 @@ Now WsgiBoostServer uses only generic Boost libraries.
 
 - Install prerequisites::
 
-    $ sudo apt-get install build-essential zlib1g-dev libbz2-dev
+    $ sudo apt-get install build-essential zlib1g-dev libbz2-dev libssl-dev
 
 - Install the necessary Python development package. For example, `deadsnakes`_ ppa repository provides various
   Python versions for Ubuntu. Let's assume we want to build WsgiBoostServer with Python 3.6::
@@ -83,7 +83,6 @@ Now WsgiBoostServer uses only generic Boost libraries.
     $ python3.6 setup.py build --boost-headers="$HOME/boost" --boost-libs="$HOME/boost/stage/lib"
 
   The ``--boost-headers=`` and ``--boost-libs=`` options must point to actual folders where Boost header files and libraries are located.
-  Note that you must use the same Python version that was used to build Boost.Python library.
 
 - Install WsgiBoostServer::
   
@@ -94,17 +93,23 @@ Now WsgiBoostServer uses only generic Boost libraries.
 **Note**: On **Releases** tab of this repository you can find a statically compiled wheel
 for 3.4 on Raspberry Pi 2.
 
+HTTPS Support
+~~~~~~~~~~~~~
+
+By default, on Linux WsgiBoostServer is built with HTTPS support. You can disable it by providing
+``--without-ssl`` option to ``setup.py`` script.
+
 Windows
 -------
 
-A compiled wheel for Python 3.6 (32 bit) can be downloaded from "**Releases**" tab of this repository.
+A compiled wheels for Python 3.6 with HTTPS support can be downloaded from "**Releases**" tab of this repository.
 If you want to compile WsgiBoostServer for Windows yourself, follow the instruction below.
 You can also check AppVeyor CI build configuration ``appveyor.yml``.
 
 **Tools required**: MS Visual Studio 2015 Update 3+, Cmake
 
-Note that on Windows you can build WsgiBoostServer only with Python 3 versions that have been compiled
-with MS Visual Studio 2015 and above which are versions 3.5 and newer.
+Note that on Windows you can build WsgiBoostServer only for Python 3 versions that have been compiled
+with MS Visual Studio 2015 and above, that is, versions 3.5 and newer.
 
 Procedure
 ~~~~~~~~~
@@ -121,6 +126,8 @@ and uses only generic Boost libraries.
     >cmake .
 
   You don't need to compile ``zlib``, ``Boost.Buld`` will do that for you.
+
+- Optionally, for HTTPS support you can download and install `OpenSSL for Windows`_ (full package).
 
 - Download ``boost`` sources from `Boost Home Site`_  and unpack them into the folder of your choice,
   for example ``c:\boost``.
@@ -145,6 +152,11 @@ and uses only generic Boost libraries.
   The ``--boost-headers=`` and ``--boost-libs=`` options must point to the actual folders where Boost header files and libraries are located.
   Note that you must use the same Python version that was used to build Boost.Python library.
 
+  Optionally, for HTTPS support you can also provide the path to OpenSSL libraries with ``--open-ssl-dir=`` option,
+  for example::
+
+    >python setup.py build --boost-headers="c:\boost" --boost-libs="c:\boost\stage\lib" --open-ssl-dir="c:\OpenSSL-Win32"
+
 - Install WsgiBoostServer::
 
     >python setup.py install
@@ -155,3 +167,4 @@ and uses only generic Boost libraries.
 .. _Boost Home Site: http://www.boost.org
 .. _deadsnakes: https://launchpad.net/~fkrull/+archive/ubuntu/deadsnakes
 .. _Boost.Build documentation: http://www.boost.org/doc/libs/1_63_0/libs/python/doc/html/building/configuring_boost_build.html
+.. _OpenSSL for Windows: https://slproweb.com/products/Win32OpenSSL.html
