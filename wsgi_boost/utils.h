@@ -42,10 +42,14 @@ namespace wsgi_boost
 		std::istringstream ss{ time_string };
 		ss.imbue(std::locale("C"));
 		ss >> std::get_time(&t, "%a, %d %b %Y %H:%M:%S GMT");
+		if (ss.fail())
+			return std::time(nullptr); // Return current time on a malformed date/time string
 		return _mkgmtime(&t);
 #else
 		std::locale::global(std::locale("C"));
-		strptime(time_string.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &t);
+		char* res = strptime(time_string.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &t);
+		if (!res)
+			return std::time(nullptr);
 		return timegm(&t);
 #endif
 	}
