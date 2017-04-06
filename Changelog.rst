@@ -6,8 +6,7 @@ Changelog
 
 - Converted Python bindings from Boost.Python to Pybind11.
 - Dropped Python 2 support.
-- Implemented
-- Code optimization and clean-up.
+- Implemented HTTPS support (with full code refactoring).
 
 1.0.4
 -----
