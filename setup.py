@@ -85,16 +85,17 @@ if sys.platform == 'win32':
         else:
             define_macros.append(('HTTPS_ENABLED', None))
             include_dirs.append(os.path.join(openssl_root, 'include'))
-            library_dirs.append(os.path.join(openssl_root, 'lib', 'VC', 'static'))
-            # Appveyor uses old OpenSSL for Windows
-            if os.environ.get('APPVEYOR'):
+            openssl_libs = os.path.join(openssl_root, 'lib', 'VC', 'static')
+            library_dirs.append(openssl_libs)
+            if os.path.exists(os.path.join(openssl_libs), 'libeay32MT'):
+                # OpenSSL v.1.0.x
                 libraries += [
                     'libeay32MT',
                     'ssleay32MT',
                     'gdi32',
                     'User32',
                 ]
-            else:
+            else:  # OpenSSL 1.1.x
                 if sys.maxsize > 2 ** 32 // 2 - 1:
                     arch = 64
                 else:
