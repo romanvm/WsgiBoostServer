@@ -81,6 +81,8 @@ Simple example with `Flask`_ micro-framework:
   httpd.start()
 
 More advanced examples with Flask and Django frameworks can be found ``examples`` folder.
+Also see docstrings in ``wsgi_boost/wsgi_boost.cpp`` file for detailed information on
+WsgiBoostServer API.
 
 HTTPS Support
 =============

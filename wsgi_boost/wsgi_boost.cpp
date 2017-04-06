@@ -54,7 +54,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 			)'''")
 
 		.def_readwrite("url_scheme", &BaseServer<socket_ptr>::url_scheme,
-			"Get or set url scheme -- http or https (default: ``'http'``)"
+			"Get or set URL scheme -- http or https (default: ``'http'``)"
 			)
 
 		.def_readwrite("static_cache_control", &BaseServer<socket_ptr>::static_cache_control,
@@ -110,8 +110,8 @@ PYBIND11_PLUGIN(wsgi_boost)
 		The server can serve both Python WSGI applications and static files.
 		For static files gzip compression, 'If-None-Match' and 'If-Modified-Since' headers are supported.
 
-		:param ip_adderess: Server's IP address.
-		:type ip_address: str
+		:param address: Server's address.
+		:type address: str
 		:param port: Server's port.
 		:type port: int
 		:param threads: The number of threads for the server to run.
@@ -124,6 +124,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 			from wsgi_boost import WsgiBoostHttp
 
+
 			def hello_app(environ, start_response):
 				content = b'Hello World!'
 				status = '200 OK'
@@ -132,7 +133,8 @@ PYBIND11_PLUGIN(wsgi_boost)
 				start_response(status, response_headers)
 				return[content]
 
-			httpd = WsgiBoostHttp(threads=4)
+
+			httpd = WsgiBoostHttp(port=80, threads=4)
 			httpd.set_app(hello_app)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
@@ -151,7 +153,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 		.def_readwrite("host_hame", &BaseServer<ssl_socket_ptr>::host_name)
 		.def_readwrite("header_timeout", &BaseServer<ssl_socket_ptr>::header_timeout)
 		.def_readwrite("content_timeout", &BaseServer<ssl_socket_ptr>::content_timeout)
-		.def_readwrite("url_scheme", &BaseServer<ssl_socket_ptr>::url_scheme)
+		.def_readwrite("url_scheme", &BaseServer<ssl_socket_ptr>::url_scheme, "Default: ``'https'``")
 		.def_readwrite("static_cache_control", &BaseServer<ssl_socket_ptr>::static_cache_control)
 		.def("start", &BaseServer<ssl_socket_ptr>::start)
 		.def("stop", &BaseServer<ssl_socket_ptr>::stop)
@@ -161,6 +163,44 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 	py::class_<HttpsServer<ssl_socket_ptr>, BaseServer<ssl_socket_ptr>>(module, "WsgiBoostHttps",
 		R"'''(
+		WsgiBoostHttps(cert, private_key, dh='', address='', port=8000, threads=0)
+
+		PEP-3333-compliant multi-threaded WSGI server with HTTPS support
+		
+		:param cert: path to HTTPS certificate file
+		:type cert: str
+		:param private_key: path to private key file
+		:type private_key: str
+		:param dh: path to Diffie-Hellman parameters file (optional)
+		:type dt: str
+		:param address: server's address.
+		:type address: str
+		:param port: Server's port.
+		:type port: int
+		:param threads: The number of threads for the server to run.
+		    Default: 0 (the number of threads is selected automatically depending on system parameters).
+		:type threads: int
+
+		Usage:
+
+		.. code-block:: python
+
+			from wsgi_boost import WsgiBoostHttps
+
+
+			def hello_app(environ, start_response):
+				content = b'Hello World!'
+				status = '200 OK'
+				response_headers = [('Content-type', 'text/plain'),
+									('Content-Length', str(len(content)))]
+				start_response(status, response_headers)
+				return[content]
+
+
+			httpd = WsgiBoostHttps('server.crt', 'server.key', port=80, threads=4)
+			httpd.set_app(hello_app)
+			httpd.add_static_route('^/static', '/var/www/static-files')
+			httpd.start()
 		)'''")
 
 		.def(py::init<string, string, string, string, unsigned short, unsigned int>(),
