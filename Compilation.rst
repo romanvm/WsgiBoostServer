@@ -9,6 +9,12 @@ Linux
 WsgiBoostServer can be compiled on any Linux distributive that uses GCC 4.9+ as the default system compiler,
 for example Ubuntu 16.04 LTS (Xenial Xerus). The procedure below assumes that you are using Ubuntu 16.04.
 
+Note for **Raspberry Pi** users: Raspbian provides GCC 4.9 compiler by default and its repositories
+have all the necessary libraries, so if you want to compile WsgiBoostServer for Raspberry Pi
+the procedure below can be used on Raspbian with no changes.
+On **Releases** tab of this repository you can find a statically compiled wheel with HTTPS support
+for Python 3.4 on Raspberry Pi 2.
+
 Python and Boost From System Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -17,7 +23,8 @@ Ubuntu 16.04 LTS (Xenial Xerus) provides Python 3.5 and Boost 1.58.
 
 - Install prerequisites::
 
-    $ sudo apt-get install build-essential python3-dev python3-pip zlib1g-dev libbz2-dev libboost-all-dev libssl-dev
+    $ sudo apt-get install build-essential python3-dev python3-pip zlib1g-dev libbz2-dev libssl-dev
+    $ sudo apt-get install libboost-regex-dev libboost-system-dev libboost-coroutine-dev libboost-context-dev libboost-filesystem-dev libboost-iostreams-dev libboost-date-time-dev libboost-thread-dev
 
 - Download or clone WsgiBoostServer sources to your computer.
 
@@ -45,24 +52,28 @@ using ``pip``::
 ``pip`` will download WsgiBoostServer sources, compile the binary module
 and install it into your working Python environment.
 
-Custom Python and Boost Versions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Custom Python and/or Boost Versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following procedure assumes that you want to use custom Boost versions.
+The following procedure assumes that you want to use a custom Boost version.
 In WsgiBoostServer v.2.0 Python bindings were converted to Pybind11 library that allowed to remove
 dependency on Boost.Python library pre-built against a specific Python version.
 Now WsgiBoostServer uses only generic Boost libraries.
 
 - Install prerequisites::
 
-    $ sudo apt-get install build-essential zlib1g-dev libbz2-dev libssl-dev
+    $ sudo apt-get install build-essential python3-pip zlib1g-dev libbz2-dev libssl-dev
 
 - Install the necessary Python development package. For example, `deadsnakes`_ ppa repository provides various
   Python versions for Ubuntu. Let's assume we want to build WsgiBoostServer with Python 3.6::
 
+    $ sudo apt-get install software-properties-common python-software-properties 
     $ sudo add-apt-repository ppa:fkrull/deadsnakes
     $ sudo apt-get update
     $ sudo apt-get install python3.6 python3.6-dev
+
+  Now if you want to use only a custom Python version, follow the preceding procedure but
+  replace python3 with python3.6 (you need to install full prerequisites except for python3-dev).
 
 - Downloaded the necessary Boost version from `Boost Home Site`_ and unpack it to a folder
   of your choice, for example ``$HOME/boost``.
@@ -90,9 +101,6 @@ Now WsgiBoostServer uses only generic Boost libraries.
 
   It is strongly recommended to use Python virtual environments.
 
-**Note**: On **Releases** tab of this repository you can find a statically compiled wheel
-for 3.4 on Raspberry Pi 2.
-
 HTTPS Support
 ~~~~~~~~~~~~~
 
@@ -102,7 +110,7 @@ By default, on Linux WsgiBoostServer is built with HTTPS support. You can disabl
 Windows
 -------
 
-A compiled wheels for Python 3.6 with HTTPS support can be downloaded from "**Releases**" tab of this repository.
+Compiled wheels for Python 3.6 with HTTPS support can be downloaded from "**Releases**" section of this repository.
 If you want to compile WsgiBoostServer for Windows yourself, follow the instruction below.
 You can also check AppVeyor CI build configuration ``appveyor.yml``.
 
