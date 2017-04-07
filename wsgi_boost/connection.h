@@ -17,8 +17,8 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
-	template <class socket_p>
 	// Represents a http connection to a client
+	template <class socket_p>
 	class Connection
 	{
 	private:

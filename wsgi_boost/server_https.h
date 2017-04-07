@@ -26,6 +26,7 @@ namespace wsgi_boost
 	typedef std::shared_ptr<ssl_socket_t> ssl_socket_ptr;
 
 
+	// HTTPS server class
 	template<>
 	class HttpsServer<ssl_socket_ptr> : public BaseServer<ssl_socket_ptr>
 	{

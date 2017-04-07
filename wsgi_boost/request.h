@@ -51,8 +51,8 @@ namespace wsgi_boost
 		}
 	};
 
+	// HTTP request
 	template <class conn_t>
-	// HTTP request parameters
 	class Request
 	{
 	private:

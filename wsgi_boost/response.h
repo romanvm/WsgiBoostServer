@@ -20,6 +20,7 @@ namespace wsgi_boost
 {
 	typedef std::vector<std::pair<std::string, std::string>> out_headers_t;
 
+	// HTTP response
 	template <class conn_t>
 	class Response
 	{

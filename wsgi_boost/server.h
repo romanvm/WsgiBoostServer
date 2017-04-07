@@ -22,6 +22,7 @@ License: MIT, see License.txt
 
 namespace wsgi_boost
 {
+	// Base server class template for both HTTP and HTTPS
 	template <class socket_p>
 	class BaseServer
 	{
@@ -276,6 +277,7 @@ namespace wsgi_boost
 	typedef std::shared_ptr<socket_t> socket_ptr;
 
 
+	// HTTP server class
 	template<>
 	class HttpServer<socket_ptr> : public BaseServer<socket_ptr>
 	{
