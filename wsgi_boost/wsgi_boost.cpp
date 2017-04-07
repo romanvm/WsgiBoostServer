@@ -19,8 +19,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 {
 	PyEval_InitThreads(); // Initialize GIL
 	
-	py::module module{ "wsgi_boost",  "This module provides WSGI/HTTP server class" };
-	module.attr("__doc__") = "This module provides WSGI/HTTP server class";
+	py::module module{ "wsgi_boost",  "This module provides WSGI/HTTP server classes" };
 	module.attr("__version__") = WSGI_BOOST_VERSION;
 	module.attr("__author__") = "Roman Miroshnychenko";
 	module.attr("__email__") = "romanvm@yandex.ua";
@@ -29,7 +28,6 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 
 	py::class_<BaseServer<socket_ptr>>(module, "_BaseServerHttp");
-
 
 	py::class_<HttpServer<socket_ptr>, BaseServer<socket_ptr>>(module, "WsgiBoostHttp",
 		R"'''(
@@ -68,17 +66,12 @@ PYBIND11_PLUGIN(wsgi_boost)
 			httpd.set_app(hello_app)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
-		)'''")
-		
+		)'''")		
 		.def(py::init<string, unsigned short, unsigned int>(),
 			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
-
 		.def_property_readonly("is_running", &HttpServer<socket_ptr>::is_running, "Get server running status")
-
 		.def_readwrite("use_gzip", &HttpServer<socket_ptr>::use_gzip, "Use gzip compression for static content, default: ``True``")
-
 		.def_readwrite("host_hame", &HttpServer<socket_ptr>::host_name, "Get or set the host name, default: automatically determined")
-
 		.def_readwrite("header_timeout", &HttpServer<socket_ptr>::header_timeout,
 			R"'''(
 			Get or set timeout for receiving HTTP request headers
@@ -86,7 +79,6 @@ PYBIND11_PLUGIN(wsgi_boost)
 			This is the max. interval for reciving request headers before closing connection.
 			Default: 5s
 			)'''")
-
 		.def_readwrite("content_timeout", &HttpServer<socket_ptr>::content_timeout,
 			R"'''(
 			Get or set timeout for receiving POST/PUT content or sending response
@@ -95,17 +87,14 @@ PYBIND11_PLUGIN(wsgi_boost)
 			or sending response before closing connection.
 			Default: 300s
 			)'''")
-
 		.def_readwrite("url_scheme", &HttpServer<socket_ptr>::url_scheme,
 			"Get or set URL scheme -- http or https (default: ``'http'``)"
 		)
-
 		.def_readwrite("static_cache_control", &HttpServer<socket_ptr>::static_cache_control,
 			R"'''(
 			The value of ``Cache-Control`` HTTP header for static content
 			(default: ``'public, max-age=3600'``)
 			)'''")
-
 		.def("start", &HttpServer<socket_ptr>::start,
 			R"'''(
 			Start processing HTTP requests
@@ -113,9 +102,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 			.. note:: This method blocks the current thread until the server is stopped
 				either by calling :meth:`WsgiBoostHttp.stop` or by pressing :kbd:`Ctrl+C`
 			)'''")
-
 		.def("stop", &HttpServer<socket_ptr>::stop, "Stop processing HTTP requests")
-
 		.def("add_static_route", &HttpServer<socket_ptr>::add_static_route,
 				py::arg("path"), py::arg("content_dir"),
 			R"'''(
@@ -133,7 +120,6 @@ PYBIND11_PLUGIN(wsgi_boost)
 			    that is, if you set a static route for path :regexp:`^/` *all* requests for ``http://example.com/
 			    will be directed to that route and a WSGI application will never be reached.
 			)'''")
-
 		.def("set_app", &HttpServer<socket_ptr>::set_app, py::arg("app"),
 			R"'''(
 			Set a WSGI application to be served
@@ -190,11 +176,9 @@ PYBIND11_PLUGIN(wsgi_boost)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
 		)'''")
-
 		.def(py::init<string, string, string, string, unsigned short, unsigned int>(),
 			py::arg("cert"), py::arg("private_key"), py::arg("dh") = string(),
 			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
-
 		.def_property_readonly("is_running", &HttpsServer<ssl_socket_ptr>::is_running)
 		.def_readwrite("use_gzip", &HttpsServer<ssl_socket_ptr>::use_gzip)
 		.def_readwrite("host_hame", &HttpsServer<ssl_socket_ptr>::host_name)
@@ -228,13 +212,11 @@ PYBIND11_PLUGIN(wsgi_boost)
 		.def("__next__", &InputStream<Connection<socket_ptr>>::next)
 		;
 
-
 	py::class_<ErrorStream>(module, "ErrorStream", "wsgi.errors")
 		.def("write", &ErrorStream::write)
 		.def("writelines", &ErrorStream::writelines)
 		.def("flush", &ErrorStream::flush)
 		;
-
 
 	py::class_<FileWrapper>(module, "FileWrapper", "wsgi.file_wrapper")
 		.def("__call__", &FileWrapper::call, py::arg("file"), py::arg("block_size") = 8192,
