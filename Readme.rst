@@ -118,7 +118,9 @@ to ``WsgiBoostHttps`` constructor.
 Compilation
 ===========
 
-See `compilation instructions <Compilation.rst>`_.
+See `compilation instructions <Compilation.rst>`_. In "Releases" section of this repository
+you can find statically compiled wheels with HTTPS support for Python 3.6 on Windows (32 and 64 bit)
+and for Python 3.4 on Raspberry Pi 2 (if I'm not too lazy to compile it).
 
 .. _Boost.Asio: http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio.html
 .. _Pybind11: https://github.com/pybind/pybind11
