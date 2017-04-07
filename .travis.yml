@@ -1,21 +1,19 @@
 language: python
 
-python: "3.5"
+python: "3.6"
 
 addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
-            - deadsnakes
-            - boost-latest
+            #- deadsnakes
 
         packages:
             - g++-4.9
             - zlib1g-dev
             - libbz2-dev
-            - python3.5-dev
+            #- python3.5-dev
             - libssl-dev
-            - libboost1.54-all-dev
 
 env: CC_VER=4.9
     BOOST_ROOT=$TRAVIS_BUILD_DIR/boost
@@ -25,11 +23,11 @@ install:
     - export CC=g++-$CC_VER
     - export CXX=g++-$CC_VER
     # We are building Boost libs here because libboost1.55-all-dev does not include static boost_coroutine
-    # - git clone https://github.com/romanvm/boost.git
-    # - chmod -R +x $BOOST_ROOT
-    # - cd $BOOST_ROOT
-    # - ./bootstrap.sh
-    # - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+    - git clone https://github.com/romanvm/boost.git
+    - chmod -R +x $BOOST_ROOT
+    - cd $BOOST_ROOT
+    - ./bootstrap.sh
+    - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 
 script:
     - cd $TRAVIS_BUILD_DIR
