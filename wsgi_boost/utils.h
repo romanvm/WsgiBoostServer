@@ -127,14 +127,10 @@ namespace wsgi_boost
 	// Determine mime type by file extension
 	inline std::string get_mime(const std::string& ext)
 	{
-		try
-		{
-			return mime_types.at(boost::to_lower_copy(ext));
-		}
-		catch (const std::out_of_range&)
-		{
-			return "application/octet-stream";
-		}
+			auto it = mime_types.find(boost::to_lower_copy(ext));
+			if (it == mime_types.end())
+				return "application/octet-stream";
+			return it->second;
 	}
 #pragma endregion
 
