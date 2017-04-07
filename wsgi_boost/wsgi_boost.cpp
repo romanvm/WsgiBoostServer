@@ -28,77 +28,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 	py::list all;
 
 
-	py::class_<BaseServer<socket_ptr>>(module, "_BaseServerHttp")
-
-		.def_property_readonly("is_running", &BaseServer<socket_ptr>::is_running, "Get server running status")
-
-		.def_readwrite("use_gzip", &BaseServer<socket_ptr>::use_gzip, "Use gzip compression for static content, default: ``True``")
-
-		.def_readwrite("host_hame", &BaseServer<socket_ptr>::host_name, "Get or set the host name, default: automatically determined")
-
-		.def_readwrite("header_timeout", &BaseServer<socket_ptr>::header_timeout,
-			R"'''(
-			Get or set timeout for receiving HTTP request headers
-
-			This is the max. interval for reciving request headers before closing connection.
-			Default: 5s
-			)'''")
-
-		.def_readwrite("content_timeout", &BaseServer<socket_ptr>::content_timeout,
-			R"'''(
-			Get or set timeout for receiving POST/PUT content or sending response
-
-			This is the max. interval for receiving POST/PUT content
-			or sending response before closing connection.
-			Default: 300s
-			)'''")
-
-		.def_readwrite("url_scheme", &BaseServer<socket_ptr>::url_scheme,
-			"Get or set URL scheme -- http or https (default: ``'http'``)"
-			)
-
-		.def_readwrite("static_cache_control", &BaseServer<socket_ptr>::static_cache_control,
-			R"'''(
-			The value of ``Cache-Control`` HTTP header for static content
-			(default: ``'public, max-age=3600'``)
-			)'''")
-
-		.def("start", &BaseServer<socket_ptr>::start,
-			R"'''(
-			Start processing HTTP requests
-			
-			.. note:: This method blocks the current thread until the server is stopped
-				either by calling :meth:`WsgiBoostHttp.stop` or by pressing :kbd:`Ctrl+C`
-			)'''")
-
-		.def("stop", &BaseServer<socket_ptr>::stop, "Stop processing HTTP requests")
-
-		.def("add_static_route", &BaseServer<socket_ptr>::add_static_route, py::arg("path"), py::arg("content_dir"),
-			R"'''(
-			Add a route for serving static files
-
-			Allows to serve static files from ``content_dir``
-
-			:param path: a path regex to match URLs for static files
-			:type path: str
-			:param content_dir: a directory with static files to be served
-			:type content_dir: str
-
-			.. note:: ``path`` parameter is a regex that must start with ``^/``, for example :regexp:`^/static``
-				Static URL paths have priority over WSGI application paths,
-			    that is, if you set a static route for path :regexp:`^/` *all* requests for ``http://example.com/
-			    will be directed to that route and a WSGI application will never be reached.
-			)'''")
-
-		.def("set_app", &BaseServer<socket_ptr>::set_app, py::arg("app"),
-			R"'''(
-			Set a WSGI application to be served
-
-			:param app: a WSGI application to be served as an executable object
-			:type app: object
-			:raises RuntimeError: on attempt to set a WSGI application while the server is running
-			)'''")
-		;
+	py::class_<BaseServer<socket_ptr>>(module, "_BaseServerHttp");
 
 
 	py::class_<HttpServer<socket_ptr>, BaseServer<socket_ptr>>(module, "WsgiBoostHttp",
@@ -142,24 +72,82 @@ PYBIND11_PLUGIN(wsgi_boost)
 		
 		.def(py::init<string, unsigned short, unsigned int>(),
 			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
+
+		.def_property_readonly("is_running", &HttpServer<socket_ptr>::is_running, "Get server running status")
+
+		.def_readwrite("use_gzip", &HttpServer<socket_ptr>::use_gzip, "Use gzip compression for static content, default: ``True``")
+
+		.def_readwrite("host_hame", &HttpServer<socket_ptr>::host_name, "Get or set the host name, default: automatically determined")
+
+		.def_readwrite("header_timeout", &HttpServer<socket_ptr>::header_timeout,
+			R"'''(
+			Get or set timeout for receiving HTTP request headers
+
+			This is the max. interval for reciving request headers before closing connection.
+			Default: 5s
+			)'''")
+
+		.def_readwrite("content_timeout", &HttpServer<socket_ptr>::content_timeout,
+			R"'''(
+			Get or set timeout for receiving POST/PUT content or sending response
+
+			This is the max. interval for receiving POST/PUT content
+			or sending response before closing connection.
+			Default: 300s
+			)'''")
+
+		.def_readwrite("url_scheme", &HttpServer<socket_ptr>::url_scheme,
+			"Get or set URL scheme -- http or https (default: ``'http'``)"
+		)
+
+		.def_readwrite("static_cache_control", &HttpServer<socket_ptr>::static_cache_control,
+			R"'''(
+			The value of ``Cache-Control`` HTTP header for static content
+			(default: ``'public, max-age=3600'``)
+			)'''")
+
+		.def("start", &HttpServer<socket_ptr>::start,
+			R"'''(
+			Start processing HTTP requests
+			
+			.. note:: This method blocks the current thread until the server is stopped
+				either by calling :meth:`WsgiBoostHttp.stop` or by pressing :kbd:`Ctrl+C`
+			)'''")
+
+		.def("stop", &HttpServer<socket_ptr>::stop, "Stop processing HTTP requests")
+
+		.def("add_static_route", &HttpServer<socket_ptr>::add_static_route,
+				py::arg("path"), py::arg("content_dir"),
+			R"'''(
+			Add a route for serving static files
+
+			Allows to serve static files from ``content_dir``
+
+			:param path: a path regex to match URLs for static files
+			:type path: str
+			:param content_dir: a directory with static files to be served
+			:type content_dir: str
+
+			.. note:: ``path`` parameter is a regex that must start with ``^/``, for example :regexp:`^/static``
+				Static URL paths have priority over WSGI application paths,
+			    that is, if you set a static route for path :regexp:`^/` *all* requests for ``http://example.com/
+			    will be directed to that route and a WSGI application will never be reached.
+			)'''")
+
+		.def("set_app", &HttpServer<socket_ptr>::set_app, py::arg("app"),
+			R"'''(
+			Set a WSGI application to be served
+
+			:param app: a WSGI application to be served as an executable object
+			:type app: object
+			:raises RuntimeError: on attempt to set a WSGI application while the server is running
+			)'''")
 		;
 
 	all.append("WsgiBoostHttp");
 
 #ifdef HTTPS_ENABLED
-	py::class_<BaseServer<ssl_socket_ptr>>(module, "_BaseServerHttps")
-		.def_property_readonly("is_running", &BaseServer<ssl_socket_ptr>::is_running)
-		.def_readwrite("use_gzip", &BaseServer<ssl_socket_ptr>::use_gzip)
-		.def_readwrite("host_hame", &BaseServer<ssl_socket_ptr>::host_name)
-		.def_readwrite("header_timeout", &BaseServer<ssl_socket_ptr>::header_timeout)
-		.def_readwrite("content_timeout", &BaseServer<ssl_socket_ptr>::content_timeout)
-		.def_readwrite("url_scheme", &BaseServer<ssl_socket_ptr>::url_scheme, "Default: ``'https'``")
-		.def_readwrite("static_cache_control", &BaseServer<ssl_socket_ptr>::static_cache_control)
-		.def("start", &BaseServer<ssl_socket_ptr>::start)
-		.def("stop", &BaseServer<ssl_socket_ptr>::stop)
-		.def("add_static_route", &BaseServer<ssl_socket_ptr>::add_static_route, py::arg("path"), py::arg("content_dir"))
-		.def("set_app", &BaseServer<ssl_socket_ptr>::set_app, py::arg("app"))
-		;
+	py::class_<BaseServer<ssl_socket_ptr>>(module, "_BaseServerHttps");
 
 	py::class_<HttpsServer<ssl_socket_ptr>, BaseServer<ssl_socket_ptr>>(module, "WsgiBoostHttps",
 		R"'''(
@@ -206,6 +194,19 @@ PYBIND11_PLUGIN(wsgi_boost)
 		.def(py::init<string, string, string, string, unsigned short, unsigned int>(),
 			py::arg("cert"), py::arg("private_key"), py::arg("dh") = string(),
 			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
+
+		.def_property_readonly("is_running", &HttpsServer<ssl_socket_ptr>::is_running)
+		.def_readwrite("use_gzip", &HttpsServer<ssl_socket_ptr>::use_gzip)
+		.def_readwrite("host_hame", &HttpsServer<ssl_socket_ptr>::host_name)
+		.def_readwrite("header_timeout", &HttpsServer<ssl_socket_ptr>::header_timeout)
+		.def_readwrite("content_timeout", &HttpsServer<ssl_socket_ptr>::content_timeout)
+		.def_readwrite("url_scheme", &HttpsServer<ssl_socket_ptr>::url_scheme, "Default: ``'https'``")
+		.def_readwrite("static_cache_control", &HttpsServer<ssl_socket_ptr>::static_cache_control)
+		.def("start", &HttpsServer<ssl_socket_ptr>::start)
+		.def("stop", &HttpsServer<ssl_socket_ptr>::stop)
+		.def("add_static_route", &HttpsServer<ssl_socket_ptr>::add_static_route,
+			py::arg("path"), py::arg("content_dir"))
+		.def("set_app", &HttpsServer<ssl_socket_ptr>::set_app, py::arg("app"))
 		;
 
 	all.append("WsgiBoostHttps");
