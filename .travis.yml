@@ -6,13 +6,11 @@ addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
-            #- deadsnakes
 
         packages:
             - g++-4.9
             - zlib1g-dev
             - libbz2-dev
-            #- python3.5-dev
             - libssl-dev
 
 env: CC_VER=4.9
@@ -22,7 +20,7 @@ env: CC_VER=4.9
 install:
     - export CC=g++-$CC_VER
     - export CXX=g++-$CC_VER
-    # We are building Boost libs here because libboost1.55-all-dev does not include static boost_coroutine
+    # We are building Boost libs ourselves because libboost1.55-all-dev has broken boost_coroutine
     - git clone https://github.com/romanvm/boost.git
     - chmod -R +x $BOOST_ROOT
     - cd $BOOST_ROOT
