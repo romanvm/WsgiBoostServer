@@ -15,7 +15,7 @@ addons:
             - libbz2-dev
             - python3.5-dev
             - libssl-dev
-            - libboost1.55-all-dev
+            - libboost1.54-all-dev
 
 env: CC_VER=4.9
     BOOST_ROOT=$TRAVIS_BUILD_DIR/boost
