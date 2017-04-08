@@ -69,7 +69,7 @@ namespace wsgi_boost
 
 	public:
 		HttpsServer(std::string cert, const std::string private_key, std::string dh = std::string(),
-			std::string address = std::string(), unsigned short port = 8000, unsigned int threads = 0) :
+			std::string address = std::string(), unsigned short port = 4443, unsigned int threads = 0) :
 			// sslv23 is an universal option. Deprecated protocols need to be disabled by set_options()
 			// More info: https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_new.html
 			m_context{ boost::asio::ssl::context::sslv23_server },

@@ -294,7 +294,7 @@ else:
             print()
 
         def test_https_server(self):
-            resp = requests.get('https://127.0.0.1:8000/', verify=False)
+            resp = requests.get('https://127.0.0.1:4443/', verify=False)
             self.assertEqual(resp.status_code, 200)
             self.assertEqual(resp.text, 'App OK')
 

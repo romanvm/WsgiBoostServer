@@ -137,7 +137,7 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 	py::class_<HttpsServer<ssl_socket_ptr>, BaseServer<ssl_socket_ptr>>(module, "WsgiBoostHttps",
 		R"'''(
-		WsgiBoostHttps(cert, private_key, dh='', address='', port=8000, threads=0)
+		WsgiBoostHttps(cert, private_key, dh='', address='', port=4443, threads=0)
 
 		PEP-3333-compliant multi-threaded WSGI server with HTTPS support
 		
@@ -171,14 +171,14 @@ PYBIND11_PLUGIN(wsgi_boost)
 				return[content]
 
 
-			httpd = WsgiBoostHttps('server.crt', 'server.key', port=80, threads=4)
+			httpd = WsgiBoostHttps('server.crt', 'server.key', port=443, threads=4)
 			httpd.set_app(hello_app)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
 		)'''")
 		.def(py::init<string, string, string, string, unsigned short, unsigned int>(),
 			py::arg("cert"), py::arg("private_key"), py::arg("dh") = string(),
-			py::arg("address") = string(), py::arg("port") = 8000, py::arg("threads") = 0)
+			py::arg("address") = string(), py::arg("port") = 4443, py::arg("threads") = 0)
 		.def_property_readonly("is_running", &HttpsServer<ssl_socket_ptr>::is_running)
 		.def_readwrite("use_gzip", &HttpsServer<ssl_socket_ptr>::use_gzip)
 		.def_readwrite("host_hame", &HttpsServer<ssl_socket_ptr>::host_name)
