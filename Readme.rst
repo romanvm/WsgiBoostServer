@@ -94,7 +94,7 @@ with ``WsgiBoostHttps`` like this:
 
 .. code-block:: python
 
-  httpd = WsgiBoostHttps('server.crt', 'server.key', port=8080, threads=4)
+  httpd = WsgiBoostHttps('server.crt', 'server.key', port=443, threads=4)
 
 Here ``'server.crt'`` and ``'server.key'`` are paths to HTTPS certificate
 and private key files respectively. If your private key is password-protected
