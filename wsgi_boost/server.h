@@ -176,7 +176,7 @@ namespace wsgi_boost
 		BaseServer& operator=(const BaseServer&) = delete;
 		virtual ~BaseServer() {}
 
-		BaseServer(std::string address = "", unsigned short port = 8000, unsigned int threads = 0) :
+		BaseServer(std::string address, unsigned short port, unsigned int threads) :
 			m_ip_address{ address }, m_port{ port }, m_io_service_pool{ threads },
 			m_acceptor{ *m_io_service_pool.get_io_service() }, m_signals{ *m_io_service_pool.get_io_service() }
 		{
