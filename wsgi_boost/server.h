@@ -33,12 +33,32 @@ namespace wsgi_boost
 	protected:
 		IoServicePool m_io_service_pool;
 		boost::asio::ip::tcp::acceptor m_acceptor;
-		std::string m_ip_address;
+		std::string m_address;
 		unsigned short m_port;
 		boost::asio::signal_set m_signals;
 		std::vector<std::pair<boost::regex, std::string>> m_static_routes;
 		pybind11::object m_app;
 		std::atomic_bool m_is_running;
+
+		void init_endpoint(boost::asio::ip::tcp::endpoint& endpoint, unsigned int port)
+		{
+			if (!m_address.empty())
+			{
+				boost::asio::ip::tcp::resolver resolver(*m_io_service_pool.get_io_service());
+				try
+				{
+					endpoint = *resolver.resolve({ m_address, std::to_string(port) });
+				}
+				catch (const std::exception&)
+				{
+					throw std::runtime_error("Unable to resolve IP address and port " + m_address + ":" + std::to_string(port) + "!");
+				}
+			}
+			else
+			{
+				endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port);
+			}
+		}
 
 		// Pybind11 cannot expose abstract C++ classes
 		virtual void accept() { };
@@ -177,7 +197,7 @@ namespace wsgi_boost
 		virtual ~BaseServer() {}
 
 		BaseServer(std::string address, unsigned short port, unsigned int threads) :
-			m_ip_address{ address }, m_port{ port }, m_io_service_pool{ threads },
+			m_address{ address }, m_port{ port }, m_io_service_pool{ threads },
 			m_acceptor{ *m_io_service_pool.get_io_service() }, m_signals{ *m_io_service_pool.get_io_service() }
 		{
 			m_is_running.store(false);
@@ -203,7 +223,7 @@ namespace wsgi_boost
 		}
 
 		// Start handling HTTP requests
-		void start()
+		virtual void start()
 		{
 			if (!is_running())
 			{
@@ -212,22 +232,7 @@ namespace wsgi_boost
 				std::cout << "Press Ctrl+C to stop it.\n";
 				m_io_service_pool.reset();
 				boost::asio::ip::tcp::endpoint endpoint;
-				if (!m_ip_address.empty())
-				{
-					boost::asio::ip::tcp::resolver resolver(*m_io_service_pool.get_io_service());
-					try
-					{
-						endpoint = *resolver.resolve({ m_ip_address, std::to_string(m_port) });
-					}
-					catch (const std::exception&)
-					{
-						throw std::runtime_error("Unable to resolve IP address and port " + m_ip_address + ":" + std::to_string(m_port) + "!");
-					}
-				}
-				else
-				{
-					endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port);
-				}
+				init_endpoint(endpoint, m_port);
 				m_acceptor.open(endpoint.protocol());
 				m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
 				m_acceptor.bind(endpoint);

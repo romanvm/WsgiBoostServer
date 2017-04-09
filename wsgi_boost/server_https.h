@@ -32,6 +32,7 @@ namespace wsgi_boost
 	{
 	protected:
 		boost::asio::ssl::context m_context;
+		boost::asio::ip::tcp::acceptor m_redirector;
 
 		void accept()
 		{
@@ -67,12 +68,55 @@ namespace wsgi_boost
 			});
 		}
 
+		void accept_redirect()
+		{
+			socket_ptr socket = std::make_shared<socket_t>(*m_io_service_pool.get_io_service());
+			m_redirector.async_accept(*socket, [this, socket](const boost::system::error_code& ec)
+			{
+				if (ec != boost::asio::error::operation_aborted)
+					accept_redirect();
+				if (!ec)
+				{
+					socket->set_option(boost::asio::ip::tcp::no_delay(true));
+					boost::asio::spawn(socket->get_io_service(), [this, socket](boost::asio::yield_context yc)
+					{
+						Connection<socket_ptr> connection{ socket, yc, header_timeout, content_timeout };
+						Request<Connection<socket_ptr>> request{ connection };
+						Response<Connection<socket_ptr>> response{ connection };
+						parse_result res = request.parse_header();
+						if (!res)
+						{
+							std::string host = request.get_header("Host");
+							if (host.empty())
+							{
+								response.send_mesage("400 Bad Request", "'Host' header is required!");
+								return;
+							}
+							std::string location{ "https://" + host + ":" + std::to_string(m_port) + request.path };
+							std::string message{ "Redirected to " + location };
+							response.http_version = request.http_version;
+							response.keep_alive = false;
+							out_headers_t out_headers;
+							out_headers.emplace_back("Location", location);
+							out_headers.emplace_back("Content-Length", std::to_string(message.length()));
+							out_headers.emplace_back("Content-Type", "text/plain");
+							response.send_header("301 Moved Permanently", out_headers);
+							response.send_data(message);
+						}
+					});
+				}
+			});
+		}
+
 	public:
+		bool redirect_http = false;
+		unsigned short redirect_http_port = 80;
+
 		HttpsServer(std::string cert, const std::string private_key, std::string dh = std::string(),
 			std::string address = std::string(), unsigned short port = 4443, unsigned int threads = 0) :
 			// sslv23 is an universal option. Deprecated protocols need to be disabled by set_options()
 			// More info: https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_new.html
-			m_context{ boost::asio::ssl::context::sslv23_server },
+			m_context{ boost::asio::ssl::context::sslv23_server }, m_redirector{ *m_io_service_pool.get_io_service() },
 			BaseServer<ssl_socket_ptr>{ address, port, threads }
 		{
 			url_scheme = "https";
@@ -93,6 +137,20 @@ namespace wsgi_boost
 				m_context.use_tmp_dh_file(dh);
 		}
 
+		void start()
+		{
+			if (!is_running() && redirect_http)
+			{
+				boost::asio::ip::tcp::endpoint endpoint;
+				init_endpoint(endpoint, redirect_http_port);
+				m_redirector.open(endpoint.protocol());
+				m_redirector.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
+				m_redirector.bind(endpoint);
+				m_redirector.listen();
+				accept_redirect();
+			}
+			BaseServer<ssl_socket_ptr>::start();
+		}
 	};
 }
 #endif // HTTPS_ENABLED

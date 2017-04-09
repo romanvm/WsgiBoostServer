@@ -186,6 +186,10 @@ PYBIND11_PLUGIN(wsgi_boost)
 		.def_readwrite("content_timeout", &HttpsServer<ssl_socket_ptr>::content_timeout)
 		.def_readwrite("url_scheme", &HttpsServer<ssl_socket_ptr>::url_scheme, "Default: ``'https'``")
 		.def_readwrite("static_cache_control", &HttpsServer<ssl_socket_ptr>::static_cache_control)
+		.def_readwrite("redirect_http", &HttpsServer<ssl_socket_ptr>::redirect_http,
+			"Enable redirecting HTTP requests to HTTPS port (default:: ``False``)")
+		.def_readwrite("redirect_http_port", &HttpsServer<ssl_socket_ptr>::redirect_http_port,
+			"HTTP port to redirect requests from (default: ``80``)")
 		.def("start", &HttpsServer<ssl_socket_ptr>::start)
 		.def("stop", &HttpsServer<ssl_socket_ptr>::stop)
 		.def("add_static_route", &HttpsServer<ssl_socket_ptr>::add_static_route,

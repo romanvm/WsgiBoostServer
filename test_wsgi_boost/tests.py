@@ -280,6 +280,8 @@ else:
             dh = os.path.join(cwd, 'dh2048.pem')
             cls._httpd = wsgi_boost.WsgiBoostHttps(cert, key, dh, threads=1)
             app = App()
+            cls._httpd.redirect_http = True
+            cls._httpd.redirect_http_port = 8000
             cls._httpd.set_app(app)
             cls._server_thread = threading.Thread(target=cls._httpd.start)
             cls._server_thread.daemon = True
@@ -295,6 +297,11 @@ else:
 
         def test_https_server(self):
             resp = requests.get('https://127.0.0.1:4443/', verify=False)
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.text, 'App OK')
+
+        def test_http_redirect(self):
+            resp = requests.get('http://127.0.0.1:8000/', verify=False)
             self.assertEqual(resp.status_code, 200)
             self.assertEqual(resp.text, 'App OK')
 
