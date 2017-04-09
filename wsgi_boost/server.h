@@ -40,8 +40,9 @@ namespace wsgi_boost
 		pybind11::object m_app;
 		std::atomic_bool m_is_running;
 
-		void init_endpoint(boost::asio::ip::tcp::endpoint& endpoint, unsigned int port)
+		void init_acceptor(boost::asio::ip::tcp::acceptor& acceptor, unsigned int port)
 		{
+			boost::asio::ip::tcp::endpoint endpoint;
 			if (!m_address.empty())
 			{
 				boost::asio::ip::tcp::resolver resolver(*m_io_service_pool.get_io_service());
@@ -58,6 +59,10 @@ namespace wsgi_boost
 			{
 				endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port);
 			}
+			acceptor.open(endpoint.protocol());
+			acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
+			acceptor.bind(endpoint);
+			acceptor.listen();
 		}
 
 		// Pybind11 cannot expose abstract C++ classes
@@ -231,12 +236,7 @@ namespace wsgi_boost
 				std::cout << "WsgiBoost server starting with " << m_io_service_pool.size() << " thread(s).\n";
 				std::cout << "Press Ctrl+C to stop it.\n";
 				m_io_service_pool.reset();
-				boost::asio::ip::tcp::endpoint endpoint;
-				init_endpoint(endpoint, m_port);
-				m_acceptor.open(endpoint.protocol());
-				m_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
-				m_acceptor.bind(endpoint);
-				m_acceptor.listen();
+				init_acceptor(m_acceptor, m_port);
 				if (host_name.empty())
 					host_name = boost::asio::ip::host_name();
 				accept();

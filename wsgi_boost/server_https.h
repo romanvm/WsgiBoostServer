@@ -147,12 +147,7 @@ namespace wsgi_boost
 		{
 			if (!is_running() && redirect_http)
 			{
-				boost::asio::ip::tcp::endpoint endpoint;
-				init_endpoint(endpoint, redirect_http_port);
-				m_redirector.open(endpoint.protocol());
-				m_redirector.set_option(boost::asio::ip::tcp::acceptor::reuse_address(reuse_address));
-				m_redirector.bind(endpoint);
-				m_redirector.listen();
+				init_acceptor(m_redirector, redirect_http_port);
 				accept_redirect();
 			}
 			BaseServer<ssl_socket_ptr>::start();
