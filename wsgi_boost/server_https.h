@@ -156,10 +156,8 @@ namespace wsgi_boost
 		void stop()
 		{
 			if (is_running())
-			{
 				m_redirector.close();
-				BaseServer<ssl_socket_ptr>::stop();
-			}
+			BaseServer<ssl_socket_ptr>::stop();
 		}
 	};
 }
