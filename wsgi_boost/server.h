@@ -253,7 +253,7 @@ namespace wsgi_boost
 		}
 
 		// Stop handling http requests
-		void stop()
+		virtual void stop()
 		{
 			if (is_running())
 			{

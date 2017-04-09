@@ -152,6 +152,15 @@ namespace wsgi_boost
 			}
 			BaseServer<ssl_socket_ptr>::start();
 		}
+
+		void stop()
+		{
+			if (is_running())
+			{
+				m_redirector.close();
+				BaseServer<ssl_socket_ptr>::stop();
+			}
+		}
 	};
 }
 #endif // HTTPS_ENABLED
