@@ -1,37 +1,22 @@
-language: python
+language: cpp
 
-python:
-    - "3.4"
-    - "3.6"
+sudo: required
 
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
+services:
+  - docker
 
-        packages:
-            - g++-4.9
-            - zlib1g-dev
-            - libbz2-dev
-            - libssl-dev
-
-env: CC_VER=4.9
-    BOOST_ROOT=$TRAVIS_BUILD_DIR/boost
-    BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
+before_install:
+  - docker run -d --name debian-test -v $(pwd):/travis debian:jessie tail -f /dev/null
+  - docker ps
 
 install:
-    - export CC=g++-$CC_VER
-    - export CXX=g++-$CC_VER
-    # We are building Boost libs ourselves because libboost1.55-all-dev has broken boost_coroutine
-    - git clone https://github.com/romanvm/boost.git
-    - chmod -R +x $BOOST_ROOT
-    - cd $BOOST_ROOT
-    - ./bootstrap.sh
-    - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+  - docker exec debian-test bash -c "apt-get update;
+    apt-get install build-essential python3-dev python3-pip zlib1g-dev libbz2-dev libssl-dev;
+    apt-get install libboost-regex-dev libboost-system-dev libboost-coroutine-dev libboost-context-dev libboost-filesystem-dev libboost-iostreams-dev libboost-date-time-dev libboost-thread-dev"
 
 script:
-    - cd $TRAVIS_BUILD_DIR
-    - python setup.py build test
+  - docker exec debian-test bash -c "cd /travis;
+    python3 setup.py build test"
 
 notifications:
-    email: false
+  email: false
