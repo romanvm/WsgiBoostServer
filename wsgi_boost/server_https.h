@@ -92,7 +92,13 @@ namespace wsgi_boost
 								response.send_mesage("400 Bad Request", "'Host' header is required!");
 								return;
 							}
-							std::string location{ "https://" + host + ":" + std::to_string(m_port) + request.path };
+							size_t pos = host.find(":");
+							if (pos != std::string::npos)
+								host = host.substr(0, pos);
+							std::string https_port;
+							if (m_port != 443)
+								https_port = ':' + std::to_string(m_port);
+							std::string location{ "https://" + host + https_port + request.path };
 							std::string message{ "Redirected to " + location };
 							response.http_version = request.http_version;
 							response.keep_alive = false;
