@@ -124,6 +124,7 @@ namespace wsgi_boost
 			size_t end_pos = length - 1;
 			std::string requested_range = m_request.get_header("Range");
 			std::pair<std::string, std::string> range;
+			boost::system::error_code ec;
 			if (!requested_range.empty() && ((range = parse_range(requested_range)) != std::pair<std::string, std::string>()))
 			{
 				if (!range.first.empty())
@@ -143,13 +144,17 @@ namespace wsgi_boost
 				{
 					headers.emplace_back("Content-Length", std::to_string(end_pos - start_pos));
 					headers.emplace_back("Content-Range", "bytes " + range.first + "-" + range.second + "/" + std::to_string(length));
-					m_response.send_header("206 Partial Content", headers);
+					ec = m_response.send_header("206 Partial Content", headers);
+					if (ec)
+						return;
 				}
 			}
 			else
 			{
 				headers.emplace_back("Content-Length", std::to_string(length));
-				m_response.send_header("200 OK", headers);
+				ec = m_response.send_header("200 OK", headers);
+				if (ec)
+					return;
 			}
 			if (m_request.method == "GET")
 			{
@@ -164,7 +169,7 @@ namespace wsgi_boost
 				while (bytes_left > 0 &&
 					((read_length = content_stream.read(&buffer[0], std::min(bytes_left, buffer_size)).gcount()) > 0))
 				{
-					boost::system::error_code ec = m_response.send_data(std::string{ &buffer[0], read_length });
+					ec = m_response.send_data(std::string{ &buffer[0], read_length });
 					if (ec)
 						return;
 					bytes_left -= read_length;
