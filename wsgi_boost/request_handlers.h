@@ -239,7 +239,7 @@ namespace wsgi_boost
 				if (data_len > 0)
 				{
 					if (this->m_content_length == -1)
-						cpp_data = hex(data_len) + "\r\n" + cpp_data + "\r\n";
+						cpp_data.assign(hex(data_len) + "\r\n" + cpp_data + "\r\n");
 					// Read/write operations executed from inside Python must be syncronous!
 					this->m_response.send_data(cpp_data, false);
 				}
@@ -356,7 +356,7 @@ namespace wsgi_boost
 						// Skip 0-length chunks, if any
 						if (length == 0)
 							continue;
-						chunk = hex(length) + "\r\n" + chunk + "\r\n";
+						chunk.assign(hex(length) + "\r\n" + chunk + "\r\n");
 					}
 					ec = m_response.send_data(chunk);
 					if (ec)
