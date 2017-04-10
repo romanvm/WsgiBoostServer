@@ -233,14 +233,15 @@ namespace wsgi_boost
 			if (!is_running())
 			{
 				pybind11::gil_scoped_release release_gil;
-				std::cout << "WsgiBoost server starting with " << m_io_service_pool.size() << " thread(s).\n";
-				std::cout << "Press Ctrl+C to stop it.\n";
 				m_io_service_pool.reset();
 				init_acceptor(m_acceptor, m_port);
 				if (host_name.empty())
 					host_name = boost::asio::ip::host_name();
 				accept();
 				m_signals.async_wait([this](boost::system::error_code, int) { stop(); });
+				std::cout << "WsgiBoost server is starting on " << host_name << ':' << m_port << " with " <<
+					m_io_service_pool.size() << " thread(s)\n";
+				std::cout << "Press Ctrl+C to stop it.\n";
 				m_is_running.store(true);
 				m_io_service_pool.run();
 				m_is_running.store(false);
