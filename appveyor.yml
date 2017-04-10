@@ -4,37 +4,30 @@ os: Visual Studio 2015
 
 configuration: Release
 
-environment:  
+environment:
   global:
     MSVC_DEFAULT_OPTIONS: ON
     BOOST_ROOT: "C:\\Libraries\\boost_1_63_0"
-    ZLIB_DIR: "%APPVEYOR_BUILD_FOLDER%\\zlib-1.2.11"
 
   matrix:
-  - platform: x86
-    PYTHON: "C:\\Python36"
-    PYTHON_VERSION: "3.6"
-    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib32-msvc-14.0"
-    OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win32"
+    - PYTHON_VERSION: "3.6"
+      platform: x86
+      PYTHON: "C:\\Python36"
+      BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib32-msvc-14.0"
+      OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win32"
 
-  - platform: x64
-    PYTHON: "C:\\Python36-x64"
-    PYTHON_VERSION: "3.6"
-    BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib64-msvc-14.0"
-    OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win64"
+    - PYTHON_VERSION: "3.6"
+      platform: x64
+      PYTHON: "C:\\Python36-x64"
+      BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib64-msvc-14.0"
+      OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win64"
 
 install:
   - "set PATH=%PYTHON%;%PYTHON%\\Scripts;OPENSSL_ROOT_DIR\\bin;%PATH%"
   - python --version
   - pip --version
   - openssl version
-  - cd "%OPENSSL_ROOT_DIR%\\lib\\VC\\static"
-  - dir
-  - cd %APPVEYOR_BUILD_FOLDER%
-  - ps: Start-FileDownload "http://zlib.net/zlib1211.zip" -FileName zlib.zip
-  - 7z x zlib.zip -y
-  - cd %ZLIB_DIR%
-  - cmake .
+  - dir "%OPENSSL_ROOT_DIR%\\lib\\VC\\static"
   - pip install wheel
 
 build_script:

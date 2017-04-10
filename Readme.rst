@@ -13,6 +13,15 @@ Because it is written in C++, WsgiBoostServer is faster than pure Python
 solutions, like `Waitress`_. It can be used for hosting Python micro-services
 and/or static files. WsgiBoostServer also supports HTTPS protocol.
 
+In **Releases** section of this repository you can find compiled wheels with HTTPS support
+(statically linked against Boost libraries) for Python 3.6 on Windows (32 and 64 bit),
+for various Python 3 versions on Linux x64, and for Python 3.4 on Raspberry Pi 2 (if I'm not too lazy to compile this).
+
+You can install those binary wheels into your Python environment with pip::
+
+  $pip install <link to a .whl file>
+
+
 Main Features
 =============
 
@@ -128,9 +137,7 @@ to ``--webroot-path`` folder::
 Compilation
 ===========
 
-See `compilation instructions <Compilation.rst>`_. In "Releases" section of this repository
-you can find statically compiled wheels with HTTPS support for Python 3.6 on Windows (32 and 64 bit)
-and for Python 3.4 on Raspberry Pi 2 (if I'm not too lazy to compile it).
+See `compilation instructions <Compilation.rst>`_.
 
 .. _Boost.Asio: http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio.html
 .. _Pybind11: https://github.com/pybind/pybind11
