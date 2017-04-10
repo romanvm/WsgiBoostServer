@@ -190,8 +190,8 @@ namespace wsgi_boost
 		socket_p socket() const { return m_socket; }
 	};
 
-	template <class conn_t>
 	// Wraps Connection instance to provide Python file-like object for wsgi.input
+	template <class conn_t>
 	class InputStream
 	{
 	private:
