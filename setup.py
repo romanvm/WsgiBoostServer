@@ -92,8 +92,6 @@ if sys.platform == 'win32':
                 libraries += [
                     'libeay32MT',
                     'ssleay32MT',
-                    'gdi32',
-                    'User32',
                 ]
             else:  # OpenSSL 1.1.x
                 if sys.maxsize > 2 ** 32 // 2 - 1:
@@ -107,6 +105,8 @@ if sys.platform == 'win32':
             libraries += [
                 'advapi32',
                 'crypt32',
+                'gdi32',
+                'User32',
                 'legacy_stdio_definitions',
                 ]
 
