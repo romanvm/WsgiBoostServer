@@ -3,33 +3,47 @@ language: python
 python: "3.6"
 
 addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
 
-        packages:
-            - g++-4.9
-            - zlib1g-dev
-            - libbz2-dev
-            - libssl-dev
+    packages:
+      - g++-4.9
+      - zlib1g-dev
+      - libbz2-dev
+      - libssl-dev
 
-env: CC_VER=4.9
-    BOOST_ROOT=$TRAVIS_BUILD_DIR/boost
-    BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
+env:
+  CC_VER=4.9
+  BOOST_ROOT=$TRAVIS_BUILD_DIR/boost
+  BOOST_LIBRARYDIR=$BOOST_ROOT/stage/lib
 
 install:
-    - export CC=g++-$CC_VER
-    - export CXX=g++-$CC_VER
-    # We are building Boost libs ourselves because libboost1.55-all-dev has broken boost_coroutine
-    - git clone https://github.com/romanvm/boost.git
-    - chmod -R +x $BOOST_ROOT
-    - cd $BOOST_ROOT
-    - ./bootstrap.sh
-    - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
+  - export CC=g++-$CC_VER
+  - export CXX=g++-$CC_VER
+  # We are building Boost libs ourselves because libboost1.55-all-dev has broken boost_coroutine
+  - git clone https://github.com/romanvm/boost.git
+  - chmod -R +x $BOOST_ROOT
+  - cd $BOOST_ROOT
+  - ./bootstrap.sh
+  - ./b2 -j2 toolset=gcc-$CC_VER link=static variant=release cxxflags=-fPIC --layout=system --with-regex --with-system --with-coroutine --with-context --with-filesystem --with-iostreams --with-date_time
 
 script:
-    - cd $TRAVIS_BUILD_DIR
-    - python setup.py build test
+  - cd $TRAVIS_BUILD_DIR
+  - python setup.py build test
+
+before_deploy:
+  - python setup.py bdist_wheel
+
+deploy:
+  - provider: releases
+    api_key: $GH_TOKEN
+    file_glob: true
+    file: dist/*
+    skip_cleanup: true
+    overwrite: true
+    on:
+      tags: true
 
 notifications:
     email: false
