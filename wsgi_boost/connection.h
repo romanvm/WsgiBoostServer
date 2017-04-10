@@ -86,14 +86,18 @@ namespace wsgi_boost
 				size = m_bytes_left - residual_bytes;
 			boost::system::error_code ec;
 			size_t bytes_read;
-			set_timeout(m_content_timeout);
 			if (async)
+			{
+				set_timeout(m_content_timeout); // Timer works only for async operations
 				bytes_read = boost::asio::async_read(*m_socket, m_istreambuf,
 					boost::asio::transfer_exactly(size), m_yc[ec]);
+				m_timer.cancel();
+			}				
 			else
+			{
 				// Read/write operations executed from inside Python must be syncronous!
 				bytes_read = boost::asio::read(*m_socket, m_istreambuf, boost::asio::transfer_exactly(size), ec);
-			m_timer.cancel();
+			}
 			if (!ec || (ec && bytes_read > 0))
 				return true;
 			return false;
@@ -168,13 +172,17 @@ namespace wsgi_boost
 		boost::system::error_code flush(bool async = true)
 		{
 			boost::system::error_code ec;
-			set_timeout(m_content_timeout);
 			if (async)
+			{
+				set_timeout(m_content_timeout);
 				boost::asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
+				m_timer.cancel();
+			}
 			else
+			{
 				// Read/write operations executed from inside Python must be syncronous!
 				boost::asio::write(*m_socket, m_ostreambuf, ec);
-			m_timer.cancel();
+			}			
 			return ec;
 		}
 
