@@ -95,6 +95,8 @@ with ``WsgiBoostHttps`` like this:
 .. code-block:: python
 
   httpd = WsgiBoostHttps('server.crt', 'server.key', port=443, threads=4)
+  # Redirect all non-secure HTTP requests from port 80 (default) to HTTPS port
+  httpd.redirect_http = True
 
 Here ``'server.crt'`` and ``'server.key'`` are paths to HTTPS certificate
 and private key files respectively. If your private key is password-protected
@@ -115,6 +117,14 @@ It is strongly recommended to use at least 2048 bit prime number length.
 A path to the generated file can be passed as the third positional parameter
 to ``WsgiBoostHttps`` constructor.
 
+If you you want to get a free trusted certificate from `Let's Enccrypt`_ for a site
+hosted on WsgiBoostServer, you can use their ``certbot`` utility with ``--webroot`` option.
+In this case before obtaining a certificate you need to add a static route
+to ``--webroot-path`` folder::
+
+  httpd.add_static_route(r'^/\.well-known', '/path/to/webroot-dir')
+
+
 Compilation
 ===========
 
@@ -130,3 +140,4 @@ and for Python 3.4 on Raspberry Pi 2 (if I'm not too lazy to compile it).
 .. _here: https://github.com/romanvm/WsgiBoostServer/blob/master/benchmarks/benchmarks.rst
 .. _self-signed certificate: http://www.akadia.com/services/ssh_test_certificate.html
 .. _Diffie-Hellman: https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
+.. _Let's Enccrypt: https://letsencrypt.org
