@@ -10,6 +10,18 @@ environment:
     BOOST_ROOT: "C:\\Libraries\\boost_1_63_0"
 
   matrix:
+    - PYTHON_VERSION: "3.5"
+      platform: x86
+      PYTHON: "C:\\Python35"
+      BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib32-msvc-14.0"
+      OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win32"
+
+    - PYTHON_VERSION: "3.5"
+      platform: x64
+      PYTHON: "C:\\Python35-x64"
+      BOOST_LIBRARYDIR: "%BOOST_ROOT%\\lib64-msvc-14.0"
+      OPENSSL_ROOT_DIR: "C:\\OpenSSL-Win64"
+
     - PYTHON_VERSION: "3.6"
       platform: x86
       PYTHON: "C:\\Python36"
