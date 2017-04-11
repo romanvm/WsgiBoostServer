@@ -167,7 +167,7 @@ namespace wsgi_boost
 					PyErr_Print();
 					ex.clear();
 					pybind11::gil_scoped_release release_gil;
-					process_error(response, ex, "Python error while processing a WSGI request", true);
+					process_error(response, ex, "Python error while processing a WSGI request");
 				}
 				catch (const std::exception& ex)
 				{
