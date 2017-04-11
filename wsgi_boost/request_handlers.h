@@ -367,10 +367,15 @@ namespace wsgi_boost
 					if (PyErr_ExceptionMatches(PyExc_StopIteration))
 					{
 						PyErr_Clear();
-						if (!m_response.header_sent())
-							ec = send_header();
-						if (!ec && m_content_length == -1)
-							m_response.send_data("0\r\n\r\n");
+						// Avoid unnecessary GIL manipulation
+						if (!m_response.header_sent() || m_content_length == -1)
+						{
+							pybind11::gil_scoped_release release_gil;
+							if (!m_response.header_sent())
+								ec = send_header();
+							if (!ec && m_content_length == -1)
+								m_response.send_data("0\r\n\r\n");
+						}
 						break;
 					}
 					throw pybind11::error_already_set();
@@ -394,11 +399,7 @@ namespace wsgi_boost
 		{
 			if (m_app.is_none())
 			{
-				pybind11::gil_scoped_release release_gil;
-				m_response.send_html("500 Internal Server Error",
-					"Error 500", "Internal Server Error",
-					"A WSGI application is not set.");
-				return;
+				throw std::runtime_error("A WSGI application is not set!");
 			}
 			prepare_environ();
 			Iterable iterable{ m_app(m_environ, m_start_response) };
