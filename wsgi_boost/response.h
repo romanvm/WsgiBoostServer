@@ -39,7 +39,7 @@ namespace wsgi_boost
 		explicit Response(conn_t& connection) : m_connection{ connection } {}
 
 		// Send HTTP header (status code + headers)
-		boost::system::error_code send_header(const std::string& status, out_headers_t& headers, bool async = true)
+		boost::system::error_code send_header(const std::string& status, out_headers_t& headers)
 		{
 			m_connection.buffer_output(http_version + " " + status + "\r\n");
 			headers.emplace_back("Server", m_server_name);
@@ -52,14 +52,14 @@ namespace wsgi_boost
 				m_connection.buffer_output(header.first + ": " + header.second + "\r\n");
 			m_connection.buffer_output("\r\n");
 			m_header_sent = true;
-			return m_connection.flush(async);
+			return m_connection.flush();
 		}
 
 		// Send data to the client
-		boost::system::error_code send_data(const std::string& data, bool async = true)
+		boost::system::error_code send_data(const std::string& data)
 		{
 			m_connection.buffer_output(data);
-			return m_connection.flush(async);
+			return m_connection.flush();
 		}
 
 		// Send a plain text HTTP message to a client
@@ -85,10 +85,9 @@ namespace wsgi_boost
 			out_headers_t headers;
 			headers.emplace_back("Content-Type", "text/html");
 			headers.emplace_back("Content-Length", std::to_string(html.length()));
-			// Error messages in HTML are sent syncronously so that not to mess with GIL.
-			boost::system::error_code ec = send_header(status, headers, false);
+			boost::system::error_code ec = send_header(status, headers);
 			if (!ec)
-				ec = send_data(html, false);
+				ec = send_data(html);
 			return ec;
 		}
 
