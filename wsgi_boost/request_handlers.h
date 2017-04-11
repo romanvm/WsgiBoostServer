@@ -85,7 +85,6 @@ namespace wsgi_boost
 							{
 								out_headers.emplace_back("Content-Length", "0");
 								m_response.send_header("304 Not Modified", out_headers);
-								ifs.close();
 								return;
 							}
 							std::string ext = path.extension().string();
@@ -105,7 +104,6 @@ namespace wsgi_boost
 								out_headers.emplace_back("Accept-Ranges", "bytes");
 								send_file(ifs, out_headers);
 							}
-							ifs.close();
 							return;
 						}
 					}
