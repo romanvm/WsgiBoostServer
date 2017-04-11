@@ -125,12 +125,9 @@ namespace wsgi_boost
 			}
 		}
 
-		void process_error(response_t& response, const std::exception& ex, const std::string& error_msg,
-			const bool is_python_error = false) const
+		void process_error(response_t& response, const std::exception& ex, const std::string& error_msg) const
 		{
 			std::cerr << error_msg << ": " << ex.what() << '\n';
-			if (is_python_error)
-				PyErr_Print();
 			if (!response.header_sent())
 				response.send_html("500 Internal Server Error", "Error 500", "Internal Server Error", error_msg);
 			else
@@ -167,6 +164,9 @@ namespace wsgi_boost
 				catch (pybind11::error_already_set& ex)
 				{
 					ex.restore();
+					PyErr_Print();
+					ex.clear();
+					pybind11::gil_scoped_release release_gil;
 					process_error(response, ex, "Python error while processing a WSGI request", true);
 				}
 				catch (const std::exception& ex)

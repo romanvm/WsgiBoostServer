@@ -394,6 +394,7 @@ namespace wsgi_boost
 		{
 			if (m_app.is_none())
 			{
+				pybind11::gil_scoped_release release_gil;
 				m_response.send_html("500 Internal Server Error",
 					"Error 500", "Internal Server Error",
 					"A WSGI application is not set.");
