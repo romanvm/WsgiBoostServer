@@ -223,26 +223,17 @@ namespace wsgi_boost
 		std::string& m_host_name;
 		unsigned short m_local_port;
 		bool m_multithread;
+		std::string m_write_data;
 
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
 		pybind11::object create_write()
 		{
 			auto wr = [this](pybind11::bytes data)
 			{
-				std::string cpp_data{ data };
-				pybind11::gil_scoped_release release_gil;
-				// Read/write operations executed from inside Python must be syncronous!
-				boost::system::error_code ec = this->m_response.send_header(this->m_status, this->m_out_headers, false);
-				if (ec)
-					return;
-				size_t data_len = cpp_data.length();
-				if (data_len > 0)
-				{
-					if (this->m_content_length == -1)
-						cpp_data.assign(hex(data_len) + "\r\n" + cpp_data + "\r\n");
-					// Read/write operations executed from inside Python must be syncronous!
-					this->m_response.send_data(cpp_data, false);
-				}
+				this->m_write_data.assign(data);
+				size_t data_len = m_write_data.length();
+				if (data_len > 0 && this->m_content_length == -1)
+					m_write_data.assign(hex(data_len) + "\r\n" + m_write_data + "\r\n");
 			};
 			return pybind11::cpp_function(wr, pybind11::arg("data"));
 		}
@@ -327,9 +318,18 @@ namespace wsgi_boost
 			m_environ["wsgi.run_once"] = false;
 		}
 
+		boost::system::error_code send_header()
+		{
+			boost::system::error_code ec;
+			ec = m_response.send_header(m_status, m_out_headers);
+			if (!(ec || m_write_data.empty()))
+				ec = m_response.send_data(m_write_data);
+			return ec;
+		}
 
 		void send_iterable(Iterable& iterable)
 		{
+			boost::system::error_code ec;
 			pybind11::object iterator = iterable.attr("__iter__")();
 			while (true)
 			{
@@ -343,10 +343,9 @@ namespace wsgi_boost
 					// I found this scheme by accident and if we do not release GIL at this point
 					// Python will crash!
 					pybind11::gil_scoped_release release_gil;
-					boost::system::error_code ec;
 					if (!m_response.header_sent())
 					{
-						ec = m_response.send_header(m_status, m_out_headers);
+						ec = send_header();
 						if (ec)
 							break;
 					}
@@ -368,7 +367,9 @@ namespace wsgi_boost
 					if (PyErr_ExceptionMatches(PyExc_StopIteration))
 					{
 						PyErr_Clear();
-						if (m_content_length == -1)
+						if (!m_response.header_sent())
+							ec = send_header();
+						if (!ec && m_content_length == -1)
 							m_response.send_data("0\r\n\r\n");
 						break;
 					}
