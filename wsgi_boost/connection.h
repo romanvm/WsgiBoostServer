@@ -169,20 +169,12 @@ namespace wsgi_boost
 		}
 
 		// Send all output data to the client
-		boost::system::error_code flush(bool async = true)
+		boost::system::error_code flush()
 		{
 			boost::system::error_code ec;
-			if (async)
-			{
-				set_timeout(m_content_timeout);
-				boost::asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
-				m_timer.cancel();
-			}
-			else
-			{
-				// Read/write operations executed from inside Python must be syncronous!
-				boost::asio::write(*m_socket, m_ostreambuf, ec);
-			}			
+			set_timeout(m_content_timeout);
+			boost::asio::async_write(*m_socket, m_ostreambuf, m_yc[ec]);
+			m_timer.cancel();	
 			return ec;
 		}
 
