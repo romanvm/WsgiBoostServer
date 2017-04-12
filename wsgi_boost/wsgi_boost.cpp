@@ -137,12 +137,12 @@ PYBIND11_PLUGIN(wsgi_boost)
 
 	py::class_<HttpsServer<ssl_socket_ptr>, BaseServer<ssl_socket_ptr>>(module, "WsgiBoostHttps",
 		R"'''(
-		WsgiBoostHttps(cert, private_key, dh='', address='', port=4443, threads=0)
+		WsgiBoostHttps(cert_chain, private_key, dh='', address='', port=4443, threads=0)
 
 		PEP-3333-compliant multi-threaded WSGI server with HTTPS support
 		
-		:param cert: path to HTTPS certificate file
-		:type cert: str
+		:param cert_chain: path to *full* certificate chain file
+		:type cert_chain: str
 		:param private_key: path to private key file
 		:type private_key: str
 		:param dh: path to Diffie-Hellman parameters file (optional)
@@ -171,13 +171,13 @@ PYBIND11_PLUGIN(wsgi_boost)
 				return[content]
 
 
-			httpd = WsgiBoostHttps('server.crt', 'server.key', port=443, threads=4)
+			httpd = WsgiBoostHttps('fullchain.pem', 'privkey.pem', port=443, threads=4)
 			httpd.set_app(hello_app)
 			httpd.add_static_route('^/static', '/var/www/static-files')
 			httpd.start()
 		)'''")
 		.def(py::init<string, string, string, string, unsigned short, unsigned int>(),
-			py::arg("cert"), py::arg("private_key"), py::arg("dh") = string(),
+			py::arg("cert_chain"), py::arg("private_key"), py::arg("dh") = string(),
 			py::arg("address") = string(), py::arg("port") = 4443, py::arg("threads") = 0)
 		.def_property_readonly("is_running", &HttpsServer<ssl_socket_ptr>::is_running)
 		.def_readwrite("use_gzip", &HttpsServer<ssl_socket_ptr>::use_gzip)

@@ -118,7 +118,7 @@ namespace wsgi_boost
 		bool redirect_http = false;
 		unsigned short redirect_http_port = 80;
 
-		HttpsServer(std::string cert, const std::string private_key, std::string dh = std::string(),
+		HttpsServer(std::string cert_chain, const std::string private_key, std::string dh = std::string(),
 			std::string address = std::string(), unsigned short port = 4443, unsigned int threads = 0) :
 			// sslv23 is an universal option. Deprecated protocols need to be disabled by set_options()
 			// More info: https://www.openssl.org/docs/man1.0.2/ssl/SSL_CTX_new.html
@@ -137,7 +137,7 @@ namespace wsgi_boost
 					return pass;
 				return "";
 			});
-			m_context.use_certificate_chain_file(cert);
+			m_context.use_certificate_chain_file(cert_chain);
 			m_context.use_private_key_file(private_key, boost::asio::ssl::context::pem);
 			if (!dh.empty())
 				m_context.use_tmp_dh_file(dh);
