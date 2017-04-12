@@ -25,7 +25,7 @@ if __name__ == '__main__':
     httpd = wsgi_boost.WsgiBoostHttp(threads=4)
     # Serve static files by "static/*" path from "static" subfolder.
     # Also see template.html.
-    httpd.add_static_route('^/static', os.path.join(cwd, 'static'))
+    httpd.add_static_route(r'^/static', os.path.join(cwd, 'static'))
     # Set Flask WSGI application to be served
     httpd.set_app(app)
     httpd.start()

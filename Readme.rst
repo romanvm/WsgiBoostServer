@@ -86,7 +86,7 @@ Simple example with `Flask`_ micro-framework:
   # Set the WSGI app to serve
   httpd.set_app(app)
   # Serve static files from a directory
-  httpd.add_static_route('^/files', '/var/www/files')
+  httpd.add_static_route(r'^/files', '/var/www/files')
   httpd.start()
 
 More advanced examples with Flask and Django frameworks can be found ``examples`` folder.
@@ -129,7 +129,9 @@ to ``WsgiBoostHttps`` constructor.
 If you you want to get a free trusted certificate from `Let's Enccrypt`_ for a site
 hosted on WsgiBoostServer, you can use their ``certbot`` utility with ``--webroot`` option.
 In this case before obtaining a certificate you need to add a static route
-to ``--webroot-path`` folder::
+to ``--webroot-path`` folder:
+
+.. code-block:: python
 
   httpd.add_static_route(r'^/\.well-known', '/path/to/webroot-dir')
 
