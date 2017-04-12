@@ -81,7 +81,7 @@
 
 #define PYBIND11_VERSION_MAJOR 2
 #define PYBIND11_VERSION_MINOR 1
-#define PYBIND11_VERSION_PATCH 0
+#define PYBIND11_VERSION_PATCH 1
 
 /// Include Python header, disable linking to pythonX_d.lib on Windows in debug mode
 #if defined(_MSC_VER)
@@ -596,6 +596,9 @@ public:
 
     /// Clear the held Python error state (the C++ `what()` message remains intact)
     void clear() { restore(); PyErr_Clear(); }
+
+	/// Check if the trapped exception matches a given Python exception class
+	bool matches(PyObject *ex) const { return PyErr_GivenExceptionMatches(ex, type); }
 
 private:
     PyObject *type, *value, *trace;

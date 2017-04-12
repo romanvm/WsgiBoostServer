@@ -361,10 +361,9 @@ namespace wsgi_boost
 				}
 				catch (pybind11::error_already_set& ex)
 				{
-					ex.restore();
-					if (PyErr_ExceptionMatches(PyExc_StopIteration))
+					if (ex.matches(PyExc_StopIteration))
 					{
-						PyErr_Clear();
+						ex.clear();
 						// Avoid unnecessary GIL manipulation
 						if (!m_response.header_sent() || m_content_length == -1)
 						{
@@ -376,7 +375,7 @@ namespace wsgi_boost
 						}
 						break;
 					}
-					throw pybind11::error_already_set();
+					throw;
 				}
 			}
 		}
