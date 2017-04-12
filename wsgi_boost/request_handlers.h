@@ -396,9 +396,7 @@ namespace wsgi_boost
 		void handle()
 		{
 			if (m_app.is_none())
-			{
 				throw std::runtime_error("A WSGI application is not set!");
-			}
 			prepare_environ();
 			Iterable iterable{ m_app(m_environ, m_start_response) };
 			send_iterable(iterable);
