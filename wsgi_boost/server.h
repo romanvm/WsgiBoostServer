@@ -171,6 +171,7 @@ namespace wsgi_boost
 				}
 				catch (const std::exception& ex)
 				{
+					pybind11::gil_scoped_release release_gil;
 					process_error(response, ex, "General error while processing a WSGI request");
 				}
 			}
