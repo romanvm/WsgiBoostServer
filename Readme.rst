@@ -103,12 +103,12 @@ with ``WsgiBoostHttps`` like this:
 
 .. code-block:: python
 
-  httpd = WsgiBoostHttps('server.crt', 'server.key', port=443, threads=4)
+  httpd = WsgiBoostHttps('fullchain.pem', 'privkey.pem', port=443, threads=4)
   # Redirect all non-secure HTTP requests from port 80 (default) to HTTPS port
   httpd.redirect_http = True
 
-Here ``'server.crt'`` and ``'server.key'`` are paths to HTTPS certificate
-and private key files respectively. If your private key is password-protected
+Here ``'fullchain.pem'`` and ``'privkey.pem'`` are paths to *full* HTTPS certificate
+chain and private key files respectively. If your private key is password-protected
 you can provide a password via ``HTTPS_KEY_PASS`` environment variable.
 
 It is recommended to obtain a HTTPS certificate from a trusted Certificate Authority
