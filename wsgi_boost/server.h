@@ -202,7 +202,7 @@ namespace wsgi_boost
 		virtual ~BaseServer() {}
 
 		BaseServer(std::string address, unsigned short port, unsigned int threads) :
-			m_address{ address }, m_port{ port }, m_io_service_pool{ threads },
+			m_address{ address }, m_port{ port }, m_io_service_pool{ threads }, m_app{ pybind11::none() },
 			m_acceptor{ *m_io_service_pool.get_io_service() }, m_signals{ *m_io_service_pool.get_io_service() }
 		{
 			m_is_running.store(false);
