@@ -125,7 +125,7 @@ namespace wsgi_boost
 			m_context{ boost::asio::ssl::context::sslv23_server }, m_redirector{ *m_io_service_pool.get_io_service() },
 			BaseServer<ssl_socket_ptr>{ address, port, threads }
 		{
-			url_scheme = "https";
+			url_scheme.assign("https");
 			m_context.set_options(boost::asio::ssl::context::default_workarounds
 				| boost::asio::ssl::context::no_sslv2
 				| boost::asio::ssl::context::no_sslv3
