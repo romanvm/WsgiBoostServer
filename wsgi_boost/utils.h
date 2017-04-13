@@ -183,6 +183,8 @@ namespace wsgi_boost
 		int m_block_size;
 
 	public:
+		FileWrapper() : m_file{ pybind11::none() } {}
+
 		FileWrapper* call(pybind11::object file, int block_size = 8192)
 		{
 			m_file = file;
