@@ -228,10 +228,10 @@ namespace wsgi_boost
 		{
 			auto wr = [this](pybind11::bytes data)
 			{
-				this->m_write_data.assign(data);
+				this->m_write_data = data;
 				size_t data_len = m_write_data.length();
 				if (data_len > 0 && this->m_content_length == -1)
-					m_write_data.assign(hex(data_len) + "\r\n" + m_write_data + "\r\n");
+					m_write_data = hex(data_len) + "\r\n" + m_write_data + "\r\n";
 			};
 			return pybind11::cpp_function(wr, pybind11::arg("data"));
 		}
@@ -251,7 +251,7 @@ namespace wsgi_boost
 					PyErr_Restore(t.ptr(), v.ptr(), tb.ptr());
 					throw pybind11::error_already_set();
 				}
-				this->m_status.assign(status);
+				this->m_status = status;
 				this->m_out_headers.clear();
 				exc_info = pybind11::none();
 				for (const auto& h : headers)
@@ -353,7 +353,7 @@ namespace wsgi_boost
 						// Skip 0-length chunks, if any
 						if (length == 0)
 							continue;
-						chunk.assign(hex(length) + "\r\n" + chunk + "\r\n");
+						chunk = hex(length) + "\r\n" + chunk + "\r\n";
 					}
 					ec = m_response.send_data(chunk);
 					if (ec)
