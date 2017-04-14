@@ -6,6 +6,25 @@ WsgiBoostServer
 .. image:: https://ci.appveyor.com/api/projects/status/5q3hlfplc9xqtm4y/branch/master?svg=true
     :target: https://ci.appveyor.com/project/romanvm/wsgiboostserver
 
+The project is closed!
+======================
+
+Unfortunately, I found out that using WsgiBoostServer with various Python
+packages that include compiled binary modules often leads to Python interpreter crashes because of
+interpreter memory corruption. This happens both on Windows and Linux. Since WsgiBoostServer follows
+(more or less) modern C++ best practices and does not use things like raw pointers and C-style arrays,
+this probably happens because some libraries (Boost.Asio?) do not work well inside a Python
+interpreter.
+
+Since my C++ skills are limited, finding the root cause is beyond my abilities. Feel free to inspect the code
+(maybe I've missed something) or use it as a starting point for your own projects.
+WsgiBoostServer does work well with pure-Python WSGI applications and static files, after all.
+
+For me, it was fun to code WsgiBoostServer and I learned a lot about C++ and Python in the process.
+
+Information
+===========
+
 WsgiBoostServer is an asynchronous multi-threaded WSGI and HTTP server written
 as a Python extension module in C++ using `Boost.Asio`_ and `Pybind11`_ libraries.
 It can serve both Python WSGI applications and static files.
