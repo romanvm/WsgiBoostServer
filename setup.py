@@ -113,7 +113,7 @@ if sys.platform == 'win32':
     extra_compile_args.append('/EHsk')
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
-    extra_link_args.append('/DEBUG')
+    #extra_link_args.append('/DEBUG')
 else:
     try:
         include_dirs.append(os.path.expandvars(os.environ['BOOST_ROOT']))
