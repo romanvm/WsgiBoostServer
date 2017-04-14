@@ -226,7 +226,7 @@ namespace wsgi_boost
 		// Create write() callable: https://www.python.org/dev/peps/pep-3333/#the-write-callable
 		pybind11::object create_write()
 		{
-			auto wr = [this](pybind11::bytes data)
+			auto wr = [this](pybind11::bytes& data)
 			{
 				this->m_write_data = data;
 				size_t data_len = m_write_data.length();
@@ -239,7 +239,8 @@ namespace wsgi_boost
 		// Create start_response() callable: https://www.python.org/dev/peps/pep-3333/#the-start-response-callable
 		pybind11::object create_start_response()
 		{
-			auto sr = [this](pybind11::str status, pybind11::list headers, pybind11::object exc_info = pybind11::none())
+			auto sr = [this](std::string& status, std::list<std::pair<std::string, std::string>>& headers,
+							pybind11::object& exc_info)
 			{
 				if (!exc_info.is_none() && this->m_response.header_sent())
 				{
@@ -256,18 +257,15 @@ namespace wsgi_boost
 				exc_info = pybind11::none();
 				for (const auto& h : headers)
 				{
-					pybind11::tuple header = pybind11::reinterpret_borrow<pybind11::tuple>(h);
-					std::string header_name = header[0].cast<std::string>();
-					std::string header_value = header[1].cast<std::string>();
-					if (boost::algorithm::iequals(header_name, "Content-Length"))
+					if (boost::algorithm::iequals(h.first, "Content-Length"))
 					{
 						try
 						{
-							this->m_content_length = stoll(header_value);
+							this->m_content_length = stoll(h.second);
 						}
 						catch (const std::logic_error&) {}
 					}
-					this->m_out_headers.emplace_back(header_name, header_value);
+					this->m_out_headers.emplace_back(h.first, h.second);
 				}
 				if (this->m_content_length == -1)
 				{

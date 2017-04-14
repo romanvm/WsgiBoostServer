@@ -9,6 +9,7 @@ License: MIT, see License.txt
 #include "constants.h"
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 
@@ -161,15 +162,12 @@ namespace wsgi_boost
 	// wsgi.errors stream implementation
 	struct ErrorStream
 	{
-		void write(std::string msg) { std::cerr << msg; }
+		void write(std::string& msg) { std::cerr << msg; }
 
-		void writelines(pybind11::list lines)
+		void writelines(std::vector<std::string>& lines)
 		{
-			for (const auto& py_line : lines)
-			{
-				std::string line = py_line.cast<std::string>();
+			for (const auto& line : lines)
 				std::cerr << line;
-			}
 		}
 
 		void flush() { std::cerr.flush(); }
