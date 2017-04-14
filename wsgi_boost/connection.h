@@ -168,6 +168,16 @@ namespace wsgi_boost
 			m_ostreambuf.commit(length);
 		}
 
+		// Save data to the output buffer
+		void buffer_output(const std::vector<char>& data, size_t length)
+		{
+			auto out_buffers = m_ostreambuf.prepare(length);
+			auto buffers_begin = boost::asio::buffers_begin(out_buffers);
+			auto data_begin = data.begin();
+			std::copy(data_begin, data_begin + length, buffers_begin);
+			m_ostreambuf.commit(length);
+		}
+
 		// Send all output data to the client
 		boost::system::error_code flush()
 		{

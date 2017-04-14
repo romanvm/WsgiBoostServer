@@ -62,6 +62,13 @@ namespace wsgi_boost
 			return m_connection.flush();
 		}
 
+		// Send data to the client
+		boost::system::error_code send_data(const std::vector<char>& data, size_t length)
+		{
+			m_connection.buffer_output(data, length);
+			return m_connection.flush();
+		}
+
 		// Send a plain text HTTP message to a client
 		boost::system::error_code send_mesage(const std::string& status, const std::string& message = std::string())
 		{

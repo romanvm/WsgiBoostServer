@@ -167,7 +167,7 @@ namespace wsgi_boost
 				while (bytes_left > 0 &&
 					((read_length = content_stream.read(&buffer[0], std::min(bytes_left, buffer_size)).gcount()) > 0))
 				{
-					ec = m_response.send_data(std::string{ &buffer[0], read_length });
+					ec = m_response.send_data(buffer, read_length);
 					if (ec)
 						return;
 					bytes_left -= read_length;
