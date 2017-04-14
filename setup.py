@@ -39,6 +39,12 @@ if ssl_enabled:
             os.environ['OPENSSL_ROOT_DIR'] = item.split('=')[1]
             sys.argv.remove(item)
             break
+generate_pdb = False
+for item in sys.argv:
+    if '--debug' in item:
+        generate_pdb = True
+        sys.argv.remove(item)
+        break
 
 
 class BuildError(Exception):
@@ -113,6 +119,8 @@ if sys.platform == 'win32':
     extra_compile_args.append('/EHsk')
     extra_compile_args.append('/MT')
     extra_link_args.append('/SAFESEH:NO')
+    if generate_pdb:
+        extra_link_args.append('/DEBUG')
 else:
     try:
         include_dirs.append(os.path.expandvars(os.environ['BOOST_ROOT']))
@@ -138,6 +146,8 @@ else:
         define_macros.append(('HTTPS_ENABLED', None))
         libraries += ['crypto', 'ssl']
     extra_compile_args.append('-std=c++11')
+    if generate_pdb:
+        extra_compile_args.append('-ggdb')
 
 
 setup(
