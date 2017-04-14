@@ -20,7 +20,9 @@ Since my C++ skills are limited, finding the root cause is beyond my abilities. 
 (maybe I've missed something) or use it as a starting point for your own projects.
 WsgiBoostServer does work well with pure-Python WSGI applications and static files, after all.
 
-For me, it was fun to code WsgiBoostServer and I learned a lot about C++ and Python in the process.
+In the future I may return to the project if by some happy chance I find out what is wrong with it.
+But for now I put it on hold. It was fun to code WsgiBoostServer
+and I learned a lot about C++ and Python in the process.
 
 Information
 ===========
